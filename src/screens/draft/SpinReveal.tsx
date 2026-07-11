@@ -1,11 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { squadRefsV2 } from '../../engine/data/loader';
 import { flagOf } from '../../game/flags';
 import type { RolledTeam } from '../../engine/types';
 
+const ROW_H = 56; // px per reel row; 3 rows visible, centre row is the payline
+const NATION_LAND_MS = 1500;
+const YEAR_LAND_MS = 2450; // year reel keeps running after the nation locks — anticipation
+const SETTLE_MS = 3150; // banner beat, then hand back to the board
+
 /**
- * Two-beat spin: the flag highlight laps the available nations with ease-out and
- * lands on the target, then the World Cup year snaps in. Extends the v1 SpinWheel
- * juice to the (nation, year) roll. `animate === false` settles immediately (tests).
+ * THE DRAW as a slot machine: two vertical reels behind a gold payline — the
+ * NATION reel locks first, the YEAR reel holds the suspense and locks late.
+ * Motion-blurred while fast, mechanical overshoot on the stop, lamp rails that
+ * blink while spinning and go solid gold on lock. Purely cosmetic and
+ * deterministic per roll; `animate === false` settles immediately (tests).
  */
 export default function SpinReveal(props: {
   target: RolledTeam;
@@ -13,61 +21,177 @@ export default function SpinReveal(props: {
   animate: boolean;
   onSettled: () => void;
 }) {
-  const nations = props.nations;
-  const [highlight, setHighlight] = useState(-1);
-  const [showYear, setShowYear] = useState(false);
+  const [nationLocked, setNationLocked] = useState(false);
+  const [yearLocked, setYearLocked] = useState(false);
+
+  // Deterministic per-roll variety: rotate the reel order by a hash of the roll.
+  const seed = useMemo(() => {
+    const s = `${props.target.nation}-${props.target.year}`;
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return h;
+  }, [props.target.nation, props.target.year]);
+
+  const nationSeq = useMemo(() => {
+    const pool = props.nations.length > 0 ? props.nations.map((n) => n.code) : [props.target.nation];
+    const rotated = pool.map((_, i) => pool[(i + seed) % pool.length]);
+    // three laps of variety, then the target lands on the payline
+    return [...rotated, ...rotated, ...rotated.slice(0, Math.max(2, rotated.length >> 1)), props.target.nation];
+  }, [props.nations, props.target.nation, seed]);
+
+  const yearSeq = useMemo(() => {
+    const years = [...new Set(squadRefsV2().map((r) => r.year))].sort((a, b) => a - b);
+    const pool = years.length > 1 ? years : [props.target.year];
+    const rotated = pool.map((_, i) => pool[(i + seed) % pool.length]);
+    const laps = Math.max(3, Math.ceil(24 / pool.length));
+    const seq: number[] = [];
+    for (let l = 0; l < laps; l++) seq.push(...rotated);
+    seq.push(props.target.year);
+    return seq;
+  }, [props.target.year, seed]);
 
   useEffect(() => {
     if (!props.animate) {
       props.onSettled();
       return;
     }
-    const targetIndex = Math.max(0, nations.findIndex((n) => n.code === props.target.nation));
-    const steps = nations.length + targetIndex; // one full lap, then land
-    let step = 0;
-    let timer: number;
-    const tick = () => {
-      step++;
-      setHighlight(step % nations.length);
-      if (step >= steps) {
-        timer = window.setTimeout(() => {
-          setShowYear(true);
-          timer = window.setTimeout(props.onSettled, 700);
-        }, 300);
-        return;
-      }
-      const t = step / steps;
-      timer = window.setTimeout(tick, 45 + 220 * t * t);
+    const t1 = window.setTimeout(() => setNationLocked(true), NATION_LAND_MS);
+    const t2 = window.setTimeout(() => setYearLocked(true), YEAR_LAND_MS);
+    const t3 = window.setTimeout(props.onSettled, SETTLE_MS);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
     };
-    timer = window.setTimeout(tick, 45);
-    return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.target.nation, props.target.year]);
 
+  const bothLocked = nationLocked && yearLocked;
+
   return (
-    <div className="flex flex-col items-center gap-6 rounded-2xl border border-slate-800 bg-slate-900 p-8">
-      <div className="grid grid-cols-6 gap-3 text-3xl">
-        {nations.map((n, i) => (
-          <span
-            key={n.code}
-            className={`rounded-lg p-1 transition-transform duration-75 ${
-              i === highlight
-                ? 'scale-125 bg-emerald-500/20 ring-2 ring-emerald-400'
-                : 'opacity-50'
-            }`}
-          >
-            {flagOf(n.code)}
-          </span>
-        ))}
+    <div
+      className={`card-gloss relative mx-auto flex max-w-md flex-col items-center gap-3 rounded-2xl !border-gold-600/60 p-5 ${
+        bothLocked ? 'animate-gold-pulse' : ''
+      }`}
+    >
+      <p className="headline text-[10px] tracking-[0.4em] text-gold-400">THE DRAW</p>
+
+      <div className="flex items-stretch gap-3">
+        <LampRail locked={bothLocked} />
+        <Reel
+          items={nationSeq.map((code) => (
+            <span className="flex items-center gap-2">
+              <span className="text-3xl">{flagOf(code)}</span>
+              <span className="headline text-lg text-ink-100">{code}</span>
+            </span>
+          ))}
+          landMs={NATION_LAND_MS}
+          locked={nationLocked}
+          wide
+        />
+        <Reel
+          items={yearSeq.map((y) => (
+            <span className="headline text-2xl tabular-nums text-ink-100">{y}</span>
+          ))}
+          landMs={YEAR_LAND_MS}
+          locked={yearLocked}
+        />
+        <LampRail locked={bothLocked} />
       </div>
-      {showYear ? (
-        <p className="animate-pop text-2xl font-black text-slate-100">
+
+      {bothLocked ? (
+        <p className="animate-kick-pop headline text-xl text-ink-100">
           {flagOf(props.target.nation)} {props.target.nation}{' '}
-          <span className="text-emerald-400">{props.target.year}</span>
+          <span className="headline-gold">{props.target.year}</span>
         </p>
       ) : (
-        <p className="animate-pulse font-bold text-slate-400">Spinning…</p>
+        <p className="animate-pulse text-xs font-bold tracking-widest text-ink-500">
+          {nationLocked ? 'WHICH YEAR…' : 'SPINNING…'}
+        </p>
       )}
+    </div>
+  );
+}
+
+/** One vertical reel: a translating column behind a 3-row window with a gold
+ *  payline. Blurred while fast; overshoot easing sells the mechanical stop. */
+function Reel(props: { items: React.ReactNode[]; landMs: number; locked: boolean; wide?: boolean }) {
+  const [offset, setOffset] = useState(0);
+  const [spinning, setSpinning] = useState(false);
+  const frameRef = useRef<HTMLDivElement>(null);
+
+  // Target index sits last; final offset centres it on the middle visible row:
+  // item i's on-screen top = i·ROW_H + offset + ROW_H, and the payline row starts
+  // at ROW_H ⇒ offset = -(len-1)·ROW_H centres the last item exactly.
+  const finalOffset = -(props.items.length - 1) * ROW_H;
+
+  useEffect(() => {
+    setOffset(0);
+    setSpinning(true);
+    // next frame so the transition animates from 0
+    const raf = requestAnimationFrame(() => setOffset(finalOffset));
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finalOffset]);
+
+  useEffect(() => {
+    if (props.locked) setSpinning(false);
+  }, [props.locked]);
+
+  return (
+    <div
+      ref={frameRef}
+      className={`relative overflow-hidden rounded-xl border bg-night-950 ${
+        props.locked ? 'border-gold-400 animate-slot-shake' : 'border-night-600'
+      } ${props.wide ? 'w-36' : 'w-24'}`}
+      style={{ height: ROW_H * 3 }}
+    >
+      {/* the moving column */}
+      <div
+        className={spinning && !props.locked ? 'reel-blur' : ''}
+        style={{
+          transform: `translateY(${offset + ROW_H}px)`,
+          transition: `transform ${props.landMs}ms cubic-bezier(0.12, 0.82, 0.22, 1.04)`,
+        }}
+      >
+        {props.items.map((it, i) => (
+          <div key={i} className="flex items-center justify-center" style={{ height: ROW_H }}>
+            {it}
+          </div>
+        ))}
+      </div>
+
+      {/* window shading + payline */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-night-950 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-night-950 to-transparent" />
+        <div
+          className={`absolute inset-x-1 top-1/2 -translate-y-1/2 rounded-lg border ${
+            props.locked ? 'border-gold-400/90' : 'border-gold-600/30'
+          }`}
+          style={{ height: ROW_H - 6 }}
+        />
+        {props.locked && (
+          <div
+            className="payline-flash absolute inset-x-1 top-1/2 -translate-y-1/2 rounded-lg bg-gold-300/25"
+            style={{ height: ROW_H - 6 }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LampRail(props: { locked: boolean }) {
+  return (
+    <div className="flex flex-col justify-between py-1">
+      {Array.from({ length: 5 }, (_, i) => (
+        <span
+          key={i}
+          className={`h-1.5 w-1.5 rounded-full bg-gold-400 ${props.locked ? 'lamp-locked' : 'lamp'}`}
+          style={{ animationDelay: `${i * 90}ms` }}
+        />
+      ))}
     </div>
   );
 }

@@ -154,6 +154,56 @@
     opacity: 0.7;
   }
 }
+/* Slot machine (the draw) */
+@keyframes slot-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  60% {
+    transform: translateX(2px);
+  }
+}
+@keyframes lamp-blink {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes payline-flash {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.animate-slot-shake {
+  animation: slot-shake 0.28s ease-out both;
+}
+.lamp {
+  animation: lamp-blink 0.45s ease-in-out infinite;
+}
+.lamp-locked {
+  animation: none;
+  opacity: 1;
+}
+.reel-blur {
+  filter: blur(2.5px);
+}
+.payline-flash {
+  animation: payline-flash 0.5s ease-out both;
+}
+
 @keyframes kick-pop {
   0% {
     transform: scale(0.4);
