@@ -1055,6 +1055,54 @@
         { "id": "usa-1994-kooiman", "name": "Cle Kooiman", "pos": "CB", "rating": 75, "club": "San Diego Sockers" },
         { "id": "usa-1994-sommer", "name": "Juergen Sommer", "pos": "GK", "rating": 75, "club": "Luton Town" }
       ]
+    },
+    {
+      "nation": "KOR", "name": "South Korea", "year": 2002, "result": "Fourth place",
+      "notes": "Guus Hiddink's co-host semi-finalists - the biggest shock of the modern World Cup era, beating Portugal, Italy, and Spain (on penalties) before losing to Germany. Hong Myung-bo captained; Ahn Jung-hwan's golden goal beat Italy; Park Ji-sung broke through here.",
+      "players": [
+        { "id": "kor-2002-hong", "name": "Hong Myung-bo", "pos": "CB", "rating": 85, "shirt": 20, "club": "Pohang Steelers" },
+        { "id": "kor-2002-park", "name": "Park Ji-sung", "pos": "RM", "altPos": ["CM"], "rating": 82, "shirt": 21, "club": "Kyoto Purple Sanga" },
+        { "id": "kor-2002-lee-woon-jae", "name": "Lee Woon-jae", "pos": "GK", "rating": 82, "shirt": 1, "club": "Suwon Samsung Bluewings" },
+        { "id": "kor-2002-ahn", "name": "Ahn Jung-hwan", "pos": "ST", "rating": 81, "shirt": 19, "club": "Perugia" },
+        { "id": "kor-2002-yoo", "name": "Yoo Sang-chul", "pos": "CM", "rating": 80, "shirt": 6, "club": "Kashiwa Reysol" },
+        { "id": "kor-2002-lee-young-pyo", "name": "Lee Young-pyo", "pos": "LB", "rating": 80, "shirt": 10, "club": "Anyang LG Cheetahs" },
+        { "id": "kor-2002-hwang", "name": "Hwang Sun-hong", "pos": "ST", "rating": 79, "shirt": 18, "club": "Kashiwa Reysol" },
+        { "id": "kor-2002-kim-tae-young", "name": "Kim Tae-young", "pos": "CB", "rating": 78, "shirt": 7, "club": "Suwon Samsung Bluewings" },
+        { "id": "kor-2002-seol", "name": "Seol Ki-hyeon", "pos": "ST", "altPos": ["RW"], "rating": 78, "shirt": 9, "club": "Anyang LG Cheetahs" },
+        { "id": "kor-2002-cha", "name": "Cha Du-ri", "pos": "RB", "rating": 77, "shirt": 16, "club": "Korea University" },
+        { "id": "kor-2002-choi-tae-uk", "name": "Choi Tae-uk", "pos": "CDM", "rating": 77, "shirt": 8, "club": "Anyang LG Cheetahs" },
+        { "id": "kor-2002-kim-nam-il", "name": "Kim Nam-il", "pos": "CDM", "rating": 77, "shirt": 5, "club": "Suwon Samsung Bluewings" },
+        { "id": "kor-2002-yoon", "name": "Yoon Jong-hwan", "pos": "CM", "rating": 77, "shirt": 17, "club": "Suwon Samsung Bluewings" },
+        { "id": "kor-2002-lee-chun-soo", "name": "Lee Chun-soo", "pos": "LW", "rating": 77, "shirt": 14, "club": "Ansan Mugungwha" },
+        { "id": "kor-2002-choi-yong-soo", "name": "Choi Yong-soo", "pos": "CAM", "rating": 76, "shirt": 11, "club": "Ulsan Hyundai" },
+        { "id": "kor-2002-choi-jin-cheul", "name": "Choi Jin-cheul", "pos": "CB", "rating": 76, "shirt": 4, "club": "Anyang LG Cheetahs" },
+        { "id": "kor-2002-hyun", "name": "Hyun Young-min", "pos": "RB", "rating": 76, "shirt": 2, "club": "Jeonbuk Hyundai Motors" },
+        { "id": "kor-2002-kim-byung-ji", "name": "Kim Byung-ji", "pos": "GK", "rating": 76, "shirt": 12, "club": "Pohang Steelers" }
+      ]
+    },
+    {
+      "nation": "COL", "name": "Colombia", "year": 2014, "result": "Quarter-final",
+      "notes": "Jose Pekerman's team, Colombia's best World Cup run - lost 2-1 to hosts Brazil in the QF. James Rodriguez won the Golden Boot with 6 goals, including a scissor-kick volley vs Uruguay in the Round of 16 widely rated among the greatest World Cup goals ever. Falcao missed the tournament through injury.",
+      "players": [
+        { "id": "col-2014-james", "name": "James Rodríguez", "pos": "CAM", "rating": 91, "shirt": 10, "club": "AS Monaco" },
+        { "id": "col-2014-cuadrado", "name": "Juan Cuadrado", "pos": "RW", "rating": 83, "shirt": 11, "club": "Fiorentina" },
+        { "id": "col-2014-guarin", "name": "Fredy Guarín", "pos": "CM", "rating": 81, "shirt": 13, "club": "Internazionale" },
+        { "id": "col-2014-ospina", "name": "David Ospina", "pos": "GK", "rating": 80, "shirt": 1, "club": "Nice" },
+        { "id": "col-2014-martinez", "name": "Jackson Martínez", "pos": "ST", "rating": 80, "shirt": 21, "club": "Porto" },
+        { "id": "col-2014-yepes", "name": "Mario Yepes", "pos": "CB", "rating": 79, "shirt": 3, "club": "Atalanta" },
+        { "id": "col-2014-zapata", "name": "Cristián Zapata", "pos": "CB", "rating": 79, "shirt": 2, "club": "AC Milan" },
+        { "id": "col-2014-sanchez", "name": "Carlos Sánchez", "pos": "CDM", "rating": 79, "shirt": 6, "club": "Elche" },
+        { "id": "col-2014-arias", "name": "Santiago Arias", "pos": "RB", "rating": 78, "shirt": 4, "club": "PSV Eindhoven" },
+        { "id": "col-2014-armero", "name": "Pablo Armero", "pos": "LB", "rating": 78, "shirt": 7, "club": "West Ham United" },
+        { "id": "col-2014-gutierrez", "name": "Teófilo Gutiérrez", "pos": "ST", "rating": 78, "shirt": 9, "club": "River Plate" },
+        { "id": "col-2014-bacca", "name": "Carlos Bacca", "pos": "ST", "rating": 78, "shirt": 17, "club": "Sevilla" },
+        { "id": "col-2014-aguilar", "name": "Abel Aguilar", "pos": "CM", "altPos": ["CDM"], "rating": 77, "shirt": 8, "club": "Toulouse" },
+        { "id": "col-2014-zuniga", "name": "Juan Camilo Zúñiga", "pos": "RB", "rating": 77, "shirt": 18, "club": "Napoli" },
+        { "id": "col-2014-quintero", "name": "Juan Fernando Quintero", "pos": "CAM", "rating": 76, "shirt": 20, "club": "Porto" },
+        { "id": "col-2014-mejia", "name": "Alexander Mejía", "pos": "CDM", "rating": 76, "shirt": 15, "club": "Atlético Nacional" },
+        { "id": "col-2014-ibarbo", "name": "Víctor Ibarbo", "pos": "LW", "rating": 76, "shirt": 14, "club": "Cagliari" },
+        { "id": "col-2014-ramos", "name": "Adrián Ramos", "pos": "ST", "rating": 76, "shirt": 19, "club": "Hertha BSC" }
+      ]
     }
   ]
 }
