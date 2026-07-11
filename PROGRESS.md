@@ -2,7 +2,33 @@
 
 _Running log for the build agent._
 
-## Current state: TIER 1 + CORE TIER 2 SHIPPED ✅
+## Current state: V2 REDESIGN LIVE — ALL FLAGS ON ✅ (2026-07-11)
+
+The six-worker redesign (docs/redesign/: DECISIONS.md + CONTRACT.md are the
+authority) shipped and is switched on as the default game (4bf64d5):
+
+- **Draft v2** (draft-page): free pick-then-place tactics board, 12 detailed
+  positions, 8 formations + styles, re-spin tokens, (nation, year) roll.
+- **Data v2** (players): 33+ squads across World Cups 1950–2026 on Lucca's
+  anchor scale (Pelé-1970 97 ceiling), verified vs the web; RATINGS-LADDER.md
+  pending Lucca's calibration pass.
+- **Engine v2** (game-engine): zonal tactics-aware engine, affinity matrix,
+  morale (chemistry removed), penalty shootouts (no draws; points 3/2/1/0),
+  deterministic minute-timeline producer. Balance verified vs DECISIONS
+  targets: 3.48 goals/match (3.4), 15.6% pre-shootout draws (15%), 0.0% final.
+- **Sim v2** (match-sim): watched 2D-pitch playback (drifting dots, ticker,
+  goal FX, shootout beat, rail) as pure(timeline, elapsed); real engine
+  timelines wired (score/timeline agreement invariant held).
+- **Integration** (architect + Main): tournament + App threading (per-match
+  seeds, morale round-to-round, varied bot tactics), flags flipped ON;
+  app.test.tsx pinned as the flags-OFF regression gate.
+
+176+ tests green, `npm run build` green. In flight: between-match re-arrange
+board (draft-page + match-sim), all-flags-ON walkthrough test (QA). Chrome
+extension unavailable again → DOM walkthroughs + balance harness are the
+browser evidence; Lucca playtests via `npm run dev`.
+
+## Tier 1 history: TIER 1 + CORE TIER 2 SHIPPED ✅ (2026-07-10)
 
 All phases of PLAN.md through Tier 2 core juice are done, reviewed, and green.
 54 tests passing, production build verified serving.
