@@ -1,21 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { affinityForV2, pickValueV2, placeholderAffinity, slotFitsForPlayer } from './draft';
+import { evaluateStealV2 } from './steal-v2';
 import { AFFINITY_MATRIX, affinity } from './affinity';
-import { FORMATIONS } from './types';
+import { FORMATIONS, formationById } from './types';
 import type { PlayerV2 } from './data/schema';
+import type { XiSlotV2 } from './types';
 
 /**
  * Steal-math regression, per Main's night-shift brief (2026-07-11): "a
  * natural/secondary-position superstar (Messi CAM w/ RW altPos) must not be
- * out-ranked by a vastly worse-affinity swap." No dedicated v2 steal-
- * evaluation function exists yet (only v1's `evaluateSteal` in tournament.ts,
- * which operates on coarse GK/DF/MF/FW Player — it can't even represent a
- * CAM/RW distinction, let alone a secondary position). This tests the
- * committed, real primitives ANY v2 steal-evaluation function must be built
- * on (`pickValueV2` / `affinityForV2` / `slotFitsForPlayer`, draft.ts) — the
- * exact value-comparison math the bug pattern lives in. Re-verify this same
- * fixture end-to-end once a real `evaluateStealV2` lands (tracked in
- * ~/Documents/agent-ops/logs/last11-qa-2026-07-11.md).
+ * out-ranked by a vastly worse-affinity swap."
+ *
+ * UPDATE (same night, `7a9760e`): `evaluateStealV2` (steal-v2.ts) landed —
+ * its own doc comment confirms this WAS a real, reported bug: v1's coarse
+ * `evaluateSteal` (tournament.ts) evaluated Messi on his COARSE-projected
+ * position, producing "absurd swings (Romário +26 over Messi)". The tests
+ * below were originally written against just the shared value-comparison
+ * primitives (no dedicated steal-eval existed yet); now extended to verify
+ * `evaluateStealV2` end to end too, on the actual detailed slate.
  *
  * The concrete bug this guards: a player's SECONDARY position must be
  * treated as fully natural (affinity 1.0), not silently fall through to the
@@ -104,5 +106,54 @@ describe('steal-math regression: superstar secondary-position exemption (Messi C
     // if the matrix's family groupings ever change.
     expect(AFFINITY_MATRIX.CAM.RW).toBeLessThan(1);
     expect(AFFINITY_MATRIX.CAM.RW).toBeGreaterThan(0.5); // "forgiving", not vastly bad on its face
+  });
+});
+
+/** A striker, natural fit only at ST — no CAM/RW secondary. Used as the
+ *  "vastly worse fit for THIS steal opportunity" comparison player: he's a
+ *  genuine, highly-rated player (this isn't a strawman), just not a fit for
+ *  the open upgrade the way Messi is. */
+const ROMARIO: PlayerV2 = {
+  id: 'bra-1994-romario',
+  name: 'Romário',
+  nation: 'BRA',
+  year: 1994,
+  position: 'ST',
+  rating: 90,
+};
+
+function weakOccupant(id: string, position: PlayerV2['position'], rating: number): XiSlotV2 {
+  return { position, player: { id, name: id, nation: 'JPN', year: 2026, position, rating } };
+}
+
+describe('evaluateStealV2 end-to-end: Messi must win the steal ranking over Romário', () => {
+  it('ranks Messi (secondary RW) above Romário (natural ST elsewhere) when the open upgrade is at RW', () => {
+    const formation = formationById('4-3-3')!; // GK,RB,CB,CB,LB,CDM,CM,CM,RW,ST,LW
+    const slate: XiSlotV2[] = formation.slots.map((pos, i) => weakOccupant(`slot-${i}`, pos, pos === 'RW' ? 65 : 80));
+
+    const result = evaluateStealV2(slate, [MESSI, ROMARIO]);
+    expect(result).not.toBeNull();
+    expect(result!.player.id).toBe(MESSI.id);
+    expect(result!.bestPosition).toBe('RW');
+    // Messi natural-exempt at RW (96) vs the weak occupant there (65) = +31.
+    expect(result!.gain).toBeCloseTo(31, 5);
+
+    // Confirm this ISN'T just "Messi happens to be in the pool" — Romário's
+    // own best gain (at his natural ST, 90 vs the 80 occupant = +10, or a
+    // worse cross-position gain elsewhere) is strictly smaller, so ranking
+    // by gain correctly puts Messi first regardless of pool order.
+    const messiOnly = evaluateStealV2(slate, [MESSI]);
+    const romarioOnly = evaluateStealV2(slate, [ROMARIO]);
+    expect(messiOnly!.gain).toBeGreaterThan(romarioOnly!.gain);
+  });
+
+  it('reversed pool order gives the identical winner — not an artifact of iteration order', () => {
+    const formation = formationById('4-3-3')!;
+    const slate: XiSlotV2[] = formation.slots.map((pos, i) => weakOccupant(`slot-${i}`, pos, pos === 'RW' ? 65 : 80));
+    const a = evaluateStealV2(slate, [MESSI, ROMARIO]);
+    const b = evaluateStealV2(slate, [ROMARIO, MESSI]);
+    expect(a!.player.id).toBe(MESSI.id);
+    expect(b!.player.id).toBe(MESSI.id);
+    expect(a!.gain).toBe(b!.gain);
   });
 });

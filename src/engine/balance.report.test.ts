@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { runTournament, type TournamentLog } from './tournament';
+import { resolveMatch, type MatchSide } from './match';
+import { FORMATIONS } from './types';
 import {
   TARGETS,
   buildBalanceReport,
   buildBalanceReportV2,
+  buildEarlyRoundBalanceReportV2,
   cleanSheetRate,
   collectMatches,
   drawRate,
+  finalDrawRate,
   goalsStats,
   lootSnowball,
   moraleSnowball,
@@ -295,8 +299,8 @@ describe.skipIf(!process.env.BALANCE)('balance report (v1 baseline)', () => {
       },
       'draw rate (plain)': {
         value: (report.drawRate * 100).toFixed(1) + '%',
-        target: `${TARGETS.preShootoutDrawRate * 100}% pre-shootout (v2) / 0% final (v2)`,
-        note: 'v1 has no shootout — this is v1s FINAL draw rate, not comparable to either v2 band yet',
+        target: `${TARGETS.earlyRoundDrawRate * 100}% early-round (v2) / 0% late-round final (v2)`,
+        note: 'v1 has no staged shootout rule — this is v1s FINAL draw rate, not comparable to either v2 regime yet',
       },
       'scoreless rate': { value: (report.goals.scorelessRate * 100).toFixed(1) + '%', target: '-', note: 'informational' },
       '5+ goal rate': { value: (report.goals.fivePlusRate * 100).toFixed(1) + '%', target: '-', note: 'informational' },
@@ -346,83 +350,108 @@ describe.skipIf(!process.env.BALANCE)('balance report (v1 baseline)', () => {
 // both. This is the first REAL diff against the v1 baseline logged in
 // ~/Documents/agent-ops/logs/last11-qa-2026-07-11.md.
 describe.skipIf(!process.env.BALANCE)('balance report (v2 engine)', () => {
-  it('prints the full v2 report against the DECISIONS.md targets', () => {
+  it('prints the full v2 report against the DECISIONS.md targets, BOTH staged-shootout regimes', () => {
     const N = 4000; // matches engine.v2.test.ts's own sample size for comparability
     const seeds = Array.from({ length: N }, (_, i) => i);
-    const report = buildBalanceReportV2(seeds);
+    const late = buildBalanceReportV2(seeds); // <=16 alive: shootoutEnabled=true
+    const early = buildEarlyRoundBalanceReportV2(seeds); // >16 alive: shootoutEnabled=false
 
-    console.log('\n=== Last11 balance report — v2 engine ===');
-    console.log(`sample: ${report.sampleMatches} synthetic matchups\n`);
+    console.log('\n=== Last11 balance report — v2 engine (NIGHT-SHIFT staged shootouts, ce6c5b4) ===');
+    console.log(`sample: ${late.sampleMatches} synthetic matchups per regime\n`);
 
+    console.log('--- LATE-ROUND regime (<=16 alive, shootoutEnabled=true, R3-R6) ---');
     console.table({
-      'goals/match': { value: report.goals.mean.toFixed(2), target: TARGETS.goalsPerMatch, note: '' },
-      'draw rate (pre-shootout)': {
-        value: (report.preShootoutDrawRate * 100).toFixed(1) + '%',
-        target: `${TARGETS.preShootoutDrawRate * 100}%`,
-        note: '',
+      'goals/match': { value: late.goals.mean.toFixed(2), target: TARGETS.goalsPerMatch, note: '' },
+      'draw rate (pre-shootout, i.e. level-in-regulation)': {
+        value: (late.preShootoutDrawRate * 100).toFixed(1) + '%',
+        target: `${TARGETS.earlyRoundDrawRate * 100}%`,
+        note: 'same "how often is regulation level" stat as the early-round regime — shootoutEnabled only affects what happens AFTER, not the rate of reaching it',
       },
-      'draw rate (final, post-shootout)': {
-        value: (report.postShootoutDrawRate * 100).toFixed(1) + '%',
-        target: `${TARGETS.postShootoutDrawRate * 100}%`,
-        note: 'should be exactly 0 — see postShootoutDrawRate doc comment',
+      'draw rate (FINAL)': {
+        value: (late.finalDrawRate * 100).toFixed(1) + '%',
+        target: `${TARGETS.lateRoundFinalDrawRate * 100}%`,
+        note: 'must be exactly 0 — every level match here gets a shootout winner',
       },
-      'scoreless rate': { value: (report.goals.scorelessRate * 100).toFixed(1) + '%', target: '-', note: 'informational' },
-      '5+ goal rate': { value: (report.goals.fivePlusRate * 100).toFixed(1) + '%', target: '-', note: 'informational' },
-      'clean sheet rate': { value: (report.cleanSheetRate * 100).toFixed(1) + '%', target: '-', note: 'informational' },
+      'undecided (bug check)': { value: (late.undecidedRate * 100).toFixed(1) + '%', target: '0%', note: 'must be exactly 0' },
+      'scoreless rate': { value: (late.goals.scorelessRate * 100).toFixed(1) + '%', target: '-', note: 'informational' },
+      '5+ goal rate': { value: (late.goals.fivePlusRate * 100).toFixed(1) + '%', target: '-', note: 'informational' },
+      'clean sheet rate': { value: (late.cleanSheetRate * 100).toFixed(1) + '%', target: '-', note: 'informational' },
     });
-
-    console.log('\nupset rate by strength-gap bucket (v2 overallStrength scale, ~60-97):');
+    console.log('upset rate by strength-gap bucket (v2 overallStrength scale, ~60-97):');
     console.table(
-      report.upsets.map((u) => ({
+      late.upsets.map((u) => ({
         bucket: u.label,
         decisiveMatches: u.decisiveMatches,
         weakerWinRate: Number.isNaN(u.weakerWinRate) ? 'n/a (0 samples)' : (u.weakerWinRate * 100).toFixed(1) + '%',
       })),
     );
 
-    console.log('\nmorale snowball (real mechanic, not a proxy):');
+    console.log('\n--- EARLY-ROUND regime (>16 alive, shootoutEnabled=false, R1-R2) ---');
+    console.table({
+      'goals/match': { value: early.goals.mean.toFixed(2), target: TARGETS.goalsPerMatch, note: '' },
+      'draw rate (FINAL — nothing resolves it further)': {
+        value: (early.drawRate * 100).toFixed(1) + '%',
+        target: `${TARGETS.earlyRoundDrawRate * 100}%`,
+        note: '',
+      },
+      'undecided (bug check)': { value: (early.undecidedRate * 100).toFixed(1) + '%', target: '0%', note: 'must be exactly 0 — no shootout should EVER fire here' },
+      'scoreless rate': { value: (early.goals.scorelessRate * 100).toFixed(1) + '%', target: '-', note: 'informational' },
+      '5+ goal rate': { value: (early.goals.fivePlusRate * 100).toFixed(1) + '%', target: '-', note: 'informational' },
+      'clean sheet rate': { value: (early.cleanSheetRate * 100).toFixed(1) + '%', target: '-', note: 'informational' },
+    });
+    console.log('upset rate by strength-gap bucket (v2 overallStrength scale, ~60-97), genuine draws excluded:');
+    console.table(
+      early.upsets.map((u) => ({
+        bucket: u.label,
+        decisiveMatches: u.decisiveMatches,
+        weakerWinRate: Number.isNaN(u.weakerWinRate) ? 'n/a (0 samples)' : (u.weakerWinRate * 100).toFixed(1) + '%',
+      })),
+    );
+
+    console.log('\nmorale snowball (real mechanic, not a proxy — late-round regime only):');
     console.table([
       {
-        managers: report.moraleSnowball.managers,
-        rounds: report.moraleSnowball.rounds,
-        topThirdAvgGain: report.moraleSnowball.topThirdAvgGain.toFixed(3),
-        bottomThirdAvgGain: report.moraleSnowball.bottomThirdAvgGain.toFixed(3),
-        ratio: Number.isNaN(report.moraleSnowball.ratio) ? 'n/a' : report.moraleSnowball.ratio.toFixed(2),
-        maxMoraleDeltaObserved: report.moraleSnowball.maxMoraleDeltaObserved.toFixed(3),
+        managers: late.moraleSnowball.managers,
+        rounds: late.moraleSnowball.rounds,
+        topThirdAvgGain: late.moraleSnowball.topThirdAvgGain.toFixed(3),
+        bottomThirdAvgGain: late.moraleSnowball.bottomThirdAvgGain.toFixed(3),
+        ratio: Number.isNaN(late.moraleSnowball.ratio) ? 'n/a' : late.moraleSnowball.ratio.toFixed(2),
+        maxMoraleDeltaObserved: late.moraleSnowball.maxMoraleDeltaObserved.toFixed(3),
       },
     ]);
 
-    console.log('\ntactics spread — equal-strength round robin, 8 formations x 3 styles:');
+    console.log('\ntactics spread — equal-strength round robin, 8 formations x 3 styles (late-round regime):');
     console.table(
-      report.tacticsSpread.formations.map((f) => ({
+      late.tacticsSpread.formations.map((f) => ({
         formation: f.formationId,
         matches: f.matches,
         winRate: (f.winRate * 100).toFixed(1) + '%',
       })),
     );
     console.table(
-      report.tacticsSpread.styles.map((s) => ({
+      late.tacticsSpread.styles.map((s) => ({
         style: s.style,
         matches: s.matches,
         winRate: (s.winRate * 100).toFixed(1) + '%',
       })),
     );
-    if (report.tacticsSpread.outliers.length > 0) {
-      console.log(`outliers (win rate outside 35-65% at equal strength): ${report.tacticsSpread.outliers.join(', ')}`);
+    if (late.tacticsSpread.outliers.length > 0) {
+      console.log(`outliers (win rate outside 35-65% at equal strength): ${late.tacticsSpread.outliers.join(', ')}`);
     }
 
     // Same posture as the v1 report: this is a human-read report, not a hard
     // gate (game-engine's engine.v2.test.ts already owns the hard band
     // assertions on goals/draws/stronger-win-rate). Sanity-only here.
-    expect(report.sampleMatches).toBe(N);
-    expect(report.postShootoutDrawRate).toBe(0);
+    expect(late.sampleMatches).toBe(N);
+    expect(late.undecidedRate).toBe(0);
+    expect(late.finalDrawRate).toBe(0);
+    expect(early.undecidedRate).toBe(0);
   });
 
-  it('is deterministic: same seed batch => identical report', () => {
+  it('is deterministic: same seed batch => identical report, both regimes', () => {
     const seeds = [10, 20, 30, 40, 50];
-    const a = buildBalanceReportV2(seeds);
-    const b = buildBalanceReportV2(seeds);
-    expect(a).toEqual(b);
+    expect(buildBalanceReportV2(seeds)).toEqual(buildBalanceReportV2(seeds));
+    expect(buildEarlyRoundBalanceReportV2(seeds)).toEqual(buildEarlyRoundBalanceReportV2(seeds));
   });
 });
 
@@ -449,11 +478,54 @@ describe('buildBalanceReport smoke test', () => {
 });
 
 describe('buildBalanceReportV2 smoke test', () => {
-  it('runs against a small seed batch without throwing', () => {
+  it('runs against a small seed batch without throwing (late-round regime)', () => {
     const report = buildBalanceReportV2([1, 2, 3, 4, 5, 6]);
     expect(report.sampleMatches).toBe(6);
     expect(report.goals.sampleSize).toBe(6);
-    expect(report.postShootoutDrawRate).toBe(0);
+    expect(report.undecidedRate).toBe(0);
+    expect(report.finalDrawRate).toBe(0);
     expect(report.moraleSnowball.managers).toBe(16); // default roster size
+  });
+});
+
+describe('buildEarlyRoundBalanceReportV2 smoke test', () => {
+  it('runs against a small seed batch without throwing (early-round regime)', () => {
+    const report = buildEarlyRoundBalanceReportV2([1, 2, 3, 4, 5, 6]);
+    expect(report.sampleMatches).toBe(6);
+    expect(report.goals.sampleSize).toBe(6);
+    expect(report.undecidedRate).toBe(0); // no shootout should ever fire
+  });
+
+  it('never produces a shootout — shootoutEnabled=false is honored, checked directly on the raw results (undecidedRate would not catch a stray shootout, only a MISSING one)', () => {
+    const formation = FORMATIONS.find((f) => f.id === '4-3-3')!;
+    const flatSide = (id: string): MatchSide => ({
+      id,
+      xi: formation.slots.map((pos, i) => ({
+        position: pos,
+        player: { id: `${id}-${i}`, name: `${id}-${i}`, nation: 'BRA', year: 2026, position: pos, rating: 80 },
+      })),
+      tactics: { formationId: formation.id, style: 'balanced' },
+    });
+    const home = flatSide('h');
+    const away = flatSide('a');
+    let sawLevel = false;
+    for (let seed = 0; seed < 300; seed++) {
+      const r = resolveMatch(home, away, seed, false);
+      if (r.homeGoals === r.awayGoals) sawLevel = true;
+      expect(r.shootout).toBeUndefined();
+    }
+    expect(sawLevel).toBe(true); // proves the sample actually exercised level scores
+  });
+});
+
+describe('finalDrawRate', () => {
+  it('counts genuine draws (matchVerdict decidedBy===draw), not raw level scores', () => {
+    const decisive: MatchResultV2 = { homeId: 'a', awayId: 'b', homeGoals: 2, awayGoals: 0, goals: [] };
+    const genuineDraw: MatchResultV2 = { homeId: 'a', awayId: 'b', homeGoals: 1, awayGoals: 1, goals: [] }; // no shootout
+    const pensDecided: MatchResultV2 = {
+      homeId: 'a', awayId: 'b', homeGoals: 1, awayGoals: 1, goals: [],
+      shootout: { winner: 'away', home: 3, away: 4, kicks: [] },
+    };
+    expect(finalDrawRate([decisive, genuineDraw, pensDecided])).toBeCloseTo(1 / 3, 10);
   });
 });
