@@ -102,6 +102,17 @@ describe('projectMatch — regulation', () => {
     expect(s.clockLabel).toBe('FT');
     expect(s.score).toEqual({ home: 1, away: 1 });
   });
+
+  // Contract with useMatchClock: the clock fires onEnd EXACTLY when
+  // elapsed >= durationMs, and durationMs === matchEndMs(timeline). So the frame
+  // the clock ends on must already read finished — no off-by-one where the match
+  // is "still live" at the elapsed the skip/terminal fire uses. Locks the exact
+  // boundary (matchEndMs, not MATCH_DURATION_MS + slack) for a regulation match.
+  it('reads finished at exactly matchEndMs — the elapsed the clock ends on', () => {
+    expect(matchEndMs(base)).toBe(MATCH_DURATION_MS);
+    expect(projectMatch(base, matchEndMs(base)).finished).toBe(true);
+    expect(projectMatch(base, matchEndMs(base) - 1).finished).toBe(false);
+  });
 });
 
 describe('projectMatch — multigoal celebrations', () => {
