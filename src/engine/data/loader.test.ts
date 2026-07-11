@@ -127,7 +127,7 @@ describe('back-compat adapter (CONTRACT §7)', () => {
   it('dataV2 ON returns the 12 2026 nations as coarse players', () => {
     const coarse = activeCoarseSquads(true, 2026);
     expect(v2Nations(2026).length).toBe(12);
-    expect(coarse.length).toBe(12 * 16);
+    expect(coarse.length).toBe(12 * 18); // 2026 squads carry 18 players each
     for (const p of coarse) expect(['GK', 'DF', 'MF', 'FW']).toContain(p.position);
   });
 });
