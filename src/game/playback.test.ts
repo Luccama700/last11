@@ -427,3 +427,60 @@ describe('formationAnchors + dotView', () => {
     );
   });
 });
+
+describe('dotView — individual movement (C1, post-playtest de-unison pass)', () => {
+  // Playtest critique: all dots moved up and down in unison. These lock the new
+  // per-player character model: distinct paths per index, position-scaled energy,
+  // momentum-scaled urgency, and the pressed side's back line sinking.
+  const anchors = formationAnchors('4-3-3');
+  const ball = { x: 0.5, y: 0.5 };
+  const sweep = Array.from({ length: 40 }, (_, k) => k * 700); // ~28s of frames
+  const idx = (p: string) => anchors.findIndex((a) => a.position === p);
+
+  /** Total roam range (x span + y span) of one dot across the sweep. */
+  const roam = (i: number, momentum = 0) => {
+    let minX = 1, maxX = 0, minY = 1, maxY = 0;
+    for (const t of sweep) {
+      const d = dotView('home', anchors[i], ball, 'away', t, i, momentum);
+      minX = Math.min(minX, d.x); maxX = Math.max(maxX, d.x);
+      minY = Math.min(minY, d.y); maxY = Math.max(maxY, d.y);
+    }
+    return maxX - minX + (maxY - minY);
+  };
+
+  it('two players on the same anchor never move in unison', () => {
+    const cb = idx('CB'); // 4-3-3 has twin CBs sharing an anchor position
+    for (const t of [500, 5000, 12000]) {
+      const a = dotView('home', anchors[cb], ball, 'home', t, 3);
+      const b = dotView('home', anchors[cb], ball, 'home', t, 4);
+      expect(Math.abs(a.x - b.x) + Math.abs(a.y - b.y)).toBeGreaterThan(0.001);
+    }
+  });
+
+  it('movement budget rises through the spine: GK < CB < ST', () => {
+    expect(roam(0)).toBeLessThan(roam(idx('CB')));
+    expect(roam(idx('CB'))).toBeLessThan(roam(idx('ST')));
+  });
+
+  it('the outplayed side visibly hustles — urgency widens the roam', () => {
+    const st = idx('ST');
+    expect(roam(st, -1)).toBeGreaterThan(roam(st, 0) * 1.1);
+  });
+
+  it('under siege the back line sinks toward its own goal', () => {
+    const cb = idx('CB');
+    const avgX = (momentum: number) =>
+      sweep.reduce(
+        (s, t) => s + dotView('home', anchors[cb], ball, 'away', t, cb, momentum).x,
+        0,
+      ) / sweep.length;
+    expect(avgX(-1)).toBeLessThan(avgX(0));
+  });
+
+  it('momentum defaults to 0 — legacy 6-arg calls are unchanged', () => {
+    const st = idx('ST');
+    expect(dotView('home', anchors[st], ball, 'home', 4000, st)).toEqual(
+      dotView('home', anchors[st], ball, 'home', 4000, st, 0),
+    );
+  });
+});

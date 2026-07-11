@@ -268,8 +268,12 @@ function Pitch(props: {
 
   const homeAnchors = formationAnchors(timeline.homeFormationId);
   const awayAnchors = formationAnchors(timeline.awayFormationId);
-  const homeDots = homeAnchors.map((a, i) => dotView('home', a, pb.ball, pb.possession, elapsed, i));
-  const awayDots = awayAnchors.map((a, i) => dotView('away', a, pb.ball, pb.possession, elapsed, i + 40));
+  const homeDots = homeAnchors.map((a, i) =>
+    dotView('home', a, pb.ball, pb.possession, elapsed, i, pb.momentum),
+  );
+  const awayDots = awayAnchors.map((a, i) =>
+    dotView('away', a, pb.ball, pb.possession, elapsed, i + 40, pb.momentum),
+  );
 
   return (
     <div

@@ -62,8 +62,38 @@ export function formationAnchors(formationId: string): DotAnchor[] {
 export interface DotView { team: Team; x: number; y: number; isGK: boolean }
 
 /**
- * Pseudo-moving dot: eases from its formation anchor toward the ball's zone by
- * possession, plus a per-index wobble on elapsed. PURE — no per-dot simulation.
+ * Positional energy budget (Main's C1 creative spec, post-playtest): how much a
+ * player in this role roams. Keepers are near-static; the budget rises through
+ * the spine to the front line so strikers are visibly the busiest dots.
+ */
+const POSITION_ENERGY: Readonly<Record<Position, number>> = {
+  GK: 0.15,
+  CB: 0.55, RB: 0.9, LB: 0.9,
+  CDM: 0.8, CM: 1.0, CAM: 1.1, RM: 1.15, LM: 1.15,
+  RW: 1.2, LW: 1.2, ST: 1.25,
+};
+
+const TWO_PI = Math.PI * 2;
+/** Cheap stable hash → [0,1). Pure function of the index — deterministic,
+ *  MP-safe, and it never changes between frames (a dot's "character"). */
+const hash01 = (n: number) => {
+  const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return s - Math.floor(s);
+};
+
+/**
+ * Pseudo-moving dot — PURE, no per-dot simulation (CONTRACT §5 holds).
+ * Post-playtest rework (C1): the old model gave every dot the same wobble and
+ * the same rigid ball-pull, so the team translated as one block ("unison" was
+ * the #1 immersion complaint). Now each dot has:
+ *  - a stable per-index CHARACTER: personal phase, tempo (0.75–1.3×) and stride;
+ *  - a positional ENERGY budget (POSITION_ENERGY): GK near-static → ST busiest;
+ *  - a personal lissajous PATROL orbit (two incommensurate frequencies) instead
+ *    of a shared shimmy, plus a high-frequency micro-JITTER;
+ *  - a per-player EBB on the ball-pull gain, so when the ball swings the team
+ *    ripples after it instead of sliding as a rigid block;
+ *  - URGENCY from match momentum: the side being outplayed hustles (faster,
+ *    longer strides) and its deepest players sink toward their own goal.
  * Away = full 180° point reflection of the anchor (x→1−x AND y→1−y) so the two
  * teams are rotationally symmetric (TICKSPEC §2, MATCH-SIM refinement).
  */
@@ -74,22 +104,58 @@ export function dotView(
   possession: Team,
   elapsedMs: number,
   index: number,
+  momentum: number = 0,
 ): DotView {
   const bx = team === 'home' ? 0.04 + anchor.x * DOT_SPREAD : 0.96 - anchor.x * DOT_SPREAD;
   const by = team === 'home' ? anchor.y : 1 - anchor.y;
+
+  const phase = hash01(index) * TWO_PI;
+  const tempo = 0.75 + hash01(index + 40.7) * 0.55; // personal clock rate
+  const stride = 0.85 + hash01(index + 80.3) * 0.4; // personal roam radius
+  const momentumFor = team === 'home' ? momentum : -momentum;
+  const pressed = Math.max(0, -momentumFor); // 0..1: how hard this side is being outplayed
+  const urgency = 1 + 0.5 * pressed;
+
   if (anchor.isGK) {
-    // keeper hugs the line, shadowing the ball's lane a little
-    return { team, x: bx, y: 0.5 + (ball.y - 0.5) * 0.18, isGK: true };
+    // keeper: near-static — shadows the ball's lane with a tiny personal sway
+    // so even he never reads as frozen
+    const sway = Math.sin(elapsedMs * 0.0016 * tempo + phase) * 0.004;
+    return {
+      team,
+      x: clamp(bx + sway * 0.5, 0.02, 0.98),
+      y: clamp(0.5 + (ball.y - 0.5) * 0.18 + sway, 0.05, 0.95),
+      isGK: true,
+    };
   }
+
+  const energy = POSITION_ENERGY[anchor.position];
   const attacking = possession === team;
-  const pullX = attacking ? 0.2 : 0.12;
-  const pullY = attacking ? 0.16 : 0.22;
-  const wobX = Math.sin(elapsedMs * 0.0021 + index * 1.7) * 0.006;
-  const wobY = Math.cos(elapsedMs * 0.0019 + index) * 0.006;
+
+  // ball pull with per-player gain + slow personal ebb — attackers chase harder,
+  // and no two players step up at quite the same moment
+  const chase = (0.85 + hash01(index + 7.7) * 0.3) * (0.8 + energy * 0.35);
+  const ebb = 1 + 0.3 * Math.sin(elapsedMs * 0.00085 * tempo + phase * 1.9);
+  const pullX = (attacking ? 0.2 : 0.12) * chase * ebb;
+  const pullY = (attacking ? 0.16 : 0.22) * chase * ebb;
+
+  // personal patrol orbit: x/y frequencies deliberately incommensurate so the
+  // path is a loop, not a line — reads as a player working his zone
+  const w = 0.0021 * tempo * urgency;
+  const patX = Math.sin(elapsedMs * w + phase) * 0.013 * energy * stride * urgency;
+  const patY = Math.cos(elapsedMs * w * 0.83 + phase * 1.7) * 0.011 * energy * stride * urgency;
+
+  // micro-jitter: barely-visible twitch so nobody ever stands perfectly still
+  const jitX = Math.sin(elapsedMs * 0.011 + phase * 13) * 0.0022;
+  const jitY = Math.cos(elapsedMs * 0.0127 + phase * 17) * 0.0022;
+
+  // under siege: the outplayed side's deepest players sink toward their goal
+  const sink = pressed * Math.max(0, 0.4 - anchor.x) * 0.12;
+  const sinkX = team === 'home' ? -sink : sink;
+
   return {
     team,
-    x: clamp(bx + (ball.x - bx) * pullX + wobX, 0.02, 0.98),
-    y: clamp(by + (ball.y - by) * pullY + wobY, 0.05, 0.95),
+    x: clamp(bx + (ball.x - bx) * pullX + patX + jitX + sinkX, 0.02, 0.98),
+    y: clamp(by + (ball.y - by) * pullY + patY + jitY, 0.05, 0.95),
     isGK: false,
   };
 }
