@@ -1,0 +1,33 @@
+{
+  "$comment": "SAMPLE squad in proposed schema v2 (docs/redesign/PLAN-database.md). NOT wired into src/. Roster/numbers/clubs verified against Wikipedia (2002 FIFA World Cup squads; Brazil at the 2002 FIFA World Cup). Detailed positions are role-at-this-tournament (3-5-2 / 3-4-1-2). Ratings are per-tournament snapshots on the proposed absolute, decompressed 1-99 scale — DRAFT values for Lucca to calibrate.",
+  "nation": "BRA",
+  "name": "Brazil",
+  "year": 2002,
+  "result": "Winners",
+  "notes": "Scolari's 3-5-2 with the '3R' (Ronaldo-Rivaldo-Ronaldinho). Ronaldo's redemption tournament: 8 goals, Golden Boot.",
+  "players": [
+    { "id": "bra-2002-marcos",         "name": "Marcos",          "fullName": "Marcos Roberto Silveira Reis",        "pos": "GK",  "rating": 87, "shirt": 1,  "club": "Palmeiras" },
+    { "id": "bra-2002-cafu",           "name": "Cafu",            "fullName": "Marcos Evangelista de Morais",        "pos": "RB",  "rating": 89, "shirt": 2,  "club": "Roma" },
+    { "id": "bra-2002-lucio",          "name": "Lúcio",           "fullName": "Lucimar da Silva Ferreira",           "pos": "CB",  "rating": 85, "shirt": 3,  "club": "Bayer Leverkusen" },
+    { "id": "bra-2002-roque-junior",   "name": "Roque Júnior",    "fullName": "José Vítor Roque Júnior",             "pos": "CB",  "rating": 81, "shirt": 4,  "club": "Milan" },
+    { "id": "bra-2002-edmilson",       "name": "Edmílson",        "fullName": "Edmílson José Gomes de Moraes",       "pos": "CB",  "altPos": ["CDM"], "rating": 82, "shirt": 5, "club": "Lyon" },
+    { "id": "bra-2002-roberto-carlos", "name": "Roberto Carlos",  "fullName": "Roberto Carlos da Silva Rocha",       "pos": "LB",  "rating": 89, "shirt": 6,  "club": "Real Madrid" },
+    { "id": "bra-2002-ricardinho",     "name": "Ricardinho",      "fullName": "Ricardo Luís Pozzi Rodrigues",        "pos": "CM",  "altPos": ["CAM"], "rating": 78, "shirt": 7, "club": "Corinthians" },
+    { "id": "bra-2002-gilberto-silva", "name": "Gilberto Silva",  "fullName": "Gilberto Aparecido da Silva",         "pos": "CDM", "rating": 84, "shirt": 8,  "club": "Atlético Mineiro" },
+    { "id": "bra-2002-ronaldo",        "name": "Ronaldo",         "fullName": "Ronaldo Luís Nazário de Lima",        "pos": "ST",  "rating": 97, "shirt": 9,  "club": "Inter Milan" },
+    { "id": "bra-2002-rivaldo",        "name": "Rivaldo",         "fullName": "Rivaldo Vítor Borba Ferreira",        "pos": "CAM", "altPos": ["LW", "ST"], "rating": 91, "shirt": 10, "club": "Barcelona" },
+    { "id": "bra-2002-ronaldinho",     "name": "Ronaldinho",      "fullName": "Ronaldo de Assis Moreira",            "pos": "CAM", "altPos": ["RW"], "rating": 90, "shirt": 11, "club": "Paris Saint-Germain" },
+    { "id": "bra-2002-dida",           "name": "Dida",            "fullName": "Nélson de Jesus Silva",               "pos": "GK",  "rating": 82, "shirt": 12, "club": "Corinthians" },
+    { "id": "bra-2002-belletti",       "name": "Belletti",        "fullName": "Juliano Haus Belletti",               "pos": "RB",  "rating": 80, "shirt": 13, "club": "São Paulo" },
+    { "id": "bra-2002-polga",          "name": "Ânderson Polga",  "fullName": "Ânderson Cléber Beraldo",             "pos": "CB",  "rating": 77, "shirt": 14, "club": "Grêmio" },
+    { "id": "bra-2002-kleberson",      "name": "Kléberson",       "fullName": "José Kléberson Pereira",              "pos": "CM",  "altPos": ["RM"], "rating": 80, "shirt": 15, "club": "Atlético Paranaense" },
+    { "id": "bra-2002-junior",         "name": "Júnior",          "fullName": "Leomar Leiria",                       "pos": "LB",  "rating": 79, "shirt": 16, "club": "Parma" },
+    { "id": "bra-2002-denilson",       "name": "Denílson",        "fullName": "Denílson de Oliveira Araújo",         "pos": "LW",  "altPos": ["RW"], "rating": 80, "shirt": 17, "club": "Real Betis" },
+    { "id": "bra-2002-vampeta",        "name": "Vampeta",         "fullName": "Marcos André Batista Santos",         "pos": "CDM", "altPos": ["CM"], "rating": 78, "shirt": 18, "club": "Corinthians" },
+    { "id": "bra-2002-juninho",        "name": "Juninho Paulista","fullName": "Osvaldo Giroldo Júnior",              "pos": "CAM", "altPos": ["CM"], "rating": 78, "shirt": 19, "club": "Flamengo" },
+    { "id": "bra-2002-edilson",        "name": "Edílson",         "fullName": "Edílson da Silva Ferreira",           "pos": "RW",  "altPos": ["ST"], "rating": 79, "shirt": 20, "club": "Cruzeiro" },
+    { "id": "bra-2002-luizao",         "name": "Luizão",          "fullName": "Luís Carlos Bombonato Goulart",       "pos": "ST",  "rating": 79, "shirt": 21, "club": "Grêmio" },
+    { "id": "bra-2002-rogerio-ceni",   "name": "Rogério Ceni",    "fullName": "Rogério Ceni",                        "pos": "GK",  "rating": 80, "shirt": 22, "club": "São Paulo" },
+    { "id": "bra-2002-kaka",           "name": "Kaká",            "fullName": "Ricardo Izecson dos Santos Leite",    "pos": "CAM", "rating": 78, "shirt": 23, "club": "São Paulo" }
+  ]
+}
