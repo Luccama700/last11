@@ -1,7 +1,7 @@
 # RATINGS-LADDER.md — calibration sheet for Lucca
 
 Every squad in `src/engine/data/squads-v2.json` with its **top-3 rated players**, so you
-can red-pen the whole scale in one sitting. **47 squads / 833 players / 20 nations,
+can red-pen the whole scale in one sitting. **47 squads / 857 players / 20 nations,
 1930→2026** (every tournament year covered except the WWII-cancelled 1942/1946). Ratings
 are per-tournament snapshots on your DECISIONS.md anchors.
 
@@ -54,20 +54,27 @@ regular · ≤81 = depth. Tight top, high floor, defenders not punished.
 
 ## Current squads — 2026 (top 3 each, by squad ceiling)
 
+**Rebuilt 2026-07-11** against the actual, web-verified 2026 World Cup rosters (the
+tournament is live) — the earlier lists were stale/predicted. Squads are now 18 players
+with real call-ups (e.g. Brazil: Neymar in, Rodrygo out; England under Tuchel: no Foden/
+Palmer/Trent). Ratings tuned per Lucca: **Kane → 93**, England lifted, and the +1–2
+inflation on recent 86–88s trimmed (De Bruyne 86, de Jong 88, Cubarsí 86, Bruno/Bernardo/
+Leão −1, Enzo/Mac Allister/Lautaro/Álvarez −1).
+
 | Squad | Top 3 |
 |---|---|
-| **France** | Mbappé **93** · Dembélé 91 · Saliba 89 |
+| **France** | Mbappé **93** · Dembélé 91 · Saliba 88 |
+| **England** | Kane **93** · Bellingham 91 · Saka 90 |
 | **Brazil** | Vinícius **92** · Raphinha 90 · Alisson 90 |
-| **Argentina** | Messi **92** · J. Álvarez 90 · Lautaro 89 |
+| **Argentina** | Messi **92** · J. Álvarez 89 · E. Martínez 89 |
 | **Spain** | Rodri **92** · Yamal 92 · Pedri 90 |
-| **England** | Bellingham **91** · Kane 91 · Saka 90 |
-| **Germany** | Musiala **91** · Wirtz 91 · ter Stegen 87 |
-| **Belgium** | Courtois **90** · De Bruyne 88 · Doku 85 |
-| **Portugal** | Rúben Dias **89** · Vitinha 88 · Bruno Fernandes 88 |
-| **Netherlands** | van Dijk **89** · de Jong 89 · Reijnders 86 |
+| **Germany** | Musiala **91** · Wirtz 91 · Neuer 87 |
+| **Belgium** | Courtois **90** · De Bruyne 86 · Doku 85 |
+| **Netherlands** | van Dijk **89** · de Jong 88 · Reijnders 86 |
 | **Morocco** | Hakimi **89** · Bounou 86 · Brahim Díaz 84 |
-| **Croatia** | Gvardiol **88** · Modrić 86 · Kovačić 84 |
-| **Japan** | Mitoma **86** · Kubo 85 · Endo 82 |
+| **Portugal** | Vitinha / Rúben Dias **88** · Nuno Mendes 87 |
+| **Croatia** | Gvardiol **88** · Modrić 85 · Kovačić 84 |
+| **Japan** | Kubo **85** · Endo 82 · Kamada 82 |
 
 ## Coverage: 20 nations, 1930→2026, no year gap
 
@@ -104,7 +111,7 @@ rated at his age each year:
 - **Modrić:** 2018: **91** (Ballon d'Or peak) → 2026: **86** (age-40 veteran)
 - **Cristiano Ronaldo:** 2006: **87** (young winger) → 2026: **85** (age-41 veteran)
 - **Dembélé:** 2018: **83** → 2026: **91** (2025 Ballon d'Or form)
-- **Kane:** 2018: **88** → 2026: **91** · **Lautaro:** 2022: 84 → 2026: 89 ·
+- **Kane:** 2018: **90** → 2026: **93** (Lucca's lift) · **Lautaro:** 2022: 84 → 2026: 88 ·
   **Enzo Fernández:** 2022: 85 → 2026: 88 · **J. Álvarez:** 2022: 87 → 2026: 90
 - **Hakimi:** 2022: 87 → 2026: 89 · **Amrabat:** 2022: 84 (career tournament) → 2026: 82
 - (Flat by design: Bounou 86→86, E. Martínez 89→89, Aguerd/En-Nesyri/Tagliafico 82→82.)
