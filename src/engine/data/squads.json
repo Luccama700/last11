@@ -1,0 +1,220 @@
+{
+  "nations": [
+    {
+      "code": "BRA",
+      "name": "Brazil",
+      "players": [
+        { "id": "bra-alisson", "name": "Alisson", "pos": "GK", "rating": 89 },
+        { "id": "bra-bento", "name": "Bento", "pos": "GK", "rating": 80 },
+        { "id": "bra-marquinhos", "name": "Marquinhos", "pos": "DF", "rating": 86 },
+        { "id": "bra-gabriel", "name": "Gabriel Magalhães", "pos": "DF", "rating": 85 },
+        { "id": "bra-danilo", "name": "Danilo", "pos": "DF", "rating": 80 },
+        { "id": "bra-wesley", "name": "Wesley", "pos": "DF", "rating": 78 },
+        { "id": "bra-casemiro", "name": "Casemiro", "pos": "MF", "rating": 84 },
+        { "id": "bra-bruno-g", "name": "Bruno Guimarães", "pos": "MF", "rating": 86 },
+        { "id": "bra-paqueta", "name": "Lucas Paquetá", "pos": "MF", "rating": 84 },
+        { "id": "bra-vinicius", "name": "Vinícius Júnior", "pos": "FW", "rating": 92 },
+        { "id": "bra-rodrygo", "name": "Rodrygo", "pos": "FW", "rating": 88 },
+        { "id": "bra-raphinha", "name": "Raphinha", "pos": "FW", "rating": 89 }
+      ]
+    },
+    {
+      "code": "ARG",
+      "name": "Argentina",
+      "players": [
+        { "id": "arg-e-martinez", "name": "Emiliano Martínez", "pos": "GK", "rating": 88 },
+        { "id": "arg-rulli", "name": "Gerónimo Rulli", "pos": "GK", "rating": 80 },
+        { "id": "arg-romero", "name": "Cristian Romero", "pos": "DF", "rating": 86 },
+        { "id": "arg-l-martinez", "name": "Lisandro Martínez", "pos": "DF", "rating": 85 },
+        { "id": "arg-molina", "name": "Nahuel Molina", "pos": "DF", "rating": 81 },
+        { "id": "arg-tagliafico", "name": "Nicolás Tagliafico", "pos": "DF", "rating": 79 },
+        { "id": "arg-enzo", "name": "Enzo Fernández", "pos": "MF", "rating": 87 },
+        { "id": "arg-mac-allister", "name": "Alexis Mac Allister", "pos": "MF", "rating": 87 },
+        { "id": "arg-de-paul", "name": "Rodrigo De Paul", "pos": "MF", "rating": 84 },
+        { "id": "arg-messi", "name": "Lionel Messi", "pos": "FW", "rating": 90 },
+        { "id": "arg-alvarez", "name": "Julián Álvarez", "pos": "FW", "rating": 89 },
+        { "id": "arg-lautaro", "name": "Lautaro Martínez", "pos": "FW", "rating": 88 }
+      ]
+    },
+    {
+      "code": "FRA",
+      "name": "France",
+      "players": [
+        { "id": "fra-maignan", "name": "Mike Maignan", "pos": "GK", "rating": 88 },
+        { "id": "fra-samba", "name": "Brice Samba", "pos": "GK", "rating": 79 },
+        { "id": "fra-saliba", "name": "William Saliba", "pos": "DF", "rating": 88 },
+        { "id": "fra-konate", "name": "Ibrahima Konaté", "pos": "DF", "rating": 85 },
+        { "id": "fra-theo", "name": "Theo Hernandez", "pos": "DF", "rating": 84 },
+        { "id": "fra-kounde", "name": "Jules Koundé", "pos": "DF", "rating": 84 },
+        { "id": "fra-tchouameni", "name": "Aurélien Tchouaméni", "pos": "MF", "rating": 86 },
+        { "id": "fra-camavinga", "name": "Eduardo Camavinga", "pos": "MF", "rating": 84 },
+        { "id": "fra-rabiot", "name": "Adrien Rabiot", "pos": "MF", "rating": 82 },
+        { "id": "fra-mbappe", "name": "Kylian Mbappé", "pos": "FW", "rating": 94 },
+        { "id": "fra-dembele", "name": "Ousmane Dembélé", "pos": "FW", "rating": 90 },
+        { "id": "fra-olise", "name": "Michael Olise", "pos": "FW", "rating": 87 }
+      ]
+    },
+    {
+      "code": "ENG",
+      "name": "England",
+      "players": [
+        { "id": "eng-pickford", "name": "Jordan Pickford", "pos": "GK", "rating": 84 },
+        { "id": "eng-henderson", "name": "Dean Henderson", "pos": "GK", "rating": 79 },
+        { "id": "eng-stones", "name": "John Stones", "pos": "DF", "rating": 84 },
+        { "id": "eng-guehi", "name": "Marc Guéhi", "pos": "DF", "rating": 83 },
+        { "id": "eng-taa", "name": "Trent Alexander-Arnold", "pos": "DF", "rating": 86 },
+        { "id": "eng-lewis-skelly", "name": "Myles Lewis-Skelly", "pos": "DF", "rating": 80 },
+        { "id": "eng-rice", "name": "Declan Rice", "pos": "MF", "rating": 88 },
+        { "id": "eng-bellingham", "name": "Jude Bellingham", "pos": "MF", "rating": 92 },
+        { "id": "eng-palmer", "name": "Cole Palmer", "pos": "MF", "rating": 89 },
+        { "id": "eng-kane", "name": "Harry Kane", "pos": "FW", "rating": 91 },
+        { "id": "eng-saka", "name": "Bukayo Saka", "pos": "FW", "rating": 89 },
+        { "id": "eng-foden", "name": "Phil Foden", "pos": "FW", "rating": 87 }
+      ]
+    },
+    {
+      "code": "ESP",
+      "name": "Spain",
+      "players": [
+        { "id": "esp-simon", "name": "Unai Simón", "pos": "GK", "rating": 85 },
+        { "id": "esp-raya", "name": "David Raya", "pos": "GK", "rating": 84 },
+        { "id": "esp-cubarsi", "name": "Pau Cubarsí", "pos": "DF", "rating": 85 },
+        { "id": "esp-laporte", "name": "Aymeric Laporte", "pos": "DF", "rating": 82 },
+        { "id": "esp-cucurella", "name": "Marc Cucurella", "pos": "DF", "rating": 82 },
+        { "id": "esp-carvajal", "name": "Dani Carvajal", "pos": "DF", "rating": 83 },
+        { "id": "esp-rodri", "name": "Rodri", "pos": "MF", "rating": 91 },
+        { "id": "esp-pedri", "name": "Pedri", "pos": "MF", "rating": 89 },
+        { "id": "esp-fabian", "name": "Fabián Ruiz", "pos": "MF", "rating": 85 },
+        { "id": "esp-yamal", "name": "Lamine Yamal", "pos": "FW", "rating": 93 },
+        { "id": "esp-nico", "name": "Nico Williams", "pos": "FW", "rating": 87 },
+        { "id": "esp-morata", "name": "Álvaro Morata", "pos": "FW", "rating": 82 }
+      ]
+    },
+    {
+      "code": "GER",
+      "name": "Germany",
+      "players": [
+        { "id": "ger-ter-stegen", "name": "Marc-André ter Stegen", "pos": "GK", "rating": 87 },
+        { "id": "ger-baumann", "name": "Oliver Baumann", "pos": "GK", "rating": 79 },
+        { "id": "ger-rudiger", "name": "Antonio Rüdiger", "pos": "DF", "rating": 86 },
+        { "id": "ger-tah", "name": "Jonathan Tah", "pos": "DF", "rating": 84 },
+        { "id": "ger-kimmich", "name": "Joshua Kimmich", "pos": "DF", "rating": 86 },
+        { "id": "ger-raum", "name": "David Raum", "pos": "DF", "rating": 81 },
+        { "id": "ger-musiala", "name": "Jamal Musiala", "pos": "MF", "rating": 90 },
+        { "id": "ger-wirtz", "name": "Florian Wirtz", "pos": "MF", "rating": 90 },
+        { "id": "ger-goretzka", "name": "Leon Goretzka", "pos": "MF", "rating": 82 },
+        { "id": "ger-havertz", "name": "Kai Havertz", "pos": "FW", "rating": 85 },
+        { "id": "ger-sane", "name": "Leroy Sané", "pos": "FW", "rating": 83 },
+        { "id": "ger-fullkrug", "name": "Niclas Füllkrug", "pos": "FW", "rating": 80 }
+      ]
+    },
+    {
+      "code": "POR",
+      "name": "Portugal",
+      "players": [
+        { "id": "por-costa", "name": "Diogo Costa", "pos": "GK", "rating": 86 },
+        { "id": "por-sa", "name": "José Sá", "pos": "GK", "rating": 80 },
+        { "id": "por-dias", "name": "Rúben Dias", "pos": "DF", "rating": 88 },
+        { "id": "por-inacio", "name": "Gonçalo Inácio", "pos": "DF", "rating": 82 },
+        { "id": "por-mendes", "name": "Nuno Mendes", "pos": "DF", "rating": 86 },
+        { "id": "por-cancelo", "name": "João Cancelo", "pos": "DF", "rating": 83 },
+        { "id": "por-vitinha", "name": "Vitinha", "pos": "MF", "rating": 88 },
+        { "id": "por-bruno", "name": "Bruno Fernandes", "pos": "MF", "rating": 87 },
+        { "id": "por-neves", "name": "João Neves", "pos": "MF", "rating": 86 },
+        { "id": "por-ronaldo", "name": "Cristiano Ronaldo", "pos": "FW", "rating": 86 },
+        { "id": "por-leao", "name": "Rafael Leão", "pos": "FW", "rating": 86 },
+        { "id": "por-felix", "name": "João Félix", "pos": "FW", "rating": 80 }
+      ]
+    },
+    {
+      "code": "NED",
+      "name": "Netherlands",
+      "players": [
+        { "id": "ned-verbruggen", "name": "Bart Verbruggen", "pos": "GK", "rating": 83 },
+        { "id": "ned-flekken", "name": "Mark Flekken", "pos": "GK", "rating": 79 },
+        { "id": "ned-van-dijk", "name": "Virgil van Dijk", "pos": "DF", "rating": 89 },
+        { "id": "ned-ake", "name": "Nathan Aké", "pos": "DF", "rating": 83 },
+        { "id": "ned-dumfries", "name": "Denzel Dumfries", "pos": "DF", "rating": 83 },
+        { "id": "ned-van-de-ven", "name": "Micky van de Ven", "pos": "DF", "rating": 84 },
+        { "id": "ned-de-jong", "name": "Frenkie de Jong", "pos": "MF", "rating": 87 },
+        { "id": "ned-reijnders", "name": "Tijjani Reijnders", "pos": "MF", "rating": 85 },
+        { "id": "ned-gravenberch", "name": "Ryan Gravenberch", "pos": "MF", "rating": 86 },
+        { "id": "ned-gakpo", "name": "Cody Gakpo", "pos": "FW", "rating": 85 },
+        { "id": "ned-depay", "name": "Memphis Depay", "pos": "FW", "rating": 82 },
+        { "id": "ned-simons", "name": "Xavi Simons", "pos": "FW", "rating": 84 }
+      ]
+    },
+    {
+      "code": "BEL",
+      "name": "Belgium",
+      "players": [
+        { "id": "bel-courtois", "name": "Thibaut Courtois", "pos": "GK", "rating": 90 },
+        { "id": "bel-casteels", "name": "Koen Casteels", "pos": "GK", "rating": 81 },
+        { "id": "bel-faes", "name": "Wout Faes", "pos": "DF", "rating": 79 },
+        { "id": "bel-theate", "name": "Arthur Theate", "pos": "DF", "rating": 79 },
+        { "id": "bel-castagne", "name": "Timothy Castagne", "pos": "DF", "rating": 79 },
+        { "id": "bel-de-cuyper", "name": "Maxim De Cuyper", "pos": "DF", "rating": 78 },
+        { "id": "bel-de-bruyne", "name": "Kevin De Bruyne", "pos": "MF", "rating": 88 },
+        { "id": "bel-onana", "name": "Amadou Onana", "pos": "MF", "rating": 82 },
+        { "id": "bel-tielemans", "name": "Youri Tielemans", "pos": "MF", "rating": 83 },
+        { "id": "bel-lukaku", "name": "Romelu Lukaku", "pos": "FW", "rating": 84 },
+        { "id": "bel-doku", "name": "Jérémy Doku", "pos": "FW", "rating": 85 },
+        { "id": "bel-trossard", "name": "Leandro Trossard", "pos": "FW", "rating": 82 }
+      ]
+    },
+    {
+      "code": "CRO",
+      "name": "Croatia",
+      "players": [
+        { "id": "cro-livakovic", "name": "Dominik Livaković", "pos": "GK", "rating": 84 },
+        { "id": "cro-ivusic", "name": "Ivica Ivušić", "pos": "GK", "rating": 77 },
+        { "id": "cro-gvardiol", "name": "Joško Gvardiol", "pos": "DF", "rating": 87 },
+        { "id": "cro-sutalo", "name": "Josip Šutalo", "pos": "DF", "rating": 79 },
+        { "id": "cro-stanisic", "name": "Josip Stanišić", "pos": "DF", "rating": 79 },
+        { "id": "cro-sosa", "name": "Borna Sosa", "pos": "DF", "rating": 77 },
+        { "id": "cro-modric", "name": "Luka Modrić", "pos": "MF", "rating": 85 },
+        { "id": "cro-kovacic", "name": "Mateo Kovačić", "pos": "MF", "rating": 83 },
+        { "id": "cro-brozovic", "name": "Marcelo Brozović", "pos": "MF", "rating": 81 },
+        { "id": "cro-kramaric", "name": "Andrej Kramarić", "pos": "FW", "rating": 81 },
+        { "id": "cro-perisic", "name": "Ivan Perišić", "pos": "FW", "rating": 78 },
+        { "id": "cro-petkovic", "name": "Bruno Petković", "pos": "FW", "rating": 76 }
+      ]
+    },
+    {
+      "code": "MAR",
+      "name": "Morocco",
+      "players": [
+        { "id": "mar-bounou", "name": "Yassine Bounou", "pos": "GK", "rating": 86 },
+        { "id": "mar-munir", "name": "Munir El Kajoui", "pos": "GK", "rating": 76 },
+        { "id": "mar-hakimi", "name": "Achraf Hakimi", "pos": "DF", "rating": 89 },
+        { "id": "mar-aguerd", "name": "Nayef Aguerd", "pos": "DF", "rating": 82 },
+        { "id": "mar-mazraoui", "name": "Noussair Mazraoui", "pos": "DF", "rating": 82 },
+        { "id": "mar-saiss", "name": "Romain Saïss", "pos": "DF", "rating": 77 },
+        { "id": "mar-amrabat", "name": "Sofyan Amrabat", "pos": "MF", "rating": 82 },
+        { "id": "mar-ounahi", "name": "Azzedine Ounahi", "pos": "MF", "rating": 79 },
+        { "id": "mar-saibari", "name": "Ismael Saibari", "pos": "MF", "rating": 78 },
+        { "id": "mar-brahim", "name": "Brahim Díaz", "pos": "FW", "rating": 84 },
+        { "id": "mar-ziyech", "name": "Hakim Ziyech", "pos": "FW", "rating": 79 },
+        { "id": "mar-en-nesyri", "name": "Youssef En-Nesyri", "pos": "FW", "rating": 81 }
+      ]
+    },
+    {
+      "code": "JPN",
+      "name": "Japan",
+      "players": [
+        { "id": "jpn-suzuki", "name": "Zion Suzuki", "pos": "GK", "rating": 80 },
+        { "id": "jpn-gonda", "name": "Shūichi Gonda", "pos": "GK", "rating": 75 },
+        { "id": "jpn-tomiyasu", "name": "Takehiro Tomiyasu", "pos": "DF", "rating": 81 },
+        { "id": "jpn-itakura", "name": "Ko Itakura", "pos": "DF", "rating": 79 },
+        { "id": "jpn-sugawara", "name": "Yukinari Sugawara", "pos": "DF", "rating": 77 },
+        { "id": "jpn-ito", "name": "Hiroki Ito", "pos": "DF", "rating": 78 },
+        { "id": "jpn-endo", "name": "Wataru Endo", "pos": "MF", "rating": 81 },
+        { "id": "jpn-morita", "name": "Hidemasa Morita", "pos": "MF", "rating": 79 },
+        { "id": "jpn-kubo", "name": "Takefusa Kubo", "pos": "MF", "rating": 84 },
+        { "id": "jpn-mitoma", "name": "Kaoru Mitoma", "pos": "FW", "rating": 85 },
+        { "id": "jpn-doan", "name": "Ritsu Doan", "pos": "FW", "rating": 80 },
+        { "id": "jpn-ueda", "name": "Ayase Ueda", "pos": "FW", "rating": 78 }
+      ]
+    }
+  ]
+}
