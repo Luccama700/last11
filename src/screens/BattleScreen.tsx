@@ -1,20 +1,49 @@
+import { useState } from 'react';
+import { affinity } from '../engine/affinity';
 import { teamStrength } from '../engine/rating';
 import { SURVIVORS_PER_ROUND } from '../engine/tournament';
+import type { PlayingStyle, XiSlotV2 } from '../engine/types';
 import { aliveOf, humanOf, type GameState } from '../game/state';
+import BetweenMatchBoard from './board/BetweenMatchBoard';
 import MatchPlaybackScreen from './MatchPlaybackScreen';
 
 export default function BattleScreen(props: {
   state: GameState;
   animate: boolean;
+  boardStyle: PlayingStyle;
   onPlayRound: () => void;
   onContinue: () => void;
   onNextFeatured: () => void;
   onFinishRound: () => void;
   onSkipAll: () => void;
+  onBoardSwap: (a: number, b: number) => void;
+  onBoardStyleChange: (s: PlayingStyle) => void;
 }) {
   const { state } = props;
   const human = humanOf(state)!;
   const alive = aliveOf(state);
+  const [boardOpen, setBoardOpen] = useState(false);
+
+  // Round-boundary lineup board (DECISIONS: re-slot + style between rounds). Rounds are
+  // ATOMIC (all 3 sets resolve in one playRound), so a re-slot only affects the NEXT
+  // round — hence the round intro, not the playback flow: keeps table === played score.
+  const denseSlate = (state.humanSlate ?? []).filter((s): s is XiSlotV2 => s !== null);
+  const canAdjust = !!state.formation && denseSlate.length === state.formation.slots.length;
+
+  if (state.battleView === 'intro' && boardOpen && canAdjust) {
+    return (
+      <BetweenMatchBoard
+        formation={state.formation!}
+        xi={denseSlate}
+        mode={state.mode ?? 'classic'}
+        style={props.boardStyle}
+        affinity={affinity}
+        onSwap={props.onBoardSwap}
+        onStyleChange={props.onBoardStyleChange}
+        onDone={() => setBoardOpen(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -28,7 +57,11 @@ export default function BattleScreen(props: {
         </header>
 
         {state.battleView === 'intro' ? (
-          <RoundIntro state={state} onPlayRound={props.onPlayRound} />
+          <RoundIntro
+            state={state}
+            onPlayRound={props.onPlayRound}
+            onAdjust={canAdjust ? () => setBoardOpen(true) : undefined}
+          />
         ) : state.battleView === 'playback' ? (
           <MatchPlaybackScreen
             state={state}
@@ -58,7 +91,7 @@ const TRASH_TALK = [
   'My goalkeeper could captain your whole squad.',
 ];
 
-function RoundIntro(props: { state: GameState; onPlayRound: () => void }) {
+function RoundIntro(props: { state: GameState; onPlayRound: () => void; onAdjust?: () => void }) {
   const { state } = props;
   const alive = aliveOf(state);
   const human = humanOf(state)!;
@@ -100,6 +133,14 @@ function RoundIntro(props: { state: GameState; onPlayRound: () => void }) {
       >
         PLAY ROUND {state.roundIndex + 1} ▶
       </button>
+      {props.onAdjust && (
+        <button
+          onClick={props.onAdjust}
+          className="text-sm font-bold text-slate-400 underline-offset-4 transition hover:text-slate-200 hover:underline"
+        >
+          ⚙ adjust lineup &amp; style
+        </button>
+      )}
       {talker && (
         <p className="mt-2 max-w-md rounded-xl bg-slate-950 px-4 py-2 text-sm italic text-slate-400">
           💬 <span className="font-bold not-italic text-slate-300">{talker.name}:</span> “{line}”

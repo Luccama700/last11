@@ -5,6 +5,7 @@ import {
   pickBotStyle,
   spinNation,
   spinSquadV2,
+  swapSlots,
 } from './engine/draft';
 import { affinity } from './engine/affinity';
 import { detailedToCoarse } from './engine/data/schema';
@@ -172,6 +173,17 @@ export default function App(props: { animate?: boolean }) {
 
   function handleEnterBattle() {
     dispatch({ type: 'ENTER_BATTLE' });
+  }
+
+  // ---- round-boundary lineup board (draftV2): re-slot the human's fielded XI ----
+  // Swaps two fielded players (positions stay put) via the tested `swapSlots` primitive;
+  // draft-page's REARRANGE_XI persists it to humanSlate + the coarse manager xi so the
+  // next round's playRound sees the change. Style change goes through setStyle (tacticsOf).
+  function handleBoardSwap(a: number, b: number) {
+    const human = humanOf(state);
+    const dense = (state.humanSlate ?? []).filter((s): s is XiSlotV2 => s !== null);
+    if (!human || dense.length === 0) return;
+    dispatch({ type: 'REARRANGE_XI', managerId: human.id, xi: swapSlots(dense, a, b) });
   }
 
   // ---- battle playback (simV2 ON) ----
@@ -380,11 +392,14 @@ export default function App(props: { animate?: boolean }) {
         <BattleScreen
           state={state}
           animate={animate}
+          boardStyle={style}
           onPlayRound={handlePlayRound}
           onContinue={handleContinue}
           onNextFeatured={handleNextFeatured}
           onFinishRound={handleFinishRound}
           onSkipAll={handleFinishRound}
+          onBoardSwap={handleBoardSwap}
+          onBoardStyleChange={setStyle}
         />
       );
     case 'steal':
