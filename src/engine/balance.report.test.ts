@@ -3,13 +3,20 @@ import { runTournament, type TournamentLog } from './tournament';
 import {
   TARGETS,
   buildBalanceReport,
+  buildBalanceReportV2,
   cleanSheetRate,
   collectMatches,
   drawRate,
   goalsStats,
   lootSnowball,
+  moraleSnowball,
+  moraleSnowballBatch,
+  postShootoutDrawRate,
   upsetRateByGap,
+  upsetRateByGapV2,
+  type MatchupSample,
 } from './balance.report';
+import type { MatchResultV2 } from './types';
 
 // This file runs under Vitest/Node, where `process` is a real global, but the
 // app's tsconfig has no `@types/node` (browser-lib project). Declare just
@@ -168,6 +175,79 @@ describe('lootSnowball', () => {
   });
 });
 
+describe('postShootoutDrawRate', () => {
+  it('is 0 when every level match carries a shootout', () => {
+    const results: MatchResultV2[] = [
+      { homeId: 'a', awayId: 'b', homeGoals: 1, awayGoals: 1, goals: [], shootout: { winner: 'home', home: 3, away: 2, kicks: [] } },
+      { homeId: 'a', awayId: 'b', homeGoals: 2, awayGoals: 0, goals: [] },
+    ];
+    expect(postShootoutDrawRate(results)).toBe(0);
+  });
+
+  it('flags a level match with no shootout as undecided', () => {
+    const results: MatchResultV2[] = [
+      { homeId: 'a', awayId: 'b', homeGoals: 1, awayGoals: 1, goals: [] }, // no shootout — a broken invariant
+    ];
+    expect(postShootoutDrawRate(results)).toBe(1);
+  });
+});
+
+describe('upsetRateByGapV2', () => {
+  it('buckets by supplied strength gap on the v2 (~60-97) scale and excludes level results', () => {
+    const samples: MatchupSample[] = [
+      {
+        homeStrength: 90,
+        awayStrength: 88, // gap 2 -> "0-5"
+        result: { homeId: 'weak', awayId: 'strong', homeGoals: 0, awayGoals: 0, goals: [] }, // will be excluded (level)
+      },
+      {
+        homeStrength: 70,
+        awayStrength: 90, // gap 20 -> "15+", weaker (home) wins
+        result: { homeId: 'weak', awayId: 'strong', homeGoals: 2, awayGoals: 1, goals: [] },
+      },
+    ];
+    const buckets = upsetRateByGapV2(samples);
+    const small = buckets.find((b) => b.label === '0-5')!;
+    expect(small.decisiveMatches).toBe(0); // the level one was excluded
+    const big = buckets.find((b) => b.label === '15+')!;
+    expect(big.decisiveMatches).toBe(1);
+    expect(big.weakerWinRate).toBe(1);
+  });
+});
+
+describe('moraleSnowball', () => {
+  it('runs deterministically and reports a bounded max morale delta', () => {
+    const a = moraleSnowball(42, 8, 4);
+    const b = moraleSnowball(42, 8, 4);
+    expect(a).toEqual(b);
+    // MORALE_CAP=3 per player; a single-round delta can only come from goal/
+    // assist bumps on THIS manager's own XI, so it should be well under a
+    // single star's rating, not comparable to the ~60-97 strength scale.
+    expect(a.maxMoraleDeltaObserved).toBeGreaterThanOrEqual(0);
+    expect(a.maxMoraleDeltaObserved).toBeLessThan(3);
+  });
+
+  it('rejects an odd manager count (round-robin pairing requires even)', () => {
+    expect(() => moraleSnowball(1, 7, 2)).toThrow(/even/);
+  });
+});
+
+describe('moraleSnowballBatch', () => {
+  it('averages topThird/bottomThird gain across seeds, deterministically', () => {
+    const a = moraleSnowballBatch([1, 2, 3], 8, 4);
+    const b = moraleSnowballBatch([1, 2, 3], 8, 4);
+    expect(a).toEqual(b);
+    expect(a.managers).toBe(8);
+    // sanity: the batch average should sit near the per-seed values, not
+    // wildly outside their range
+    const single = [1, 2, 3].map((s) => moraleSnowball(s, 8, 4));
+    const minTop = Math.min(...single.map((r) => r.topThirdAvgGain));
+    const maxTop = Math.max(...single.map((r) => r.topThirdAvgGain));
+    expect(a.topThirdAvgGain).toBeGreaterThanOrEqual(minTop - 1e-9);
+    expect(a.topThirdAvgGain).toBeLessThanOrEqual(maxTop + 1e-9);
+  });
+});
+
 // Full-batch report: expensive-ish (N tournaments), gated behind BALANCE=1 so
 // `npm test` stays fast. Run with `npm run balance`. This is the v1 baseline
 // to diff engineV2/dataV2 against as they land (DECISIONS.md, Phase I).
@@ -235,6 +315,71 @@ describe.skipIf(!process.env.BALANCE)('balance report (v1 baseline)', () => {
   });
 });
 
+// v2 engine balance report: same BALANCE=1 gate, `npm run balance` prints
+// both. This is the first REAL diff against the v1 baseline logged in
+// ~/Documents/agent-ops/logs/last11-qa-2026-07-11.md.
+describe.skipIf(!process.env.BALANCE)('balance report (v2 engine)', () => {
+  it('prints the full v2 report against the DECISIONS.md targets', () => {
+    const N = 4000; // matches engine.v2.test.ts's own sample size for comparability
+    const seeds = Array.from({ length: N }, (_, i) => i);
+    const report = buildBalanceReportV2(seeds);
+
+    console.log('\n=== Last11 balance report — v2 engine ===');
+    console.log(`sample: ${report.sampleMatches} synthetic matchups\n`);
+
+    console.table({
+      'goals/match': { value: report.goals.mean.toFixed(2), target: TARGETS.goalsPerMatch, note: '' },
+      'draw rate (pre-shootout)': {
+        value: (report.preShootoutDrawRate * 100).toFixed(1) + '%',
+        target: `${TARGETS.preShootoutDrawRate * 100}%`,
+        note: '',
+      },
+      'draw rate (final, post-shootout)': {
+        value: (report.postShootoutDrawRate * 100).toFixed(1) + '%',
+        target: `${TARGETS.postShootoutDrawRate * 100}%`,
+        note: 'should be exactly 0 — see postShootoutDrawRate doc comment',
+      },
+      'scoreless rate': { value: (report.goals.scorelessRate * 100).toFixed(1) + '%', target: '-', note: 'informational' },
+      '5+ goal rate': { value: (report.goals.fivePlusRate * 100).toFixed(1) + '%', target: '-', note: 'informational' },
+      'clean sheet rate': { value: (report.cleanSheetRate * 100).toFixed(1) + '%', target: '-', note: 'informational' },
+    });
+
+    console.log('\nupset rate by strength-gap bucket (v2 overallStrength scale, ~60-97):');
+    console.table(
+      report.upsets.map((u) => ({
+        bucket: u.label,
+        decisiveMatches: u.decisiveMatches,
+        weakerWinRate: Number.isNaN(u.weakerWinRate) ? 'n/a (0 samples)' : (u.weakerWinRate * 100).toFixed(1) + '%',
+      })),
+    );
+
+    console.log('\nmorale snowball (real mechanic, not a proxy):');
+    console.table([
+      {
+        managers: report.moraleSnowball.managers,
+        rounds: report.moraleSnowball.rounds,
+        topThirdAvgGain: report.moraleSnowball.topThirdAvgGain.toFixed(3),
+        bottomThirdAvgGain: report.moraleSnowball.bottomThirdAvgGain.toFixed(3),
+        ratio: Number.isNaN(report.moraleSnowball.ratio) ? 'n/a' : report.moraleSnowball.ratio.toFixed(2),
+        maxMoraleDeltaObserved: report.moraleSnowball.maxMoraleDeltaObserved.toFixed(3),
+      },
+    ]);
+
+    // Same posture as the v1 report: this is a human-read report, not a hard
+    // gate (game-engine's engine.v2.test.ts already owns the hard band
+    // assertions on goals/draws/stronger-win-rate). Sanity-only here.
+    expect(report.sampleMatches).toBe(N);
+    expect(report.postShootoutDrawRate).toBe(0);
+  });
+
+  it('is deterministic: same seed batch => identical report', () => {
+    const seeds = [10, 20, 30, 40, 50];
+    const a = buildBalanceReportV2(seeds);
+    const b = buildBalanceReportV2(seeds);
+    expect(a).toEqual(b);
+  });
+});
+
 // Cheap, always-on smoke test that buildBalanceReport works end-to-end on a
 // handful of real tournaments (not the full N=200 batch) — catches breakage
 // in `npm test` without paying the BALANCE=1 cost.
@@ -254,5 +399,15 @@ describe('buildBalanceReport smoke test', () => {
       0,
     );
     expect(matches.length).toBe(expected);
+  });
+});
+
+describe('buildBalanceReportV2 smoke test', () => {
+  it('runs against a small seed batch without throwing', () => {
+    const report = buildBalanceReportV2([1, 2, 3, 4, 5, 6]);
+    expect(report.sampleMatches).toBe(6);
+    expect(report.goals.sampleSize).toBe(6);
+    expect(report.postShootoutDrawRate).toBe(0);
+    expect(report.moraleSnowball.managers).toBe(16); // default roster size
   });
 });
