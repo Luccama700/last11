@@ -64,6 +64,8 @@ export const FORMATIONS: readonly Formation[] = [
   { id: '5-3-2',   name: '5-3-2',   slots: ['GK', 'RB', 'CB', 'CB', 'CB', 'LB', 'CM', 'CM', 'CM', 'ST', 'ST'] },
   { id: '4-5-1',   name: '4-5-1',   slots: ['GK', 'RB', 'CB', 'CB', 'LB', 'RM', 'CM', 'CM', 'CM', 'LM', 'ST'] },
   { id: '3-4-3',   name: '3-4-3',   slots: ['GK', 'CB', 'CB', 'CB', 'RM', 'CM', 'CM', 'LM', 'RW', 'ST', 'LW'] },
+  { id: '4-1-2-1-2',      name: '4-1-2-1-2',      slots: ['GK', 'RB', 'CB', 'CB', 'LB', 'CDM', 'CM', 'CM', 'CAM', 'ST', 'ST'] },
+  { id: '4-1-2-1-2-wide', name: '4-1-2-1-2 wide', slots: ['GK', 'RB', 'CB', 'CB', 'LB', 'CDM', 'RM', 'LM', 'CAM', 'ST', 'ST'] },
 ];
 
 export function formationById(id: string): Formation | undefined {

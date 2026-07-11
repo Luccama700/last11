@@ -297,6 +297,8 @@ export const BOT_FORMATION_WEIGHTS: Readonly<Record<string, number>> = {
   '4-5-1': 1,
   '4-2-4': 1,
   '3-4-3': 1,
+  '4-1-2-1-2': 1,
+  '4-1-2-1-2-wide': 1,
 };
 
 /** Weighted-sane seeded formation for a bot (favours the common shapes). */

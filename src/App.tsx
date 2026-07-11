@@ -1,4 +1,4 @@
-import { useReducer, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import {
   draftBotSlateV2,
   pickBotFormation,
@@ -38,6 +38,7 @@ import type {
 } from './engine/types';
 import type { PlayerV2 } from './engine/data/schema';
 import { FEATURES } from './game/features';
+import { recordChampion } from './game/champions';
 import { assignGoals, fabricateTimeline } from './game/fabricate-timeline';
 import { aliveOf, humanOf, initialState, reducer, tournamentOver, type Matchday } from './game/state';
 import BattleScreen from './screens/BattleScreen';
@@ -96,7 +97,6 @@ export default function App(props: { animate?: boolean }) {
   const animate = props.animate ?? true;
   const [state, dispatch] = useReducer(reducer, initialState);
   const rngRef = useRef<Rng | null>(null);
-  const pendingResultRef = useRef<RoundResult | null>(null);
   const [style, setStyle] = useState<PlayingStyle>('balanced');
   // engineV2 plumbing: bot tactics fixed at lobby creation; match counter + morale
   // threaded round-to-round via RoundResult.engineNext (refs, never in the reducer).
@@ -104,6 +104,27 @@ export default function App(props: { animate?: boolean }) {
   const engineCtxRef = useRef<{ matchIndex: number; moraleByManager: Record<string, MoraleMap> }>(
     { matchIndex: 0, moraleByManager: {} },
   );
+
+  // Hall of champions: record ONE entry the moment a tournament finishes (screen ->
+  // 'end', both the human-wins SHOW_END path and the fast-forward FINISHED path set
+  // `champion`). The ref guards against re-recording on re-renders and StrictMode's
+  // double-invoke, and resets whenever we leave 'end' so the NEXT tournament records
+  // again. Persistence + all storage guards live in game/champions.ts; Main renders
+  // the list (via readChampions) on the end/home screens.
+  const championRecordedRef = useRef(false);
+  useEffect(() => {
+    if (state.screen !== 'end') {
+      championRecordedRef.current = false;
+      return;
+    }
+    if (championRecordedRef.current || !state.champion) return;
+    championRecordedRef.current = true;
+    recordChampion({
+      name: state.champion.name,
+      isHuman: state.champion.isHuman,
+      placementOfHuman: state.humanPlacement,
+    });
+  }, [state.screen, state.champion, state.humanPlacement]);
 
   function handleStart() {
     const seed = (Math.random() * 0x7fffffff) | 0;
@@ -262,8 +283,10 @@ export default function App(props: { animate?: boolean }) {
     // instant path), so tests still resolve to the same table. Flag OFF keeps the
     // shipped instant reveal untouched (all default-flag tests unaffected).
     if (FEATURES.simV2) {
-      pendingResultRef.current = result;
-      dispatch({ type: 'ENTER_PLAYBACK', matchday: buildMatchday(result) });
+      // The result rides into reducer state on ENTER_PLAYBACK, so whatever ends
+      // playback (finish, skip, skip-all, or overshoot) records it exactly once —
+      // recording is a state invariant, not a screen call-discipline obligation.
+      dispatch({ type: 'ENTER_PLAYBACK', matchday: buildMatchday(result), result });
     } else {
       dispatch({ type: 'ROUND_PLAYED', result });
     }
@@ -273,11 +296,10 @@ export default function App(props: { animate?: boolean }) {
     dispatch({ type: 'NEXT_FEATURED' });
   }
 
-  /** Playback of your matches finished (or was skipped): record the round, reveal the table. */
+  /** Playback of your matches finished (or was skipped): record the round, reveal the
+   *  table. The reducer folds in the round it stashed at ENTER_PLAYBACK (idempotent). */
   function handleFinishRound() {
-    const result = pendingResultRef.current;
-    pendingResultRef.current = null;
-    if (result) dispatch({ type: 'ROUND_PLAYED', result });
+    dispatch({ type: 'PLAYBACK_DONE' });
   }
 
   /** After viewing round results: end, steal window, or next round. */

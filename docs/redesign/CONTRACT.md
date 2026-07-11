@@ -258,12 +258,18 @@ export const FORMATIONS: readonly Formation[] = [
   { id: '5-3-2',   name: '5-3-2',   slots: ['GK','RB','CB','CB','CB','LB','CM','CM','CM','ST','ST'] },
   { id: '4-5-1',   name: '4-5-1',   slots: ['GK','RB','CB','CB','LB','RM','CM','CM','CM','LM','ST'] },
   { id: '3-4-3',   name: '3-4-3',   slots: ['GK','CB','CB','CB','RM','CM','CM','LM','RW','ST','LW'] },
+  // Diamond pair (added 2026-07-11, night batch 2). Narrow = double-pivot-less CDM +
+  // twin CM + CAM behind two STs; wide swaps the twin CMs for RM/LM touchline width.
+  { id: '4-1-2-1-2',      name: '4-1-2-1-2',      slots: ['GK','RB','CB','CB','LB','CDM','CM','CM','CAM','ST','ST'] },
+  { id: '4-1-2-1-2-wide', name: '4-1-2-1-2 wide', slots: ['GK','RB','CB','CB','LB','CDM','RM','LM','CAM','ST','ST'] },
 ];
 ```
 
 **Engine §3.3 must change to match:** it listed `4-2-2-2` and omitted `4-2-4`.
 Canonical drops `4-2-2-2`, keeps `4-2-4` (7a0's actual set, per draft §1a). Engine's
-zone-weight map should be authored for THESE eight.
+zone-weight map should be authored for THESE ten (eight above + the diamond pair).
+The two `4-1-2-1-2*` shapes reuse only existing `Position` values, so `board-layout`
+(lane-aware rows) and the bot drafter (formation-agnostic, slot-driven) need no change.
 
 ---
 

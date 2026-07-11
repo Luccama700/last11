@@ -254,16 +254,20 @@ describe('moraleSnowballBatch', () => {
 });
 
 describe('tacticsMatchupSpreadV2', () => {
-  it('is deterministic and covers all 8 formations x 3 styles at equal strength', () => {
+  it('is deterministic and covers every catalog formation x 3 styles at equal strength', () => {
     const a = tacticsMatchupSpreadV2(1);
     const b = tacticsMatchupSpreadV2(1);
     expect(a).toEqual(b);
-    expect(a.formations).toHaveLength(8);
-    expect(a.styles).toHaveLength(3);
-    // every combo played every OTHER combo once: 23 opponents per combo, and
-    // each formation appears in 3 combos (one per style) -> 3*23 matches.
-    for (const f of a.formations) expect(f.matches).toBe(3 * 23);
-    for (const s of a.styles) expect(s.matches).toBe(8 * 23);
+    // Derive from the live catalog so adding a formation doesn't fossilise a count.
+    const F = FORMATIONS.length;
+    const S = 3;
+    const opponents = F * S - 1; // every (formation,style) combo plays every OTHER once
+    expect(a.formations).toHaveLength(F);
+    expect(a.styles).toHaveLength(S);
+    // each formation appears in S combos (one per style) -> S*opponents matches;
+    // each style appears in F combos -> F*opponents matches.
+    for (const f of a.formations) expect(f.matches).toBe(S * opponents);
+    for (const s of a.styles) expect(s.matches).toBe(F * opponents);
     // win rates are real fractions in [0,1], not NaN (every bucket has samples)
     for (const f of a.formations) expect(f.winRate).toBeGreaterThanOrEqual(0);
     for (const f of a.formations) expect(f.winRate).toBeLessThanOrEqual(1);

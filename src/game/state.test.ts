@@ -11,7 +11,19 @@ import {
   reducer,
   tournamentOver,
   type GameState,
+  type Matchday,
 } from './state';
+
+/** Minimal matchday for reducer tests — ENTER_PLAYBACK only stores it and
+ *  NEXT_FEATURED only reads `featured.length`/`featuredIndex`, so the timelines
+ *  themselves are never touched here. */
+function fakeMatchday(featuredCount: number, index = 0): Matchday {
+  return {
+    featured: Array.from({ length: featuredCount }, () => ({})) as unknown as Matchday['featured'],
+    featuredIndex: index,
+    rail: [],
+  };
+}
 
 function startedState(seed = 42): { state: GameState; rng: ReturnType<typeof createRng> } {
   const rng = createRng(seed);
@@ -99,6 +111,58 @@ describe('game reducer: battle flow', () => {
     const human = humanOf(s)!;
     if (human.alive) expect(s.humanPlacement).toBe(1);
     else expect(s.humanPlacement).toBeGreaterThan(1);
+  });
+
+  // Regression (night batch 2): with simV2 ON the round is WATCHED before it is
+  // recorded. Recording used to hinge on the screen calling onFinishRound at the
+  // exact right moment; skipping could reach the results view without the round
+  // ever reaching `rounds`, so the standings silently stalled. Recording is now a
+  // state invariant: ENTER_PLAYBACK stashes the result and any playback→results
+  // transition folds it in exactly once.
+  describe('simV2 playback records the watched round on every exit', () => {
+    function toPlayback(seed: number, featured = 3) {
+      const { state, rng } = startedState(seed);
+      let s = draftAll(state, rng);
+      s = reducer(s, { type: 'ENTER_BATTLE' });
+      const result = playRound(aliveOf(s), SURVIVORS_PER_ROUND[0], 1, rng);
+      s = reducer(s, { type: 'ENTER_PLAYBACK', matchday: fakeMatchday(featured), result });
+      return { s, result };
+    }
+
+    it('stashes the round on ENTER_PLAYBACK but does not record it while watching', () => {
+      const { s, result } = toPlayback(7);
+      expect(s.battleView).toBe('playback');
+      expect(s.rounds).toHaveLength(0);
+      expect(s.pendingRound?.round).toBe(result.round);
+    });
+
+    it('PLAYBACK_DONE (finish / skip / skip-all) folds the round into rounds', () => {
+      const { s: watching, result } = toPlayback(7);
+      const s = reducer(watching, { type: 'PLAYBACK_DONE' });
+      expect(s.rounds).toHaveLength(1);
+      expect(s.rounds[0].round).toBe(result.round);
+      expect(s.roundIndex).toBe(1);
+      expect(s.battleView).toBe('results');
+      expect(s.pendingRound).toBeNull();
+      expect(aliveOf(s).length).toBe(SURVIVORS_PER_ROUND[0]);
+    });
+
+    it('overshooting the last featured match (NEXT_FEATURED) also records the round', () => {
+      const { s: watching, result } = toPlayback(5, 1); // single featured match
+      const s = reducer(watching, { type: 'NEXT_FEATURED' });
+      expect(s.rounds).toHaveLength(1);
+      expect(s.rounds[0].round).toBe(result.round);
+      expect(s.battleView).toBe('results');
+    });
+
+    it('recording is idempotent — a repeat PLAYBACK_DONE / ROUND_PLAYED cannot double-count', () => {
+      const { s: watching, result } = toPlayback(9);
+      let s = reducer(watching, { type: 'PLAYBACK_DONE' });
+      s = reducer(s, { type: 'PLAYBACK_DONE' }); // pendingRound already cleared
+      s = reducer(s, { type: 'ROUND_PLAYED', result }); // same round via the v1 driver
+      expect(s.rounds).toHaveLength(1);
+      expect(s.roundIndex).toBe(1);
+    });
   });
 
   it('STEALS_APPLIED swaps XIs and returns to the next round intro', () => {

@@ -87,6 +87,13 @@ export interface GameState {
   humanSlate?: (XiSlotV2 | null)[];
   /** On-screen playback state for the current round (v2 sim). */
   matchday?: Matchday | null;
+  /** The round result being WATCHED but not yet recorded (simV2). Stamped on
+   *  ENTER_PLAYBACK; folded into `rounds` (idempotently, by round number) on the
+   *  playback→results transition — via PLAYBACK_DONE (finish/skip/skip-all) or the
+   *  NEXT_FEATURED overshoot. Makes round-recording a STATE invariant instead of an
+   *  obligation on the screen to call onFinishRound at the exact right moment, which
+   *  is what let a skipped round silently miss `rounds` (standings stalled). */
+  pendingRound?: RoundResult | null;
   /** The winning manager, set at tournament end (both the human-wins and the
    *  fast-forward-after-elimination paths). Powers the EndScreen. */
   champion?: Manager;
@@ -137,10 +144,48 @@ export type Action =
   | { type: 'PLACE'; player: PlayerV2; slotIndex: number }
   | { type: 'MOVE_PLACED'; from: number; to: number }
   | { type: 'REARRANGE_XI'; managerId: string; xi: (XiSlotV2 | null)[] }
-  | { type: 'ENTER_PLAYBACK'; matchday: Matchday }
+  | { type: 'ENTER_PLAYBACK'; matchday: Matchday; result: RoundResult }
   | { type: 'NEXT_FEATURED' }
   | { type: 'WATCH_MARQUEE'; timeline: MatchTimeline }
   | { type: 'PLAYBACK_DONE' };
+
+/** Fold a finished round into the state: apply cuts, build the steal pool, set the
+ *  human's placement if they just fell (or won), accrue player stats, and reveal the
+ *  results table. IDEMPOTENT by `result.round` — recording the same round twice (e.g.
+ *  ROUND_PLAYED then a PLAYBACK_DONE safety net) is a no-op past the first, so the
+ *  standings can never double-count. The single writer for `rounds` on the live path. */
+function recordRound(state: GameState, result: RoundResult): GameState {
+  const alreadyRecorded = state.rounds.some((r) => r.round === result.round);
+  if (alreadyRecorded) {
+    return { ...state, battleView: 'results', pendingRound: null };
+  }
+  const eliminatedIds = new Set(result.eliminatedIds);
+  const eliminatedManagers = state.managers.filter((m) => eliminatedIds.has(m.id));
+  const managers = state.managers.map((m) =>
+    eliminatedIds.has(m.id) ? { ...m, alive: false } : m,
+  );
+  const human = managers.find((m) => m.isHuman);
+  const aliveCount = managers.filter((m) => m.alive).length;
+  let humanPlacement = state.humanPlacement;
+  if (human && humanPlacement === null) {
+    if (!human.alive) {
+      humanPlacement = result.table.findIndex((r) => r.managerId === human.id) + 1;
+    } else if (aliveCount === 1) {
+      humanPlacement = 1;
+    }
+  }
+  return {
+    ...state,
+    managers,
+    rounds: [...state.rounds, result],
+    roundIndex: state.roundIndex + 1,
+    battleView: 'results',
+    pool: stealPool(eliminatedManagers),
+    humanPlacement,
+    playerStats: accrueStats(state.playerStats ?? {}, [result]),
+    pendingRound: null,
+  };
+}
 
 export function humanOf(state: GameState): Manager | undefined {
   return state.managers.find((m) => m.isHuman);
@@ -179,34 +224,9 @@ export function reducer(state: GameState, action: Action): GameState {
     case 'ENTER_BATTLE':
       return { ...state, screen: 'battle', battleView: 'intro' };
 
-    case 'ROUND_PLAYED': {
-      const eliminatedIds = new Set(action.result.eliminatedIds);
-      const eliminatedManagers = state.managers.filter((m) => eliminatedIds.has(m.id));
-      const managers = state.managers.map((m) =>
-        eliminatedIds.has(m.id) ? { ...m, alive: false } : m,
-      );
-      const human = managers.find((m) => m.isHuman);
-      const aliveCount = managers.filter((m) => m.alive).length;
-      let humanPlacement = state.humanPlacement;
-      if (human && humanPlacement === null) {
-        if (!human.alive) {
-          humanPlacement =
-            action.result.table.findIndex((r) => r.managerId === human.id) + 1;
-        } else if (aliveCount === 1) {
-          humanPlacement = 1;
-        }
-      }
-      return {
-        ...state,
-        managers,
-        rounds: [...state.rounds, action.result],
-        roundIndex: state.roundIndex + 1,
-        battleView: 'results',
-        pool: stealPool(eliminatedManagers),
-        humanPlacement,
-        playerStats: accrueStats(state.playerStats ?? {}, [action.result]),
-      };
-    }
+    case 'ROUND_PLAYED':
+      // v1 instant-reveal path (simV2 OFF) and the reducer-tests' direct driver.
+      return recordRound(state, action.result);
 
     case 'OPEN_STEAL':
       return { ...state, screen: 'steal' };
@@ -357,12 +377,25 @@ export function reducer(state: GameState, action: Action): GameState {
     }
 
     case 'ENTER_PLAYBACK':
-      return { ...state, screen: 'battle', battleView: 'playback', matchday: action.matchday };
+      // Carry the round result into state so that WHATEVER ends playback records it.
+      return {
+        ...state,
+        screen: 'battle',
+        battleView: 'playback',
+        matchday: action.matchday,
+        pendingRound: action.result,
+      };
 
     case 'NEXT_FEATURED': {
       if (!state.matchday) return state;
       const next = state.matchday.featuredIndex + 1;
-      if (next >= state.matchday.featured.length) return { ...state, battleView: 'results' };
+      // Overshooting the last featured match ends the round — record it, don't just
+      // flip the view (that silently dropped the round → standings never updated).
+      if (next >= state.matchday.featured.length) {
+        return state.pendingRound
+          ? recordRound(state, state.pendingRound)
+          : { ...state, battleView: 'results' };
+      }
       return { ...state, matchday: { ...state.matchday, featuredIndex: next } };
     }
 
@@ -379,7 +412,12 @@ export function reducer(state: GameState, action: Action): GameState {
     }
 
     case 'PLAYBACK_DONE':
-      return { ...state, battleView: 'results' };
+      // Playback finished OR was skipped (skip / skip-all). Record the watched round
+      // (idempotent) so its result reaches `rounds` and the standings update — the
+      // fix for "standings sometimes doesn't update after skipping a match".
+      return state.pendingRound
+        ? recordRound(state, state.pendingRound)
+        : { ...state, battleView: 'results' };
   }
 }
 
