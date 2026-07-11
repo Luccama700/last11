@@ -769,6 +769,54 @@
         { "id": "eng-1966-springett", "name": "Ron Springett", "pos": "GK", "rating": 77, "club": "Sheffield Wednesday" },
         { "id": "eng-1966-bonetti", "name": "Peter Bonetti", "pos": "GK", "rating": 77, "club": "Chelsea" }
       ]
+    },
+    {
+      "nation": "GER", "name": "West Germany", "year": 1974, "result": "Winners",
+      "notes": "Beckenbauer's champions beat the Netherlands 2-1 in the final, completing the other half of that story (see NED 1974). Vogts man-marked Cruyff out of the game; Muller scored the winner.",
+      "players": [
+        { "id": "ger-1974-beckenbauer", "name": "Franz Beckenbauer", "pos": "CB", "rating": 93, "club": "Bayern Munich" },
+        { "id": "ger-1974-muller", "name": "Gerd Müller", "pos": "ST", "rating": 91, "club": "Bayern Munich" },
+        { "id": "ger-1974-maier", "name": "Sepp Maier", "pos": "GK", "rating": 86, "club": "Bayern Munich" },
+        { "id": "ger-1974-breitner", "name": "Paul Breitner", "pos": "LB", "rating": 85, "club": "Bayern Munich" },
+        { "id": "ger-1974-overath", "name": "Wolfgang Overath", "pos": "CM", "rating": 84, "club": "1. FC Köln" },
+        { "id": "ger-1974-vogts", "name": "Berti Vogts", "pos": "RB", "rating": 83, "club": "Borussia Mönchengladbach" },
+        { "id": "ger-1974-hoeness", "name": "Uli Hoeneß", "pos": "CM", "rating": 83, "club": "Bayern Munich" },
+        { "id": "ger-1974-netzer", "name": "Günter Netzer", "pos": "CM", "altPos": ["CAM"], "rating": 83, "club": "Real Madrid" },
+        { "id": "ger-1974-bonhof", "name": "Rainer Bonhof", "pos": "RM", "altPos": ["CM"], "rating": 82, "club": "Borussia Mönchengladbach" },
+        { "id": "ger-1974-grabowski", "name": "Jürgen Grabowski", "pos": "RW", "rating": 81, "club": "Eintracht Frankfurt" },
+        { "id": "ger-1974-holzenbein", "name": "Bernd Hölzenbein", "pos": "LW", "rating": 81, "club": "Eintracht Frankfurt" },
+        { "id": "ger-1974-schwarzenbeck", "name": "Hans-Georg Schwarzenbeck", "pos": "CB", "rating": 80, "club": "Bayern Munich" },
+        { "id": "ger-1974-wimmer", "name": "Herbert Wimmer", "pos": "CM", "rating": 79, "club": "Borussia Mönchengladbach" },
+        { "id": "ger-1974-flohe", "name": "Heinz Flohe", "pos": "CM", "rating": 79, "club": "1. FC Köln" },
+        { "id": "ger-1974-heynckes", "name": "Jupp Heynckes", "pos": "ST", "rating": 79, "club": "Borussia Mönchengladbach" },
+        { "id": "ger-1974-cullmann", "name": "Bernhard Cullmann", "pos": "CM", "rating": 77, "club": "1. FC Köln" },
+        { "id": "ger-1974-kapellmann", "name": "Jupp Kapellmann", "pos": "RB", "rating": 76, "club": "Bayern Munich" },
+        { "id": "ger-1974-kleff", "name": "Wolfgang Kleff", "pos": "GK", "rating": 76, "club": "Borussia Mönchengladbach" }
+      ]
+    },
+    {
+      "nation": "ARG", "name": "Argentina", "year": 1978, "result": "Winners",
+      "notes": "Menotti's home-soil champions beat the Netherlands 3-1 (a.e.t.) in the final. Kempes scored twice in the final and finished top scorer of the tournament; Passarella captained.",
+      "players": [
+        { "id": "arg-1978-kempes", "name": "Mario Kempes", "pos": "ST", "altPos": ["CAM"], "rating": 89, "club": "Valencia CF" },
+        { "id": "arg-1978-passarella", "name": "Daniel Passarella", "pos": "CB", "rating": 87, "club": "River Plate" },
+        { "id": "arg-1978-ardiles", "name": "Osvaldo Ardiles", "pos": "CM", "rating": 85, "club": "Huracán" },
+        { "id": "arg-1978-fillol", "name": "Ubaldo Fillol", "pos": "GK", "rating": 84, "club": "River Plate" },
+        { "id": "arg-1978-luque", "name": "Leopoldo Luque", "pos": "ST", "rating": 83, "club": "River Plate" },
+        { "id": "arg-1978-bertoni", "name": "Daniel Bertoni", "pos": "RW", "rating": 81, "club": "Independiente" },
+        { "id": "arg-1978-alonso", "name": "Norberto Alonso", "pos": "CAM", "rating": 81, "club": "River Plate" },
+        { "id": "arg-1978-tarantini", "name": "Alberto Tarantini", "pos": "LB", "rating": 80, "club": "Free agent" },
+        { "id": "arg-1978-l-galvan", "name": "Luis Galván", "pos": "CB", "rating": 80, "club": "Talleres de Córdoba" },
+        { "id": "arg-1978-olguin", "name": "Jorge Olguín", "pos": "RB", "rating": 80, "club": "San Lorenzo" },
+        { "id": "arg-1978-gallego", "name": "Américo Gallego", "pos": "CDM", "rating": 80, "club": "Newell's Old Boys" },
+        { "id": "arg-1978-villa", "name": "Ricardo Villa", "pos": "CAM", "altPos": ["CM"], "rating": 79, "club": "Racing Club" },
+        { "id": "arg-1978-houseman", "name": "René Houseman", "pos": "RW", "rating": 79, "club": "Huracán" },
+        { "id": "arg-1978-killer", "name": "Daniel Killer", "pos": "CB", "rating": 78, "club": "Racing Club" },
+        { "id": "arg-1978-r-galvan", "name": "Rubén Galván", "pos": "CM", "rating": 77, "club": "Independiente" },
+        { "id": "arg-1978-larrosa", "name": "Omar Larrosa", "pos": "CM", "rating": 77, "club": "Independiente" },
+        { "id": "arg-1978-ortiz", "name": "Oscar Ortiz", "pos": "ST", "rating": 77, "club": "River Plate" },
+        { "id": "arg-1978-la-volpe", "name": "Ricardo La Volpe", "pos": "GK", "rating": 76, "club": "San Lorenzo" }
+      ]
     }
   ]
 }
