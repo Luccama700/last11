@@ -481,6 +481,54 @@
         { "id": "arg-2022-montiel", "name": "Gonzalo Montiel", "pos": "RB", "rating": 80, "shirt": 4, "club": "Sevilla" },
         { "id": "arg-2022-armani", "name": "Franco Armani", "pos": "GK", "rating": 80, "shirt": 1, "club": "River Plate" }
       ]
+    },
+    {
+      "nation": "ITA", "name": "Italy", "year": 2006, "result": "Winners",
+      "notes": "Lippi's champions, built on the best defense in the world. Cannavaro won the Ballon d'Or; Grosso's penalty settled the final vs France.",
+      "players": [
+        { "id": "ita-2006-buffon", "name": "Gianluigi Buffon", "pos": "GK", "rating": 91, "shirt": 1, "club": "Juventus" },
+        { "id": "ita-2006-cannavaro", "name": "Fabio Cannavaro", "pos": "CB", "rating": 92, "shirt": 5, "club": "Juventus" },
+        { "id": "ita-2006-nesta", "name": "Alessandro Nesta", "pos": "CB", "rating": 88, "shirt": 13, "club": "AC Milan" },
+        { "id": "ita-2006-materazzi", "name": "Marco Materazzi", "pos": "CB", "rating": 83, "shirt": 23, "club": "Internazionale" },
+        { "id": "ita-2006-barzagli", "name": "Andrea Barzagli", "pos": "CB", "rating": 82, "shirt": 6, "club": "Palermo" },
+        { "id": "ita-2006-zambrotta", "name": "Gianluca Zambrotta", "pos": "RB", "altPos": ["LB"], "rating": 85, "shirt": 19, "club": "Juventus" },
+        { "id": "ita-2006-grosso", "name": "Fabio Grosso", "pos": "LB", "rating": 82, "shirt": 3, "club": "Palermo" },
+        { "id": "ita-2006-zaccardo", "name": "Cristian Zaccardo", "pos": "RB", "altPos": ["CB"], "rating": 79, "shirt": 2, "club": "Palermo" },
+        { "id": "ita-2006-pirlo", "name": "Andrea Pirlo", "pos": "CM", "altPos": ["CDM"], "rating": 89, "shirt": 21, "club": "AC Milan" },
+        { "id": "ita-2006-gattuso", "name": "Gennaro Gattuso", "pos": "CDM", "rating": 84, "shirt": 8, "club": "AC Milan" },
+        { "id": "ita-2006-de-rossi", "name": "Daniele De Rossi", "pos": "CDM", "altPos": ["CM"], "rating": 84, "shirt": 4, "club": "AS Roma" },
+        { "id": "ita-2006-camoranesi", "name": "Mauro Camoranesi", "pos": "RM", "altPos": ["RW"], "rating": 83, "shirt": 16, "club": "Juventus" },
+        { "id": "ita-2006-perrotta", "name": "Simone Perrotta", "pos": "CM", "altPos": ["CAM"], "rating": 82, "shirt": 20, "club": "AS Roma" },
+        { "id": "ita-2006-totti", "name": "Francesco Totti", "pos": "CAM", "rating": 88, "shirt": 10, "club": "AS Roma" },
+        { "id": "ita-2006-del-piero", "name": "Alessandro Del Piero", "pos": "CAM", "altPos": ["ST"], "rating": 86, "shirt": 7, "club": "Juventus" },
+        { "id": "ita-2006-toni", "name": "Luca Toni", "pos": "ST", "rating": 84, "shirt": 9, "club": "Fiorentina" },
+        { "id": "ita-2006-gilardino", "name": "Alberto Gilardino", "pos": "ST", "rating": 82, "shirt": 11, "club": "AC Milan" },
+        { "id": "ita-2006-iaquinta", "name": "Vincenzo Iaquinta", "pos": "ST", "altPos": ["RW"], "rating": 81, "shirt": 15, "club": "Udinese" }
+      ]
+    },
+    {
+      "nation": "CRO", "name": "Croatia", "year": 2018, "result": "Runners-up",
+      "notes": "Dalić's side rode Modrić's Golden Ball / Ballon d'Or peak to the final, winning three straight knockout games in extra time before losing 4-2 to France.",
+      "players": [
+        { "id": "cro-2018-modric", "name": "Luka Modrić", "pos": "CM", "altPos": ["CAM"], "rating": 91, "shirt": 10, "club": "Real Madrid" },
+        { "id": "cro-2018-rakitic", "name": "Ivan Rakitić", "pos": "CM", "rating": 86, "shirt": 7, "club": "Barcelona" },
+        { "id": "cro-2018-perisic", "name": "Ivan Perišić", "pos": "LW", "altPos": ["LM"], "rating": 84, "shirt": 4, "club": "Internazionale" },
+        { "id": "cro-2018-mandzukic", "name": "Mario Mandžukić", "pos": "ST", "rating": 84, "shirt": 17, "club": "Juventus" },
+        { "id": "cro-2018-brozovic", "name": "Marcelo Brozović", "pos": "CDM", "rating": 83, "shirt": 11, "club": "Internazionale" },
+        { "id": "cro-2018-kovacic", "name": "Mateo Kovačić", "pos": "CM", "altPos": ["CDM"], "rating": 83, "shirt": 8, "club": "Real Madrid" },
+        { "id": "cro-2018-subasic", "name": "Danijel Subašić", "pos": "GK", "rating": 83, "shirt": 23, "club": "AS Monaco" },
+        { "id": "cro-2018-vrsaljko", "name": "Šime Vrsaljko", "pos": "RB", "rating": 82, "shirt": 2, "club": "Atlético Madrid" },
+        { "id": "cro-2018-lovren", "name": "Dejan Lovren", "pos": "CB", "rating": 82, "shirt": 6, "club": "Liverpool" },
+        { "id": "cro-2018-vida", "name": "Domagoj Vida", "pos": "CB", "rating": 82, "shirt": 21, "club": "Beşiktaş" },
+        { "id": "cro-2018-rebic", "name": "Ante Rebić", "pos": "RW", "altPos": ["ST"], "rating": 81, "shirt": 18, "club": "Eintracht Frankfurt" },
+        { "id": "cro-2018-kramaric", "name": "Andrej Kramarić", "pos": "ST", "altPos": ["CAM"], "rating": 81, "shirt": 9, "club": "1899 Hoffenheim" },
+        { "id": "cro-2018-strinic", "name": "Ivan Strinić", "pos": "LB", "rating": 80, "shirt": 3, "club": "Sampdoria" },
+        { "id": "cro-2018-corluka", "name": "Vedran Ćorluka", "pos": "CB", "rating": 80, "shirt": 5, "club": "Lokomotiv Moscow" },
+        { "id": "cro-2018-badelj", "name": "Milan Badelj", "pos": "CM", "altPos": ["CDM"], "rating": 80, "shirt": 19, "club": "Fiorentina" },
+        { "id": "cro-2018-caleta-car", "name": "Duje Ćaleta-Car", "pos": "CB", "rating": 79, "shirt": 15, "club": "Red Bull Salzburg" },
+        { "id": "cro-2018-livakovic", "name": "Dominik Livaković", "pos": "GK", "rating": 79, "shirt": 1, "club": "Dinamo Zagreb" },
+        { "id": "cro-2018-pivaric", "name": "Josip Pivarić", "pos": "LB", "rating": 78, "shirt": 22, "club": "Dynamo Kyiv" }
+      ]
     }
   ]
 }
