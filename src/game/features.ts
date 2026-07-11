@@ -22,9 +22,11 @@ export interface FeatureFlags {
   simV2: boolean;
 }
 
+// Flipped ON 2026-07-11 (Lucca's go): the v2 game is the game. The flags-OFF
+// path stays covered by app.test.tsx (mocks all-false) as the regression gate.
 export const FEATURES: FeatureFlags = {
-  dataV2: false,
-  engineV2: false,
-  draftV2: false,
-  simV2: false,
+  dataV2: true,
+  engineV2: true,
+  draftV2: true,
+  simV2: true,
 };

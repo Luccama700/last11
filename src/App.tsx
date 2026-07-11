@@ -11,6 +11,7 @@ import { detailedToCoarse } from './engine/data/schema';
 import { createRng, type Rng } from './engine/rng';
 import {
   BOT_NAMES,
+  DEFAULT_TACTICS,
   LOBBY_SIZE,
   SURVIVORS_PER_ROUND,
   applySteal,
@@ -18,15 +19,20 @@ import {
   evaluateSteal,
   playRound,
   stealPool,
+  toMatchSide,
   type Manager,
+  type PlayRoundEngine,
   type RoundResult,
 } from './engine/tournament';
+import { simulateMatchTimeline } from './engine/timeline';
+import type { MoraleMap } from './engine/morale';
 import type { Player, XI } from './engine/types';
 import type {
   DraftMode,
   Formation,
   PlayingStyle,
   RolledTeam,
+  Tactics,
   XiSlotV2,
 } from './engine/types';
 import type { PlayerV2 } from './engine/data/schema';
@@ -59,24 +65,30 @@ function v2SlateToCoarseXi(slate: readonly XiSlotV2[]): XI {
 
 /** v2 lobby: human drafts via the UI; 31 bots draft under the SAME free-pick rules
  *  with varied seeded formations/styles, projected to coarse for the current engine. */
-function createV2Lobby(rng: Rng, humanName: string): Manager[] {
+function createV2Lobby(
+  rng: Rng,
+  humanName: string,
+): { managers: Manager[]; botTactics: Record<string, Tactics> } {
   const names = rng.shuffle(BOT_NAMES);
   const managers: Manager[] = [
     { id: 'you', name: humanName, isHuman: true, xi: [], alive: true },
   ];
+  const botTactics: Record<string, Tactics> = {};
   for (let i = 0; i < LOBBY_SIZE - 1; i++) {
     const formation = pickBotFormation(rng);
-    pickBotStyle(rng); // consumed for determinism + variety (coarse engine ignores style)
+    const botStyle = pickBotStyle(rng); // same rng draw order as before (determinism)
     const slate = draftBotSlateV2(rng, formation, affinity);
+    const id = `bot-${i + 1}`;
+    botTactics[id] = { formationId: formation.id, style: botStyle };
     managers.push({
-      id: `bot-${i + 1}`,
+      id,
       name: names[i],
       isHuman: false,
       xi: v2SlateToCoarseXi(slate),
       alive: true,
     });
   }
-  return managers;
+  return { managers, botTactics };
 }
 
 export default function App(props: { animate?: boolean }) {
@@ -85,13 +97,46 @@ export default function App(props: { animate?: boolean }) {
   const rngRef = useRef<Rng | null>(null);
   const pendingResultRef = useRef<RoundResult | null>(null);
   const [style, setStyle] = useState<PlayingStyle>('balanced');
+  // engineV2 plumbing: bot tactics fixed at lobby creation; match counter + morale
+  // threaded round-to-round via RoundResult.engineNext (refs, never in the reducer).
+  const botTacticsRef = useRef<Record<string, Tactics>>({});
+  const engineCtxRef = useRef<{ matchIndex: number; moraleByManager: Record<string, MoraleMap> }>(
+    { matchIndex: 0, moraleByManager: {} },
+  );
 
   function handleStart() {
     const seed = (Math.random() * 0x7fffffff) | 0;
     const rng = createRng(seed);
     rngRef.current = rng;
-    const managers = FEATURES.draftV2 ? createV2Lobby(rng, 'You') : createLobby(rng, 'You');
+    let managers: Manager[];
+    if (FEATURES.draftV2) {
+      const lobby = createV2Lobby(rng, 'You');
+      managers = lobby.managers;
+      botTacticsRef.current = lobby.botTactics;
+    } else {
+      managers = createLobby(rng, 'You');
+      botTacticsRef.current = {};
+    }
+    engineCtxRef.current = { matchIndex: 0, moraleByManager: {} };
     dispatch({ type: 'START', seed, managers });
+  }
+
+  /** The tactics a manager takes into a match — human's live formation/style choice,
+   *  bots' fixed draft-time assignment. Same fn feeds playRound AND the watched-
+   *  timeline rebuild, so table score === played-out score. */
+  function tacticsOf(m: Manager): Tactics {
+    if (m.isHuman) return { formationId: state.formation?.id ?? DEFAULT_TACTICS.formationId, style };
+    return botTacticsRef.current[m.id] ?? DEFAULT_TACTICS;
+  }
+
+  function engineCtx(): PlayRoundEngine | undefined {
+    if (!FEATURES.engineV2) return undefined;
+    return {
+      tournamentSeed: state.seed,
+      matchIndex: engineCtxRef.current.matchIndex,
+      moraleByManager: engineCtxRef.current.moraleByManager,
+      tacticsOf,
+    };
   }
 
   // ---- v1 draft (flags OFF) ----
@@ -141,7 +186,35 @@ export default function App(props: { animate?: boolean }) {
     const human = humanOf(state)!;
     const nameOf = (id: string) => state.managers.find((m) => m.id === id)?.name ?? id;
     const round = state.roundIndex + 1;
-    const isMine = (m: RoundResult['matches'][number]) => m.homeId === human.id || m.awayId === human.id;
+    const isMine = (m: { homeId: string; awayId: string }) =>
+      m.homeId === human.id || m.awayId === human.id;
+
+    // engineV2: rebuild the REAL timeline for watched matches from the stamped
+    // (seed, morale) — same sides, same seed ⇒ byte-identical outcome to the table.
+    // Rail goal minutes come straight off the engine's goal events.
+    if (FEATURES.engineV2 && result.resultsV2) {
+      const byId = new Map(state.managers.map((m) => [m.id, m]));
+      const featured = result.resultsV2.filter(isMine).map((r, i) => {
+        const home = byId.get(r.homeId)!;
+        const away = byId.get(r.awayId)!;
+        return simulateMatchTimeline(
+          toMatchSide(home, tacticsOf(home), r.homeMorale),
+          toMatchSide(away, tacticsOf(away), r.awayMorale),
+          r.seed!,
+          `r${round}-f${i}`,
+        );
+      });
+      const rail = result.resultsV2
+        .filter((r) => !isMine(r))
+        .map((r, i) => ({
+          matchId: `r${round}-o${i}`,
+          homeId: r.homeId,
+          awayId: r.awayId,
+          goals: r.goals.map((g) => ({ minute: g.minute, team: g.team })),
+        }));
+      return { featured, featuredIndex: 0, rail };
+    }
+
     const featured = result.matches.filter(isMine).map((m, i) =>
       fabricateTimeline(
         { homeId: m.homeId, awayId: m.awayId, homeGoals: m.homeGoals, awayGoals: m.awayGoals },
@@ -168,7 +241,9 @@ export default function App(props: { animate?: boolean }) {
       SURVIVORS_PER_ROUND[state.roundIndex],
       state.roundIndex + 1,
       rngRef.current!,
+      engineCtx(),
     );
+    if (result.engineNext) engineCtxRef.current = result.engineNext;
     // simV2 ON ⇒ watch your matches play out, THEN record + reveal the table. The
     // playback screen honours `animate=false` by finishing synchronously (headless
     // instant path), so tests still resolve to the same table. Flag OFF keeps the
@@ -238,7 +313,8 @@ export default function App(props: { animate?: boolean }) {
     }
 
     while (alive.length > 1 && roundIndex < SURVIVORS_PER_ROUND.length) {
-      const result = playRound(alive, SURVIVORS_PER_ROUND[roundIndex], roundIndex + 1, rng);
+      const result = playRound(alive, SURVIVORS_PER_ROUND[roundIndex], roundIndex + 1, rng, engineCtx());
+      if (result.engineNext) engineCtxRef.current = result.engineNext;
       newRounds.push(result);
       const eliminatedIds = new Set(result.eliminatedIds);
       const eliminated = alive.filter((m) => eliminatedIds.has(m.id));

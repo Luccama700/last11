@@ -140,6 +140,13 @@ export interface MatchResultV2 {
   awayGoals: number;
   goals: { minute: number; team: Team; playerId?: string; assistPlayerId?: string }[];
   shootout?: Shootout; // present iff homeGoals === awayGoals
+  /** engineV2 bookkeeping (stamped by playRound, absent on bare resolveMatch):
+   *  the canonical per-match seed and the morale each side carried INTO this
+   *  match — everything App needs to rebuild the identical watched timeline via
+   *  simulateMatchTimeline (score/timeline agreement invariant). */
+  seed?: number;
+  homeMorale?: Record<string, number>;
+  awayMorale?: Record<string, number>;
 }
 
 // ---- Manager / XI v2 (CONTRACT §6) -------------------------------------------

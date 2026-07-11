@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+// This suite is the FLAGS-OFF regression gate (CONTRACT §7): it must keep passing
+// against the shipped v1 game even though production defaults are now all-ON.
+vi.mock('./game/features', () => ({
+  FEATURES: { dataV2: false, engineV2: false, draftV2: false, simV2: false },
+}));
+
 import App from './App';
 
 afterEach(cleanup);

@@ -213,6 +213,9 @@ export function playRound(
           toMatchSide(away, engine.tacticsOf(away), morale[away.id]),
           seed,
         );
+        r.seed = seed;
+        r.homeMorale = morale[home.id];
+        r.awayMorale = morale[away.id];
         resultsV2.push(r);
         setResults.push(r);
         matches.push({ homeId: home.id, awayId: away.id, homeGoals: r.homeGoals, awayGoals: r.awayGoals });
