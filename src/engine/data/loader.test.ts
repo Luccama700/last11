@@ -66,8 +66,10 @@ describe('bundled squads-v2.json', () => {
   it('the same real player across years is distinct, draftable entries', () => {
     // Brazil appears at multiple tournament years as separate keys; the same real
     // player (Cafu 1994/2002, Ronaldo 1994/2002) is a distinct entry per year.
-    const braKeys = squads.filter((s) => s.nation === 'BRA').map((s) => s.year).sort();
-    expect(braKeys).toEqual([1958, 1962, 1970, 1994, 2002, 2026]);
+    // Assert a growing floor (not an exact list) so new Brazil squads don't churn this test.
+    const braYears = new Set(squads.filter((s) => s.nation === 'BRA').map((s) => s.year));
+    expect(braYears.size).toBeGreaterThanOrEqual(6);
+    for (const y of [1958, 1962, 1970, 1994, 2002, 2026]) expect(braYears.has(y)).toBe(true);
     const cafus = players.filter((p) => p.name === 'Cafu').map((p) => p.year).sort();
     expect(cafus).toEqual([1994, 2002]); // young rotation → peak captain
   });

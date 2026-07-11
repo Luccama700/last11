@@ -959,6 +959,54 @@
         { "id": "swe-1958-jonsson", "name": "Torbjörn Jonsson", "pos": "CB", "rating": 76, "club": "AIK" },
         { "id": "swe-1958-brostrom", "name": "Lars Broström", "pos": "LB", "rating": 76, "club": "Djurgårdens IF" }
       ]
+    },
+    {
+      "nation": "NED", "name": "Netherlands", "year": 1978, "result": "Runners-up",
+      "notes": "Runners-up again, this time without Cruyff (he opted out). Krol captained. Rensenbrink hit the post in the final's last minute of normal time before Nanninga's late equalizer forced extra time; Argentina won it there. Pairs with the existing Argentina 1978 squad.",
+      "players": [
+        { "id": "ned-1978-neeskens", "name": "Johan Neeskens", "pos": "CM", "altPos": ["CAM"], "rating": 87, "shirt": 13, "club": "New York Cosmos" },
+        { "id": "ned-1978-krol", "name": "Ruud Krol", "pos": "LB", "altPos": ["CB"], "rating": 85, "shirt": 5, "club": "Ajax" },
+        { "id": "ned-1978-rensenbrink", "name": "Rob Rensenbrink", "pos": "LW", "rating": 85, "shirt": 12, "club": "Anderlecht" },
+        { "id": "ned-1978-haan", "name": "Arie Haan", "pos": "CM", "altPos": ["CB"], "rating": 84, "shirt": 9, "club": "Anderlecht" },
+        { "id": "ned-1978-rep", "name": "Johnny Rep", "pos": "RW", "rating": 83, "shirt": 16, "club": "Bastia" },
+        { "id": "ned-1978-jansen", "name": "Wim Jansen", "pos": "CDM", "rating": 83, "shirt": 6, "club": "Feyenoord" },
+        { "id": "ned-1978-r-vd-kerkhof", "name": "René van de Kerkhof", "pos": "RM", "rating": 82, "shirt": 10, "club": "PSV Eindhoven" },
+        { "id": "ned-1978-w-vd-kerkhof", "name": "Willy van de Kerkhof", "pos": "CM", "rating": 82, "shirt": 11, "club": "PSV Eindhoven" },
+        { "id": "ned-1978-jongbloed", "name": "Jan Jongbloed", "pos": "GK", "rating": 79, "shirt": 8, "club": "FC Amsterdam" },
+        { "id": "ned-1978-nanninga", "name": "Dick Nanninga", "pos": "ST", "rating": 79, "shirt": 18, "club": "Roda JC" },
+        { "id": "ned-1978-brandts", "name": "Ernie Brandts", "pos": "CB", "rating": 79, "shirt": 22, "club": "PSV Eindhoven" },
+        { "id": "ned-1978-suurbier", "name": "Wim Suurbier", "pos": "RB", "rating": 78, "shirt": 20, "club": "Metz" },
+        { "id": "ned-1978-poortvliet", "name": "Jan Poortvliet", "pos": "RB", "rating": 78, "shirt": 2, "club": "PSV Eindhoven" },
+        { "id": "ned-1978-rijsbergen", "name": "Wim Rijsbergen", "pos": "CB", "rating": 78, "shirt": 17, "club": "Feyenoord" },
+        { "id": "ned-1978-schoenaker", "name": "Dick Schoenaker", "pos": "CB", "rating": 76, "shirt": 3, "club": "FC Twente" },
+        { "id": "ned-1978-boskamp", "name": "Johan Boskamp", "pos": "CM", "rating": 76, "shirt": 14, "club": "RWD Molenbeek" },
+        { "id": "ned-1978-wildschut", "name": "Piet Wildschut", "pos": "RM", "rating": 76, "shirt": 7, "club": "FC Twente" },
+        { "id": "ned-1978-schrijvers", "name": "Piet Schrijvers", "pos": "GK", "rating": 76, "shirt": 1, "club": "FC Twente" }
+      ]
+    },
+    {
+      "nation": "BRA", "name": "Brazil", "year": 1982, "result": "Second round",
+      "notes": "Telê Santana's team - often called the greatest side never to win the World Cup. Eliminated by Rossi's hat-trick for Italy, 3-2, in one of the classic matches in World Cup history. Pairs with the existing Italy 1982 squad.",
+      "players": [
+        { "id": "bra-1982-zico", "name": "Zico", "pos": "CAM", "altPos": ["ST"], "rating": 93, "shirt": 10, "club": "Flamengo" },
+        { "id": "bra-1982-socrates", "name": "Sócrates", "pos": "CAM", "rating": 90, "shirt": 8, "club": "Corinthians" },
+        { "id": "bra-1982-falcao", "name": "Falcão", "pos": "CM", "altPos": ["CAM"], "rating": 89, "shirt": 15, "club": "Roma" },
+        { "id": "bra-1982-eder", "name": "Éder", "pos": "LW", "rating": 85, "shirt": 11, "club": "Atlético Mineiro" },
+        { "id": "bra-1982-cerezo", "name": "Toninho Cerezo", "pos": "CDM", "altPos": ["CM"], "rating": 84, "shirt": 5, "club": "Atlético Mineiro" },
+        { "id": "bra-1982-junior", "name": "Júnior", "pos": "LB", "altPos": ["LM"], "rating": 84, "shirt": 6, "club": "Flamengo" },
+        { "id": "bra-1982-oscar", "name": "Oscar", "pos": "CB", "rating": 80, "shirt": 3, "club": "Internacional" },
+        { "id": "bra-1982-leandro", "name": "Leandro", "pos": "RB", "rating": 80, "shirt": 2, "club": "Flamengo" },
+        { "id": "bra-1982-waldir-peres", "name": "Waldir Peres", "pos": "GK", "rating": 79, "shirt": 1, "club": "São Paulo" },
+        { "id": "bra-1982-dirceu", "name": "Dirceu", "pos": "CM", "rating": 79, "shirt": 21, "club": "Atlético Mineiro" },
+        { "id": "bra-1982-luizinho", "name": "Luizinho", "pos": "CB", "rating": 78, "shirt": 4, "club": "Fluminense" },
+        { "id": "bra-1982-serginho", "name": "Serginho", "pos": "ST", "rating": 77, "shirt": 9, "club": "São Paulo" },
+        { "id": "bra-1982-paulo-isidoro", "name": "Paulo Isidoro", "pos": "RW", "rating": 77, "shirt": 7, "club": "Grêmio" },
+        { "id": "bra-1982-paulo-sergio", "name": "Paulo Sérgio", "pos": "ST", "rating": 76, "shirt": 12, "club": "Botafogo" },
+        { "id": "bra-1982-edevaldo", "name": "Edevaldo", "pos": "CB", "rating": 76, "shirt": 13, "club": "Flamengo" },
+        { "id": "bra-1982-juninho", "name": "Juninho", "pos": "RB", "rating": 76, "shirt": 14, "club": "Corinthians" },
+        { "id": "bra-1982-edinho", "name": "Edinho", "pos": "GK", "rating": 76, "shirt": 16, "club": "Fluminense" },
+        { "id": "bra-1982-batista", "name": "Batista", "pos": "CDM", "rating": 76, "shirt": 18, "club": "Flamengo" }
+      ]
     }
   ]
 }
