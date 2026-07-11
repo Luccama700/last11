@@ -529,6 +529,54 @@
         { "id": "cro-2018-livakovic", "name": "Dominik Livaković", "pos": "GK", "rating": 79, "shirt": 1, "club": "Dinamo Zagreb" },
         { "id": "cro-2018-pivaric", "name": "Josip Pivarić", "pos": "LB", "rating": 78, "shirt": 22, "club": "Dynamo Kyiv" }
       ]
+    },
+    {
+      "nation": "FRA", "name": "France", "year": 2018, "result": "Winners",
+      "notes": "Deschamps' young champions; a 19-year-old Mbappé and Griezmann both scored in a 4-2 final over Croatia. Kanté + Pogba anchored midfield.",
+      "players": [
+        { "id": "fra-2018-lloris", "name": "Hugo Lloris", "pos": "GK", "rating": 85, "shirt": 1, "club": "Tottenham Hotspur" },
+        { "id": "fra-2018-pavard", "name": "Benjamin Pavard", "pos": "RB", "altPos": ["CB"], "rating": 83, "shirt": 2, "club": "VfB Stuttgart" },
+        { "id": "fra-2018-varane", "name": "Raphaël Varane", "pos": "CB", "rating": 87, "shirt": 4, "club": "Real Madrid" },
+        { "id": "fra-2018-umtiti", "name": "Samuel Umtiti", "pos": "CB", "rating": 84, "shirt": 5, "club": "Barcelona" },
+        { "id": "fra-2018-kimpembe", "name": "Presnel Kimpembe", "pos": "CB", "rating": 82, "shirt": 3, "club": "Paris Saint-Germain" },
+        { "id": "fra-2018-lucas-hernandez", "name": "Lucas Hernández", "pos": "LB", "altPos": ["CB"], "rating": 83, "shirt": 21, "club": "Atlético Madrid" },
+        { "id": "fra-2018-kante", "name": "N'Golo Kanté", "pos": "CDM", "rating": 88, "shirt": 13, "club": "Chelsea" },
+        { "id": "fra-2018-pogba", "name": "Paul Pogba", "pos": "CM", "altPos": ["CDM"], "rating": 87, "shirt": 6, "club": "Manchester United" },
+        { "id": "fra-2018-matuidi", "name": "Blaise Matuidi", "pos": "CM", "altPos": ["LM"], "rating": 83, "shirt": 14, "club": "Juventus" },
+        { "id": "fra-2018-griezmann", "name": "Antoine Griezmann", "pos": "CAM", "altPos": ["ST"], "rating": 89, "shirt": 7, "club": "Atlético Madrid" },
+        { "id": "fra-2018-mbappe", "name": "Kylian Mbappé", "pos": "RW", "altPos": ["ST"], "rating": 90, "shirt": 10, "club": "Paris Saint-Germain" },
+        { "id": "fra-2018-giroud", "name": "Olivier Giroud", "pos": "ST", "rating": 83, "shirt": 9, "club": "Chelsea" },
+        { "id": "fra-2018-dembele", "name": "Ousmane Dembélé", "pos": "RW", "altPos": ["LW"], "rating": 83, "shirt": 11, "club": "Barcelona" },
+        { "id": "fra-2018-tolisso", "name": "Corentin Tolisso", "pos": "CM", "rating": 82, "shirt": 12, "club": "Bayern Munich" },
+        { "id": "fra-2018-lemar", "name": "Thomas Lemar", "pos": "LM", "altPos": ["LW"], "rating": 81, "shirt": 8, "club": "AS Monaco" },
+        { "id": "fra-2018-fekir", "name": "Nabil Fekir", "pos": "CAM", "altPos": ["ST"], "rating": 82, "shirt": 18, "club": "Olympique Lyonnais" },
+        { "id": "fra-2018-sidibe", "name": "Djibril Sidibé", "pos": "RB", "rating": 80, "shirt": 19, "club": "AS Monaco" },
+        { "id": "fra-2018-mandanda", "name": "Steve Mandanda", "pos": "GK", "rating": 80, "shirt": 16, "club": "Olympique de Marseille" }
+      ]
+    },
+    {
+      "nation": "POR", "name": "Portugal", "year": 2006, "result": "Fourth place",
+      "notes": "Scolari's semi-finalists. A 21-year-old Cristiano Ronaldo played as a winger (#17), years before his goal-machine era; Deco and captain Figo ran midfield.",
+      "players": [
+        { "id": "por-2006-ricardo", "name": "Ricardo", "pos": "GK", "rating": 83, "shirt": 1, "club": "Sporting CP" },
+        { "id": "por-2006-paulo-ferreira", "name": "Paulo Ferreira", "pos": "RB", "rating": 82, "shirt": 2, "club": "Chelsea" },
+        { "id": "por-2006-carvalho", "name": "Ricardo Carvalho", "pos": "CB", "rating": 85, "shirt": 16, "club": "Chelsea" },
+        { "id": "por-2006-meira", "name": "Fernando Meira", "pos": "CB", "rating": 82, "shirt": 5, "club": "VfB Stuttgart" },
+        { "id": "por-2006-nuno-valente", "name": "Nuno Valente", "pos": "LB", "rating": 80, "shirt": 14, "club": "Everton" },
+        { "id": "por-2006-miguel", "name": "Miguel", "pos": "RB", "rating": 81, "shirt": 13, "club": "Valencia" },
+        { "id": "por-2006-caneira", "name": "Caneira", "pos": "LB", "altPos": ["CB"], "rating": 79, "shirt": 3, "club": "Sporting CP" },
+        { "id": "por-2006-ricardo-costa", "name": "Ricardo Costa", "pos": "CB", "rating": 79, "shirt": 4, "club": "FC Porto" },
+        { "id": "por-2006-costinha", "name": "Costinha", "pos": "CDM", "rating": 83, "shirt": 6, "club": "Dynamo Moscow" },
+        { "id": "por-2006-maniche", "name": "Maniche", "pos": "CDM", "altPos": ["CM"], "rating": 83, "shirt": 18, "club": "Chelsea" },
+        { "id": "por-2006-petit", "name": "Petit", "pos": "CDM", "altPos": ["CM"], "rating": 81, "shirt": 8, "club": "Benfica" },
+        { "id": "por-2006-tiago", "name": "Tiago", "pos": "CM", "altPos": ["CDM"], "rating": 82, "shirt": 19, "club": "Lyon" },
+        { "id": "por-2006-deco", "name": "Deco", "pos": "CAM", "altPos": ["CM"], "rating": 86, "shirt": 20, "club": "Barcelona" },
+        { "id": "por-2006-figo", "name": "Luís Figo", "pos": "RW", "altPos": ["RM"], "rating": 85, "shirt": 7, "club": "Internazionale" },
+        { "id": "por-2006-ronaldo", "name": "Cristiano Ronaldo", "pos": "RW", "altPos": ["LW"], "rating": 87, "shirt": 17, "club": "Manchester United" },
+        { "id": "por-2006-simao", "name": "Simão", "pos": "LW", "altPos": ["LM"], "rating": 82, "shirt": 11, "club": "Benfica" },
+        { "id": "por-2006-pauleta", "name": "Pauleta", "pos": "ST", "rating": 83, "shirt": 9, "club": "Paris Saint-Germain" },
+        { "id": "por-2006-nuno-gomes", "name": "Nuno Gomes", "pos": "ST", "rating": 81, "shirt": 21, "club": "Benfica" }
+      ]
     }
   ]
 }
