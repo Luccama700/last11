@@ -4,7 +4,7 @@ import {
   draftOptionsV2,
   effectiveRatingV2,
   slotFitsForPlayer,
-  type SlotFit,
+  sortByBoost,
 } from '../../engine/draft';
 import { squadByRef, v2Nations } from '../../engine/data/loader';
 import type {
@@ -66,10 +66,12 @@ export default function DraftScreenV2(props: {
   const revealed = props.spunRoll !== null && (settled || !props.animate);
   const nations = useMemo(() => v2Nations(2026), []);
   const options = props.spunRoll ? draftOptionsV2(humanSlate, props.spunRoll) : [];
+  // Always ranked by the biggest boost to squad points (Lucca's rule).
+  const ranked = useMemo(
+    () => sortByBoost(options, humanSlate, formation, affinity),
+    [options, humanSlate, formation, affinity],
+  );
   const strength = strengthOf(humanSlate, affinity);
-
-  const bestFitOf = (player: PlayerV2): SlotFit | undefined =>
-    slotFitsForPlayer(humanSlate, formation, player, affinity)[0];
 
   function pickPlayer(player: PlayerV2) {
     const fits = slotFitsForPlayer(humanSlate, formation, player, affinity);
@@ -95,13 +97,14 @@ export default function DraftScreenV2(props: {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      {/* On desktop the whole draft fits ONE viewport: the grid is h-screen, the
-          pitch flexes to the leftover height (aspect keeps it in proportion), and
-          the squad card scrolls internally instead of growing the page. */}
-      <div className="mx-auto grid max-w-6xl gap-5 px-4 py-4 lg:h-screen lg:grid-cols-[16rem_1fr_15rem]">
-        {/* Left: tactics rail */}
-        <aside className="order-2 lg:order-1 lg:min-h-0 lg:overflow-y-auto">
+    <div className="bg-stadium min-h-screen text-ink-100">
+      {/* One-viewport desktop layout (Lucca's Image-#4 direction): LEFT rail =
+          tactics + the rolled squad card, CENTER = pitch with the big gold SPIN
+          beneath it, RIGHT = box score. The rail scrolls internally; the pitch
+          flexes to the leftover height so the page itself never scrolls. */}
+      <div className="mx-auto grid max-w-7xl gap-5 px-4 py-4 lg:h-screen lg:grid-cols-[21rem_1fr_15rem]">
+        {/* Left: tactics rail + squad flow */}
+        <aside className="order-2 space-y-4 lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
           <TacticsRail
             formationName={formation.name}
             style={props.style}
@@ -112,20 +115,37 @@ export default function DraftScreenV2(props: {
             filled={filled}
             slotCount={slotCount}
           />
+          {props.spunRoll !== null && revealed && !draftDone && (
+            <SquadCard
+              roll={props.spunRoll}
+              squadName={squadByRef(props.spunRoll.nation, props.spunRoll.year).name}
+              options={ranked}
+              mode={props.mode}
+              onPick={pickPlayer}
+              respinTokens={props.respinTokens}
+              onRespin={props.respinTokens > 0 ? props.onRespin : undefined}
+            />
+          )}
+          {props.spunRoll === null && !draftDone && (
+            <div className="card-gloss rounded-2xl p-4 text-center text-xs leading-relaxed text-ink-500">
+              Spin to draw a national team and a World Cup — the squad lands here.
+            </div>
+          )}
         </aside>
 
-        {/* Center: pitch + spin/squad flow */}
+        {/* Center: pitch + spin flow */}
         <main className="order-1 lg:order-2 lg:flex lg:min-h-0 lg:flex-col">
           <header className="mb-3 flex shrink-0 items-baseline justify-between">
-            <h1 className="text-xl font-black tracking-tight">
-              Last<span className="text-emerald-400">11</span>
-              <span className="ml-2 text-xs font-semibold text-slate-500">THE DRAFT</span>
+            <h1 className="headline text-xl">
+              <span className="text-ink-100">Last</span>
+              <span className="headline-gold">11</span>
+              <span className="ml-3 text-xs tracking-[0.3em] text-ink-500">THE DRAFT</span>
             </h1>
             {pending && (
               <button
                 type="button"
                 onClick={() => setPending(null)}
-                className="text-xs font-semibold text-amber-300 hover:text-amber-200"
+                className="cursor-pointer text-xs font-semibold text-gold-300 hover:text-gold-400"
               >
                 placing {pending.player.name} — tap a slot · cancel
               </button>
@@ -143,14 +163,14 @@ export default function DraftScreenV2(props: {
             />
           </div>
 
-          <div className="mt-3 lg:max-h-[44vh] lg:shrink-0 lg:overflow-y-auto">
+          <div className="mt-3 shrink-0">
             {draftDone ? (
-              <div className="flex flex-col items-center gap-3 rounded-2xl border border-emerald-500/30 bg-slate-900 p-6 text-center">
-                <p className="text-2xl font-black">Your XI is locked in 🔒</p>
+              <div className="card-gloss animate-gold-pulse flex flex-col items-center gap-3 rounded-2xl !border-gold-500/60 p-5 text-center">
+                <p className="headline text-2xl text-ink-100">Your XI is locked in 🔒</p>
                 <button
                   type="button"
                   onClick={props.onEnterBattle}
-                  className="rounded-xl bg-emerald-500 px-8 py-3.5 text-lg font-black text-slate-950 shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-400"
+                  className="btn-gold headline cursor-pointer rounded-xl px-10 py-3.5 text-lg"
                 >
                   ENTER THE ARENA →
                 </button>
@@ -163,26 +183,17 @@ export default function DraftScreenV2(props: {
                 onSettled={() => setSettled(true)}
               />
             ) : props.spunRoll !== null ? (
-              <SquadCard
-                roll={props.spunRoll}
-                squadName={squadByRef(props.spunRoll.nation, props.spunRoll.year).name}
-                players={options}
-                mode={props.mode}
-                bestFitOf={bestFitOf}
-                onPick={pickPlayer}
-                respinTokens={props.respinTokens}
-                onRespin={props.respinTokens > 0 ? props.onRespin : undefined}
-              />
+              <p className="py-2 text-center text-xs text-ink-500">
+                Pick from the <span className="font-bold text-gold-300">squad card</span> — best
+                boosts first{props.respinTokens > 0 ? ' · or re-spin' : ''}.
+              </p>
             ) : (
-              <div className="flex flex-col items-center gap-5 rounded-2xl border border-slate-800 bg-slate-900 p-8">
-                <p className="text-center text-slate-400">
-                  Spin the wheel — land a nation &amp; World Cup year, then pick any player into an open slot.
-                </p>
+              <div className="flex items-center justify-center gap-6 py-1">
                 <button
                   type="button"
                   onClick={props.onSpin}
                   data-tour="spin-button"
-                  className="rounded-full bg-emerald-500 px-12 py-5 text-2xl font-black text-slate-950 shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-400"
+                  className="btn-gold headline cursor-pointer rounded-full px-16 py-4 text-2xl"
                 >
                   SPIN 🎡
                 </button>
@@ -192,7 +203,7 @@ export default function DraftScreenV2(props: {
         </main>
 
         {/* Right: box score */}
-        <aside className="order-3">
+        <aside className="order-3 lg:min-h-0 lg:overflow-y-auto">
           <BoxScorePanel slate={humanSlate} />
         </aside>
       </div>

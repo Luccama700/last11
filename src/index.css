@@ -1,4 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Russo+One&display=swap');
 @import 'tailwindcss';
+
+/* ── Last11 "Gold & Stadium Night" theme (2026-07-11 redesign) ─────────────────
+   Deep navy-black stadium backdrop · champagne-gold accents · emerald pitch,
+   with a retro-FIFA-2012 gloss: shiny cards, diagonal sheen, sporty type.
+   Semantic tokens only — components never hardcode raw hex. */
+@theme {
+  --font-display: 'Russo One', 'Arial Black', sans-serif;
+  --font-sans: 'Chakra Petch', ui-sans-serif, system-ui, sans-serif;
+
+  /* Surfaces */
+  --color-night-950: #05080f; /* page backdrop */
+  --color-night-900: #0a1120; /* base panels */
+  --color-night-800: #101a30; /* raised cards */
+  --color-night-700: #1a2742; /* hover / borders-strong */
+  --color-night-600: #2a3a5c; /* subtle borders */
+
+  /* Champagne gold (CTA / accents) */
+  --color-gold-300: #f4dfa4;
+  --color-gold-400: #e8c468;
+  --color-gold-500: #d4a843;
+  --color-gold-600: #a16207;
+
+  /* Pitch */
+  --color-pitch-500: #128a45;
+  --color-pitch-600: #0e7a3c;
+  --color-pitch-700: #0a5c2e;
+  --color-pitch-800: #084a25;
+
+  /* Text */
+  --color-ink-100: #f3f5f9;
+  --color-ink-300: #b9c2d4;
+  --color-ink-500: #8b95ab;
+
+  /* Semantic */
+  --color-win: #34d399;
+  --color-loss: #f0554d;
+  --color-draw: #94a3b8;
+}
+
+/* Stadium backdrop: vignette + faint floodlight beams. */
+.bg-stadium {
+  background:
+    radial-gradient(1200px 500px at 50% -10%, rgba(232, 196, 104, 0.07), transparent 60%),
+    radial-gradient(900px 400px at 15% 110%, rgba(18, 138, 69, 0.06), transparent 60%),
+    radial-gradient(900px 400px at 85% 110%, rgba(18, 138, 69, 0.06), transparent 60%),
+    var(--color-night-950);
+}
+
+/* Retro-FIFA glossy card: top sheen + hairline gold-tinted edge. */
+.card-gloss {
+  position: relative;
+  background: linear-gradient(180deg, var(--color-night-800), var(--color-night-900));
+  border: 1px solid var(--color-night-600);
+  border-top-color: rgba(232, 196, 104, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.card-gloss::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.07) 0%, transparent 28%);
+  pointer-events: none;
+}
+
+/* Gold CTA (single primary action per screen). */
+.btn-gold {
+  background: linear-gradient(180deg, var(--color-gold-300), var(--color-gold-400) 45%, var(--color-gold-500));
+  color: #231a05;
+  border: 1px solid var(--color-gold-600);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 0 24px rgba(232, 196, 104, 0.28),
+    0 6px 18px rgba(0, 0, 0, 0.5);
+  transition: transform 150ms ease-out, box-shadow 200ms ease-out, filter 150ms ease-out;
+}
+.btn-gold:hover {
+  filter: brightness(1.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 0 34px rgba(232, 196, 104, 0.42),
+    0 8px 22px rgba(0, 0, 0, 0.5);
+}
+.btn-gold:active {
+  transform: scale(0.97);
+}
+
+/* Display headline treatment. */
+.headline {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.headline-gold {
+  background: linear-gradient(180deg, var(--color-gold-300), var(--color-gold-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Pitch stripes (shared by boards + playback). */
+.pitch-grass {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      var(--color-pitch-600) 0,
+      var(--color-pitch-600) 9.5%,
+      var(--color-pitch-700) 9.5%,
+      var(--color-pitch-700) 19%
+    );
+  border: 1px solid rgba(232, 196, 104, 0.18);
+}
 
 @keyframes pop {
   from {
@@ -20,9 +135,65 @@
     transform: translateX(0);
   }
 }
+@keyframes gold-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 18px rgba(232, 196, 104, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 34px rgba(232, 196, 104, 0.55);
+  }
+}
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-8vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(105vh) rotate(720deg);
+    opacity: 0.7;
+  }
+}
+@keyframes kick-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
 .animate-pop {
   animation: pop 0.25s ease-out both;
 }
 .animate-row-in {
   animation: row-in 0.3s ease-out both;
+}
+.animate-gold-pulse {
+  animation: gold-pulse 2.2s ease-in-out infinite;
+}
+.animate-kick-pop {
+  animation: kick-pop 0.35s ease-out both;
+}
+.confetti-piece {
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 14px;
+  animation: confetti-fall 3.2s linear both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pop,
+  .animate-row-in,
+  .animate-gold-pulse,
+  .animate-kick-pop,
+  .confetti-piece {
+    animation: none;
+  }
 }
