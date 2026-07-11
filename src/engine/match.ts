@@ -263,6 +263,22 @@ export function resolveMatchOutcome(home: MatchSide, away: MatchSide, seed: numb
   return { homeGoals: score.home, awayGoals: score.away, goals, shootout, xg, homeZ, awayZ };
 }
 
+/**
+ * Canonical per-match seed (CONTRACT §4). Both the headless tournament (for the
+ * table via `resolveMatch`) and the App's watched playback (via
+ * `simulateMatchTimeline`) MUST derive a match's seed with THIS function, so the
+ * watched scoreline is guaranteed identical to the table's — and a future server
+ * can name a match by (tournamentSeed, round, matchIndex) coordinates alone.
+ * Integer hash mix (deterministic, well-distributed).
+ */
+export function matchSeed(tournamentSeed: number, round: number, matchIndex: number): number {
+  let h = tournamentSeed >>> 0;
+  h = Math.imul(h ^ (round + 0x9e3779b9), 0x85ebca6b) >>> 0;
+  h = Math.imul(h ^ (matchIndex + 0x27d4eb2f), 0xc2b2ae35) >>> 0;
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+
 /** Score-only entry point (headless BR rounds). */
 export function resolveMatch(home: MatchSide, away: MatchSide, seed: number): MatchResultV2 {
   const o = resolveMatchOutcome(home, away, seed);

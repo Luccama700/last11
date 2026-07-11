@@ -3,12 +3,7 @@ import { createRng } from './rng';
 import { affinity, effectiveRating } from './affinity';
 import { zonalStrength } from './rating';
 import { moraleFromGoals } from './morale';
-import {
-  computeXg,
-  resolveMatch,
-  resolveMatchOutcome,
-  type MatchSide,
-} from './match';
+import { computeXg, matchSeed, resolveMatch, type MatchSide } from './match';
 import { simulateMatchTimeline } from './timeline';
 import { formationById, type Tactics } from './types';
 import type { PlayerV2, Position } from './data/schema';
@@ -103,6 +98,24 @@ describe('determinism & score/timeline agreement', () => {
       expect(t.finalScore).toEqual({ home: r.homeGoals, away: r.awayGoals });
       expect(t.shootout?.winner).toEqual(r.shootout?.winner);
     }
+  });
+
+  it('matchSeed is the canonical seam: table (resolveMatch) === watched (timeline)', () => {
+    const S = 0xc0ffee;
+    for (let round = 0; round < 6; round++) {
+      for (let mi = 0; mi < 16; mi++) {
+        const seed = matchSeed(S, round, mi);
+        expect(matchSeed(S, round, mi)).toBe(seed); // deterministic
+        const r = resolveMatch(home, away, seed);
+        const t = simulateMatchTimeline(home, away, seed);
+        expect(t.finalScore).toEqual({ home: r.homeGoals, away: r.awayGoals });
+        expect(t.shootout?.winner).toEqual(r.shootout?.winner);
+      }
+    }
+    // distinct coordinates ⇒ distinct seeds (no collisions across a round)
+    const seeds = new Set<number>();
+    for (let mi = 0; mi < 100; mi++) seeds.add(matchSeed(S, 2, mi));
+    expect(seeds.size).toBe(100);
   });
 });
 
