@@ -10,8 +10,10 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
   const human = humanOf(state)!;
   const champion = aliveOf(state)[0];
   const won = state.humanPlacement === 1;
-  const roundsSurvived = state.rounds.filter((r) =>
-    r.table.some((row) => row.managerId === human.id),
+  const roundsSurvived = state.rounds.filter(
+    (r) =>
+      r.table.some((row) => row.managerId === human.id) &&
+      !r.eliminatedIds.includes(human.id),
   ).length;
   const strength = teamStrength(human.xi);
 
