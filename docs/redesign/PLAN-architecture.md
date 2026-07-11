@@ -1,9 +1,10 @@
 # PLAN — Architecture, contract & multiplayer-readiness
 
 Owner: worker-7 (integrator). Phase R (research + plan only). Companion file:
-`CONTRACT.md` (the shared types). Status: **v0.2 (2026-07-11)** — PLAN-draft and
-PLAN-qa reconciled (see the Reconciliation log); still awaiting PLAN-database,
-PLAN-engine, PLAN-sim.
+`CONTRACT.md` (the shared types). Status: **v0.3 (2026-07-11)** — all six plans
+landed and reconciled; the seven cross-plan conflicts are resolved in CONTRACT
+v0.3 and reviewed below. Includes the **Tier-A Demo Contract** (promised in
+R-compose).
 
 ---
 
@@ -245,6 +246,52 @@ bots; affinity matrix in-bounds + diagonal 1; `resolveMatch` score ==
 
 ---
 
+## Tier-A Demo Contract (the R-compose deliverable)
+
+The one thing that can sink a six-stream redesign: five internally-fine Tier-A cuts
+that **don't compose** into one playable Saturday demo (an 8-formation picker over an
+engine that distinguishes 3; a box-score panel with no numbers behind it; a playback
+view with no timeline). This is the binding agreement on the EXACT Tier-A feature set,
+so every stream cuts to the same line. **If a row below can't be green by Saturday
+afternoon, its flag ships OFF and the demo falls back to the row's stated fallback —
+`main` stays playable no matter what.**
+
+| Capability | In Tier A | Owner(s) | Hard dependency | Fallback if it slips |
+|---|---|---|---|---|
+| 12 positions + affinity matrix (real values) | ✅ | engine (values), me (shape) | CONTRACT §1 | diagonal-1/off-0.75 placeholder = today's behavior |
+| Formation picker | ✅ **all 8** (cheap data) | draft | FORMATIONS §3 | curate to 3–4 if pitch-layout time-boxed |
+| Free-pick onto pitch board | ✅ | draft | affinity shape | — (headline change, must ship) |
+| Playing style (def/bal/att) **that moves results** | ✅ | draft (UI), engine (effect) | Tactics §3 | style stored but ±0 effect (cosmetic) |
+| One extra lever | ✅ **line height only** | engine | Tactics §3 | drop lever; style-only |
+| Year roll (nation, year) | ✅ **if** DB v2 lands | draft, database | squads-by-year | nation-only roll vs current flat squads |
+| Data v2 (12 nations 2026 + 3 hero squads) | ✅ | database | schema v2 | coarse→detailed adapter over today's JSON |
+| Match engine v2 (closed-form + Dixon–Coles) | ✅ **behind flag** | engine | CONTRACT §4 | v1 Poisson (flag OFF) — demo-safe default |
+| `MatchTimeline` emitted (synthesized frames) | ✅ | engine | CONTRACT §4 | sim's adapter fabricates from `MatchResult` |
+| On-screen playback of YOUR matches (~45s) | ✅ | sim | timeline | static instant table (today) |
+| Momentum meter + ball + ticker + goal flash | ✅ | sim | ticks/events | score-only scoreboard |
+| Scoreboard rail (other matches) | ✅ **final scores** (live-tick = Tier B) | sim | `MatchResult.goals` | static final-score strip |
+| Box score panel (GK/DEF/MID/ATT + xG) | ✅ | engine (numbers), draft (panel) | `boxScore` §4 | draft's fixed-weight proxy numbers |
+| Balance harness + determinism/shape tests | ✅ | qa | engine v2 | run against v1 for a baseline |
+| Classic vs Memory mode | ❌ Tier B | draft | — | — |
+| Live-ticking rail / marquee / 2×–4× | ❌ Tier B | sim | — | — |
+| Zonal Markov chain / pressing/tempo/man-mark | ❌ Tier B | engine | — | — |
+| Multiplayer | ❌ Tier B/3 | me | — | — |
+
+**The demo-safe spine (must be green even if everything else falls back):** the
+current game runs with all v2 flags OFF. Every "fallback" column collapses to
+today's shipped behavior, so the worst case is "Last11 as it is now, plus whatever
+v2 rows went green." **Non-negotiables that MUST go green for the demo to be the
+*new* game** (if these slip, we ship the current game and say so): 12-position
+free-pick draft, style-that-matters, and on-screen playback of your match. Those
+three are the story; everything else is upside.
+
+**Enforcement:** I hold a flag matrix in `src/game/flags.ts` and flip each v2 flag ON
+only when its row is green (tests + a manual pass). Saturday afternoon I do the compose
+check — draft, play a full BR, watch a match — with the intended demo flag set, and cut
+any row that isn't solid to its fallback. This table is the checklist.
+
+---
+
 ## Reconciliation log
 
 - **v0.1 (2026-07-11):** authored before any `PLAN-*.md` peer landed. CONTRACT.md
@@ -252,6 +299,12 @@ bots; affinity matrix in-bounds + diagonal 1; `resolveMatch` score ==
 - **v0.2 (2026-07-11):** reconciled PLAN-draft + PLAN-qa into CONTRACT v0.2 (see
   below). Still awaiting PLAN-database, PLAN-engine, PLAN-sim (their `samples/`
   landed but not the plans).
+- **v0.3 (2026-07-11):** all six plans in. Resolved the seven cross-plan conflicts
+  in CONTRACT v0.3 (affinity transposition + family expansion + strictly-`>0`;
+  canonical formation set; timeline field set/ranges + boxScore + nullable team +
+  goal `scoreAfter` + `counter`; `MatchResult.goals`; chemistry design flag Q9) and
+  published the Tier-A Demo Contract above (R-compose). No shape conflicts remain
+  open — only Lucca's calibration answers.
 
 ### Peer-plan review
 
@@ -299,8 +352,50 @@ the exact feature set every stream's Tier A must hit so the Saturday demo is
 internally consistent (draft's proxy box-score in §2b already anticipates this).
 This is the single highest-value integration check; it goes in CONTRACT v0.3.
 
-**Still awaiting:** PLAN-database (squad size, id scheme, secondaries, rating
-rubric bounds → CONTRACT §2), PLAN-engine (affinity VALUES, `Tactics` levers,
-timeline producer → §1/§3/§4), PLAN-sim (match duration + wall-clock → §4/§5).
-`samples/brazil-2002.json` and `samples/match-playback.html` landed ahead of
-their plans; treated as provisional until the plans confirm shapes.
+**PLAN-engine.md (hackathon-builder) — strong, reconciled with two corrections.**
+Zonal-strength front-end + affinity matrix + tactic modifiers (Tier A closed-form
+Poisson + Dixon–Coles; Tier B zonal Markov chain), one-generator/two-emitter for
+the fast headless path, 16-question decision questionnaire.
+- ⚠️ **Affinity table authored TRANSPOSED** (`affinity[slot][natural]`) vs canonical
+  `matrix[natural][slot]`; asymmetric ⇒ values change. Resolved in CONTRACT §1 with
+  an explicit transcription rule (`matrix[natural][slot] = engineTable[slot][natural]`)
+  and flipped worked examples. Engine also authored a 9×9 *family* table — CONTRACT §1
+  documents the family→12×12 L/R expansion so the flip is applied once at build time.
+- ⚠️ **Formation-set mismatch:** engine listed `4-2-2-2`, dropped `4-2-4`. Canonical is
+  the draft/7a0 eight (keeps `4-2-4`). Engine authors its zone-weight map for those.
+- ✅ **Chemistry** reframed to a MID/ATT cohesion multiplier — good, EXCEPT the new
+  draft makes same-`(nation,year)` pairs near-impossible, so it silently dies. Elevated
+  to CONTRACT open Q9 (design decision for Lucca; my rec = same-nation-any-year for
+  Tier A). Engine's own Q13 asks "keep chemistry?" — Lucca should answer them together.
+- ✅ Determinism guarantees (`resolveMatch` ≡ `simulateMatchTimeline().finalScore`,
+  pure `simulateTimeline`) match the MP memo exactly. `boxScore` folded into CONTRACT §4.
+
+**PLAN-database.md (worker-6) — strong, reconciled.** Absolute cross-era 1–99 rubric
+(quality-not-athleticism, per-tournament snapshot), 15 named anchors, `(nation,year)`
+squads 16–23, verified Brazil-2002 sample, steal-pool-from-full-rolled-squads.
+- ✅ Id scheme `${nation}-${year}-${slug}` adopted verbatim into CONTRACT §2.
+- 🔧 **Field-name reconciliation:** db's raw type uses `pos`/`altPos` and keeps
+  `nation`/`year` on the squad only; engine/draft consume `position`/`secondary` and
+  the engine's chemistry needs `nation` ON the player. CONTRACT §2 resolves it the way
+  `data.ts` already works: raw JSON stays lean (`pos`/`altPos`, squad-level nation/year),
+  the **loader denormalizes** nation/year down and renames fields to the in-memory
+  `PlayerV2`. No churn to the sample file.
+- ✅ `Squad`→`SquadEntry`, `Manager.rolledSquads`, `squadByRef(nation,year)`,
+  `Zone`/`POSITION_ZONE` rollup all folded in. Steal-pool size blow-up flagged (Q7).
+
+**PLAN-sim.md (codex-ui) — strong, already self-reconciled to CONTRACT.** rAF clock +
+pure `projectMatch`, SofaScore-style momentum meter, watched-vs-rail split, runnable
+HTML wireframe. It proactively adopted CONTRACT §4/§5 naming — thank you.
+- ✅ **Timeline field set ratified (conflict 3):** sim wants `pressure`+`ballX`, engine
+  emits `momentum`+`ballPos`; CONTRACT §4 `TimelineTick` now carries BOTH `ballPosition`
+  (0..1, engine converts from its −1..+1) and `momentum` (−1..+1). Events get nullable
+  `team`, required `text`, `scoreAfter` required-on-goal, `'counter'` type.
+- ✅ **Rail goal stamps (conflict 4):** `MatchResult.goals:{minute,team}[]`, engine-
+  produced in the shared score core (NOT sim's UI-fabrication fallback — that would
+  desync from the real timeline and break MP). Sim's Q7/Q8 fallbacks are thereby closed.
+- ✅ `MATCH_DURATION_MS`/`VIRTUAL_MINUTES`/`CELEBRATION_MS` promoted into CONTRACT §5 as
+  shared MP constants. `animate===false` headless path preserved as a hard contract.
+
+**All six plans now reconciled into CONTRACT v0.3.** No unresolved shape conflicts
+remain; the open items are Lucca's calibration/questionnaire answers, not integration
+disagreements.

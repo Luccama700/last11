@@ -1,39 +1,46 @@
 # CONTRACT.md — shared types for the Last11 redesign
 
-Owner: worker-7 (integrator). Status: **v0.2 (2026-07-11)** — reconciled against
-`PLAN-draft.md` (bug-hunt) and `PLAN-qa.md` (test-hardening). Awaiting
-`PLAN-database`, `PLAN-engine`, `PLAN-sim`. Every block below marks whether the
-SHAPE is frozen (mine to own) or whether VALUES/extra fields are still owned by
-another workstream. When a peer plan lands I reconcile here and bump the version.
+Owner: worker-7 (integrator). Status: **v0.3 (2026-07-11)** — all six peer plans
+landed and are reconciled here (PLAN-draft, -database, -engine, -sim, -qa).
+Each block marks whether the SHAPE is frozen (mine) or whether VALUES/extra
+fields are owned by another workstream.
 
-> **v0.2 reconciliation summary:** canonicalized the affinity signature to
-> `affinity(natural, slot)` / `matrix[natural][slot]` (draft wrote the args
-> flipped — resolved here); declared the matrix **asymmetric-allowed** (answers
-> QA's open symmetry question); added `year` to `PlayerV2` (draft wants
-> self-describing players for the steal pool); added draft `mode` +
-> `respinTokens` to the game-state deltas; froze the sparse-XI-during-draft /
-> dense-after-draft invariant.
-
-> How to read this file: this is the single source of truth for the *shapes* the
-> four streams build against. If your plan needs a shared type, it must match a
-> block here or add an `ASSUMPTION:` note that I fold in. Do not silently invent a
-> conflicting shape — that is exactly the integration bug this file exists to
-> prevent.
+> This is the single source of truth for the *shapes* the four build-streams
+> compile against. If your plan needs a shared type, it matches a block here.
+> Where two plans disagreed, the resolution is called out **loudly** inline —
+> those are the integration bugs this file exists to kill before code.
 
 Legend: 🔒 shape frozen by me · 🎛️ values owned by engine · 🗄️ shape aligns with
-database · 🎬 shape aligns with sim · ⏳ awaiting a peer plan to confirm.
+database · 🎬 shape aligns with sim.
+
+### v0.3 reconciliation summary (the seven conflicts the orchestrator flagged)
+
+1. **Affinity table was authored TRANSPOSED** — engine §3.2 is `affinity[slot][natural]`,
+   canonical is `matrix[natural][slot]`. Since the matrix is asymmetric this changes
+   values. **Transcription rule + flipped examples in §1.** ⚠️
+2. **Formation-set mismatch** — engine listed `4-2-2-2` and dropped `4-2-4`; canonical
+   is the **draft/7a0 set (keeps `4-2-4`, no `4-2-2-2`)**. Engine: swap it. §3.
+3. **Timeline field set ratified** — `TimelineTick` carries BOTH `ballPosition` (0..1)
+   and `momentum` (−1..+1); `MatchTimeline` gains `boxScore`; events get nullable `team`,
+   required `text`, `scoreAfter` required-on-goal, and a `'counter'` type. §4.
+4. **Rail goal stamps** — `MatchResult.goals:{minute,team}[]`, engine-produced in the
+   shared score core (NOT UI-fabricated). §4.
+5. **Affinity cells strictly > 0** locked as an invariant (engine floor .20 → free). §1.
+6. **Chemistry is structurally broken by the new draft** — flagged as a DESIGN DECISION
+   for Lucca (Q9), not decided here. §2 note + open questions.
+7. **Tier-A demo contract** published — see `PLAN-architecture.md` (new section).
+
+Also: `PlayerV2` field-name reconciliation (raw `pos`/`altPos` → in-memory
+`position`/`secondary`; loader denormalizes `nation`/`year`); `Squad` → `SquadEntry`;
+`rolledTeams` → `rolledSquads`.
 
 ---
 
 ## 1. Position & affinity (🔒 shape / 🎛️ values)
 
-The 12 detailed positions replace the 4 coarse ones (`GK|DF|MF|FW`).
-
 ```ts
-// The vocabulary. A formation selects 11 of these (with repeats); a player has
-// one PRIMARY position (optionally secondaries). Ordering is deliberate:
-// goal → back line (R→L) → pivots → line (R→L) → wings → striker. Keep this
-// order; the tactics-board pitch layout and any bucketed UI depend on it.
+// 12 detailed positions. Order is deliberate (goal → back line R→L → pivots →
+// wide mids → wingers → striker); UI layout + bucketing depend on it.
 export type Position =
   | 'GK'
   | 'RB' | 'CB' | 'LB'
@@ -45,135 +52,170 @@ export type Position =
 export const POSITIONS: readonly Position[] = [
   'GK', 'RB', 'CB', 'LB', 'CDM', 'CM', 'CAM', 'RM', 'LM', 'LW', 'RW', 'ST',
 ];
+
+// Coarse zone rollup (database §2). Used by the back-compat adapter, the engine's
+// zonal sums, and the box score. Every detailed position maps to exactly one zone.
+export type Zone = 'GK' | 'DEF' | 'MID' | 'ATT';
+export const POSITION_ZONE: Readonly<Record<Position, Zone>> = {
+  GK: 'GK',
+  RB: 'DEF', CB: 'DEF', LB: 'DEF',
+  CDM: 'MID', CM: 'MID', CAM: 'MID', RM: 'MID', LM: 'MID',
+  LW: 'ATT', RW: 'ATT', ST: 'ATT',
+};
 ```
 
 ### Position affinity matrix
 
-Replaces the flat `OFF_POSITION_MULT = 0.75`. `matrix[natural][slot]` is the
-fraction of a player's rating retained when his PRIMARY position `natural` is
-played in formation `slot`. Diagonal is `1.0`. A CM in CDM/CAM should keep most
-of it; a ST at GK almost none.
-
-**CANONICAL SIGNATURE (resolves a cross-plan disagreement):** the accessor is
-`affinity(natural, slot)` — natural position FIRST, slot SECOND — matching the
-matrix index order `matrix[natural][slot]`. `PLAN-draft.md §6` wrote it flipped
-as `affinity(slot, natural)`; **this order wins**, draft adopts it. (It also
-matches the mental model "how well does THIS PLAYER play THAT slot".)
+`matrix[natural][slot]` (equivalently the accessor `affinity(natural, slot)`) is
+the fraction of a player's rating retained when his PRIMARY position `natural` is
+played in formation `slot`. Replaces the flat `OFF_POSITION_MULT = 0.75`.
 
 ```ts
-export type Affinity = number; // 0..1 inclusive
-
-// Full 12×12. Row = player's natural position, Col = slot he is placed in.
+export type Affinity = number; // (0, 1]  — see invariants
 export type AffinityMatrix = Readonly<Record<Position, Readonly<Record<Position, Affinity>>>>;
-
-/** Canonical accessor. natural = player's primary position; slot = formation slot. */
-export type AffinityFn = (natural: Position, slot: Position) => Affinity;
+export type AffinityFn = (natural: Position, slot: Position) => Affinity; // natural FIRST
 
 export interface AffinityConfig {
   matrix: AffinityMatrix;
-  /** Values below this make a slot "incompatible" for draft-UI gating (see draft plan).
-   *  This is ALSO the lever for the 7a0-strict eligibility model (draft §5 Q1): set
-   *  it high and the draft only offers natural/secondary slots; keep it low and any
-   *  slot is placeable at a penalty (never dead-ends the BR). Lucca's Q1 answer picks. */
-  compatibleThreshold: Affinity; // ASSUMPTION: 0.6 — draft plan may retune
+  /** Below this a slot is "incompatible" for draft-UI gating (draft §2c). Also the
+   *  lever for 7a0-strict eligibility (draft Q1): high = only natural/secondary slots
+   *  offered; low = any slot placeable at a penalty (never dead-ends the BR). */
+  compatibleThreshold: Affinity; // ASSUMPTION 0.6 — draft may retune
 }
 ```
 
-- **Shape owner:** me. It is a full 12×12 lookup. **Symmetry is NOT guaranteed**
-  — `affinity('CM','CDM')` may differ from `affinity('CDM','CM')` (a CM dropping
-  to CDM plausibly loses less than a CDM pushing to CM). This answers QA's open
-  question: **write bounds+diagonal tests unconditionally; do NOT assert
-  symmetry.** Engine may still author a symmetric matrix; the contract just
-  doesn't require it.
-- **Values owner:** engine plan (`PLAN-engine.md`) fills every cell + the
-  threshold. I ship a shape + a placeholder identity/diagonal matrix so the type
-  compiles before values land.
-- **Consumers (mine to wire):**
-  - Draft UI `pickValue()` — an off-slot pick is worth `rating × affinity[nat][slot] + chem + star`.
-  - Engine zonal strength — `effectiveRating(slot, player) = rating × affinity[player.position][slot]`.
-  - QA invariant: all cells in `[0,1]`, diagonal `== 1` (see `PLAN-qa.md`).
+**INVARIANTS (locked as QA tests — QA §Job-2, conflict 5):**
+- **Every cell strictly > 0**: `0 < matrix[a][b] ≤ 1`. A zero could dead-end the
+  draft or zero out a zone. Engine's proposed floor is `.20`, so this is free.
+- **Diagonal == 1.0**: `matrix[p][p] === 1` for all p.
+- **Symmetry NOT required** (and NOT asserted): `matrix['CM']['CDM']` may differ
+  from `matrix['CDM']['CM']`. QA tests bounds + diagonal only.
+
+**⚠️ TRANSPOSITION — read before transcribing engine §3.2 values.** The engine's
+table is authored as `affinity[slot][natural]` (its header reads "Slot ↓ / plays →",
+rows = slot, cols = the player's natural position). Canonical here is the FLIP:
+
+```
+matrix[natural][slot]  =  engineTable[slot][natural]
+```
+
+Because the matrix is asymmetric, transcribing without flipping corrupts values.
+Worked examples (engine numbers, restated in canonical orientation):
+- Engine row `CB`, col `FB` = **.80** → a natural **full-back played at CB** →
+  `matrix['RB']['CB'] = matrix['LB']['CB'] = .80`.
+- Engine row `FB`, col `CB` = **.75** → a natural **CB played at full-back** →
+  `matrix['CB']['RB'] = matrix['CB']['LB'] = .75`.
+- Engine row `ST`, col `CAM` = **.80** → a natural **CAM played at ST** →
+  `matrix['CAM']['ST'] = .80`.
+
+**Family-level authoring + L/R expansion (🔒).** The engine authored a 9×9
+*family* table (GK, CB, FB, CDM, CM, CAM, WM, W, ST), assuming L/R symmetry. Expand
+to the full 12×12 by the family map — `RB,LB → FB`; `RM,LM → WM`; `LW,RW → W`; the
+rest map to themselves — applied to BOTH indices. So `matrix[RB][CB] = matrix[LB][CB]
+= familyTable[CB-slot][FB-natural]`. This keeps the 12×12 well-defined from the
+9×9 source and is where the transposition flip is applied once, at build time.
+
+**Consumers (mine to wire, single source of truth):** draft `pickValue`, engine
+`effectiveRating(slot, player) = rating × matrix[player.position][slot]`, engine
+zonal strength. Draft bots MUST read this same matrix (engine §7) or they draft
+against a different model than the engine rewards.
 
 ---
 
-## 2. PlayerV2 & Squad (🗄️ aligns database)
+## 2. PlayerV2 & SquadEntry (🗄️ database owns; reconciled)
+
+**Two shapes, bridged by the loader (extends today's `RawPlayer`→`Player` pattern
+in `data.ts`).** The raw JSON is lean; the in-memory type is denormalized and is
+what every engine/draft/sim consumer sees.
 
 ```ts
+// ---- RAW (on disk, database owns; see samples/brazil-2002.json) ----
+interface RawPlayerV2 {
+  id: string;            // `${nationLower}-${year}-${slug}`, e.g. 'bra-2002-ronaldo'
+  name: string;
+  pos: Position;         // primary, detailed  (NOTE: field is `pos` on disk)
+  altPos?: Position[];   // 0..2 secondaries, treated as natural (affinity 1.0)
+  rating: number;        // 1..99, per-tournament snapshot
+  fullName?: string; club?: string; shirt?: number; // Tier B flavor
+}
+interface RawSquadEntry {
+  nation: string; name: string; year: number;   // (nation, year) lives HERE, once
+  players: RawPlayerV2[];                        // 16..23 (target 16-18)
+  result?: string; notes?: string;
+}
+interface SquadsFileV2 { version: 2; squads: RawSquadEntry[]; }
+
+// ---- IN-MEMORY (what consumers use; loader produces this) ----
 export interface PlayerV2 {
-  /** Globally unique across (nation, year). Scheme: `${nation}-${year}-${slug}`,
-   *  e.g. 'bra-2002-ronaldo'. The SAME real person in two tournaments is two
-   *  entries with two ids and two ratings — this preserves the genre-norm that a
-   *  player rolled from two different teams is separately draftable. */
   id: string;
   name: string;
-  nation: string;          // 3-letter code, e.g. 'BRA'
-  year: number;            // World Cup year — makes a player self-describing once
-                           // flattened out of its Squad into the steal pool
-                           // (draft §6 wants this; db plan owns the value). Redundant
-                           // with the id scheme + Squad.year, kept for convenience.
-  position: Position;      // primary, detailed
-  secondary?: Position[];  // ASSUMPTION: v2 supports 0..2 secondaries; database plan confirms
-  /** Rating of this player AT this tournament (Messi 2014 ≠ Messi 2026). ~40..99. */
+  nation: string;        // DENORMALIZED from the squad by the loader
+  year: number;          // DENORMALIZED — makes the steal pool self-describing
+  position: Position;    // renamed from raw `pos`
+  secondary?: Position[]; // renamed from raw `altPos`; treated as affinity 1.0
   rating: number;
+  fullName?: string; club?: string; shirt?: number;
 }
-
-/** A squad keyed by (nation, year). Full squad (not just a fielded XI) so the
- *  steal pool v2 can loot the whole roster of eliminated teams. */
-export interface Squad {
-  nation: string;          // code
-  year: number;            // World Cup year, e.g. 2002
-  name: string;            // display, e.g. 'Brazil 2002'
-  players: PlayerV2[];     // ASSUMPTION: 14..18 per squad; database plan sets the target
+export interface SquadEntry {   // in-memory; players carry nation/year
+  nation: string; name: string; year: number;
+  players: PlayerV2[];
+  result?: string; notes?: string;
 }
-
-/** Stable string key for maps/sets. */
-export type SquadKey = `${string}-${number}`; // `${nationCode}-${year}`
+export type SquadKey = `${string}-${number}`;      // `${nationCode}-${year}`
 export const squadKey = (nation: string, year: number): SquadKey => `${nation}-${year}`;
 ```
 
-- **Owner:** database plan owns squad sizes, the rating rubric, and which
-  nation-years exist. I own only that `PlayerV2.rating` is per-tournament and
-  the id scheme guarantees global uniqueness.
-- **Back-compat:** the current `Player` (`GK|DF|MF|FW`, flat rating, `bra-alisson`
-  ids) is adapted forward, not deleted, until data v2 lands (see sequencing §7).
+**Why nation/year are denormalized onto the player (reconciliation):** the engine's
+chemistry reads `player.nation` (today's `teamStrength` already does), and the steal
+pool flattens squads into a bare `PlayerV2[]` — both need the player self-describing.
+Database's raw type keeps them on the squad (correct for storage); the loader stamps
+them down, exactly as `data.ts` already stamps `nation: nation.code` today. Field
+renames `pos→position`, `altPos→secondary` also happen in the loader.
+
+**ID scheme (database §2):** `${nationLower}-${year}-${slug}`, unique across
+(nation, year) by construction. The SAME real player in two tournaments = two ids,
+two ratings, separately draftable (genre norm, preserved).
+
+**⚠️ Chemistry design flag (conflict 6 — for Lucca, NOT decided here).** Engine §3.1
+reframes chemistry as a same-`(nation,year)` cohesion multiplier. But under the new
+draft each spin lands a FRESH `(nation, year)` and you keep ONE player per spin — so
+same-`(nation,year)` pairs are now near-impossible and chemistry silently dies. This
+needs a decision (open Q9); the type impact is only *which* field chem keys on, all
+of which (`nation`, `year`) are already on `PlayerV2`, so no shape change either way.
 
 ---
 
-## 3. Roll, Formation, Tactics (🔒 shape / 🎛️ levers / ⏳ draft+engine)
+## 3. Roll, Formation, Tactics (🔒 shape / 🎛️ levers)
 
 ```ts
-/** One spin result: a nation AND a World Cup year (the "year roll"). */
-export interface RolledTeam {
-  nation: string; // code
-  year: number;
-}
+/** One spin result AND one entry in a manager's rolled set. Type name `RolledTeam`;
+ *  database calls the same thing `SquadRef` — alias, identical fields. */
+export interface RolledTeam { nation: string; year: number; }
+export type SquadRef = RolledTeam;
 
-/** A formation is an ordered list of 11 slots drawn from the 12 positions.
- *  Draft §6 proposed `{name, slots}`; I keep an explicit `id` for stable keys/
- *  flags — `id === name` is fine (both are '4-3-3'), so draft's shape is a subset. */
 export interface Formation {
-  id: string;         // '4-3-3', '4-2-3-1', ... (may equal `name`)
-  name: string;       // display
-  slots: Position[];  // length 11, repeats allowed, GK first by convention
+  id: string;         // '4-3-3' (may equal name)
+  name: string;
+  slots: Position[];  // length 11, GK first, repeats allowed
 }
 
 export type PlayingStyle = 'defensive' | 'balanced' | 'attacking';
 
-/** The tactical config a manager takes into a match. `formationId` + `style` are
- *  frozen; the extra levers are RESERVED here so the engine plan can populate
- *  them without a contract break. Engine plan finalizes which levers exist and
- *  their enums — until then they are optional and default to the middle value. */
 export interface Tactics {
   formationId: string;
   style: PlayingStyle;
-  // 🎛️ RESERVED for engine plan (ASSUMPTION — likely subset of these):
-  pressing?: 'low' | 'mid' | 'high';
+  // 🎛️ engine-owned levers (§3.3). Optional + additive so older Tactics never break.
+  // Engine ships Line height in Tier A (rec); pressing/tempo/man-mark are Tier B.
   lineHeight?: 'deep' | 'mid' | 'high';
-  tempo?: 'patient' | 'balanced' | 'direct'; // possession ↔ counter
-  markKeyPlayer?: boolean;                    // man-mark opponent's best
+  pressing?: 'low' | 'mid' | 'high';
+  tempo?: 'possession' | 'balanced' | 'direct';
+  markKeyPlayer?: string; // opponent playerId (Tier B)
 }
+```
 
-/** The 8 formations from the draft brief (7a0's set). `slots` here is my
- *  proposed canonical mapping; draft+engine reconcile exact slot labels. */
+**⚠️ CANONICAL FORMATION SET (conflict 2) — the draft/7a0 eight:**
+
+```ts
 export const FORMATIONS: readonly Formation[] = [
   { id: '4-3-3',   name: '4-3-3',   slots: ['GK','RB','CB','CB','LB','CDM','CM','CM','RW','ST','LW'] },
   { id: '4-4-2',   name: '4-4-2',   slots: ['GK','RB','CB','CB','LB','RM','CM','CM','LM','ST','ST'] },
@@ -186,158 +228,173 @@ export const FORMATIONS: readonly Formation[] = [
 ];
 ```
 
-- **Owner split:** draft plan owns formation-picker UX + whether formation is
-  locked at kickoff; engine plan owns which extra levers exist and how they move
-  results. My contract: `Tactics` always carries `formationId + style`, extra
-  levers are optional and additive (never break older `Tactics` objects).
+**Engine §3.3 must change to match:** it listed `4-2-2-2` and omitted `4-2-4`.
+Canonical drops `4-2-2-2`, keeps `4-2-4` (7a0's actual set, per draft §1a). Engine's
+zone-weight map should be authored for THESE eight.
 
 ---
 
 ## 4. Match timeline (🔒 shape / 🎬 sim consumes / 🎛️ engine produces)
 
-The engine's output for a WATCHED match. Deterministic given `(homeXI, awayXI,
-homeTactics, awayTactics, seed)`. Headless BR rounds do NOT need the full
-timeline — see the lazy-generation note.
+Engine output for a WATCHED match. Deterministic given `(homeXI, awayXI, homeTactics,
+awayTactics, seed)`. Headless BR rounds use the score-only path (§ MatchResult).
 
 ```ts
-export type Team = 'home' | 'away';
+export type Team = 'home' | 'away'; // per-MATCH roles, not the human. UI maps "you" on.
 
-/** Per-virtual-minute sample driving the momentum/field-position meter.
- *  `ballPosition` 0..1: 0 = deep in HOME's half (home defending), 1 = HOME
- *  attacking / in AWAY's box. `possession` = who has the ball this minute. */
+/** Per-virtual-minute sample. Carries BOTH signals (conflict 3) so the schema is
+ *  stable across tiers; in Tier A the engine MAY derive `momentum` from `ballPosition`
+ *  (they needn't be independent until Tier B's real possession chain). */
 export interface TimelineTick {
   minute: number;          // 0..durationMinutes
-  ballPosition: number;    // 0..1 (see above)
+  ballPosition: number;    // 0..1  — 0 = home goal line, 1 = away goal line (sim's ballX)
+  momentum: number;        // -1..+1 — smoothed pressure, + toward home (sim's pressure)
   possession: Team;
 }
 
 export type TimelineEventType =
   | 'kickoff' | 'halftime' | 'fulltime'
-  | 'chance' | 'shot' | 'save' | 'goal'
-  | 'card';                // ASSUMPTION: cards optional; engine plan confirms
+  | 'chance' | 'shot' | 'save' | 'goal' | 'counter'
+  | 'card';                // card = Tier B
 
-/** A discrete moment for the ticker + goal animations. */
 export interface TimelineEvent {
   minute: number;
   type: TimelineEventType;
-  team: Team;
-  playerId?: string;       // scorer/keeper when known
-  text?: string;           // pre-rendered caption ("SAVED!"), sim may restyle
+  team: Team | null;       // null for neutral events (kickoff/halftime/fulltime)
+  text: string;            // engine-authored ticker caption, rendered verbatim
+  scoreAfter?: { home: number; away: number }; // REQUIRED on type==='goal'
+  playerId?: string;
 }
+
+/** 7a0-style "deserved" box score (engine §3.1 / §4). */
+export interface ZoneBox { gk: number; def: number; mid: number; att: number; overall: number; }
 
 export interface MatchTimeline {
   matchId: string;
-  homeId: string;
-  awayId: string;
+  homeId: string; awayId: string;
   seed: number;
-  durationMinutes: number;               // virtual minutes, ASSUMPTION 90
-  ticks: TimelineTick[];                 // one per virtual minute (length = duration+1)
+  durationMinutes: number;               // virtual minutes; ASSUMPTION 90
+  ticks: TimelineTick[];                 // length = durationMinutes + 1, minutes 0..N
   events: TimelineEvent[];               // minute-sorted
   finalScore: { home: number; away: number };
+  boxScore: { home: ZoneBox; away: ZoneBox; xg: { home: number; away: number } };
 }
 ```
 
-**Invariants (locked as QA tests):**
-- `events.filter(e => e.type === 'goal' && e.team === 'home').length === finalScore.home` (and away).
-- `ticks` minutes are contiguous `0..durationMinutes`; every `ballPosition ∈ [0,1]`.
-- Same seed+inputs ⇒ byte-identical timeline (determinism).
+**Range reconciliation (conflict 3):** engine emits `ballPos ∈ [-1,+1]`; canonical
+`ballPosition ∈ [0,1]`. Engine converts at emit: `ballPosition = (ballPos + 1) / 2`.
+Momentum stays `[-1,+1]` (engine's `momentum` == sim's `pressure`, same field).
 
-**Lazy generation:** the engine exposes two entry points so headless BR stays
-fast — `resolveMatch(...) → MatchScore` (score only, used for 32×3 pairings)
-and `simulateMatchTimeline(...) → MatchTimeline` (full timeline, called ONLY for
-watched matches). `resolveMatch` and the score field of `simulateMatchTimeline`
-MUST agree for the same seed (a QA invariant). Engine plan owns how.
+**Invariants (locked as QA tests):**
+- `Σ events(type='goal', team='home') === finalScore.home` (and away).
+- Every `goal` event carries `scoreAfter`; ticks are contiguous `0..durationMinutes`;
+  `ballPosition ∈ [0,1]`, `momentum ∈ [-1,+1]`.
+- Same seed+inputs ⇒ byte-identical timeline.
+
+**Lazy generation + score/timeline agreement (conflict 4).** Two entry points share
+ONE core loop with ONE rng draw sequence:
+- `resolveMatch(...) → MatchResult` — score-only, used for all ~48 matches/round.
+- `simulateMatchTimeline(...) → MatchTimeline` — full timeline, ONLY for watched matches.
+Their scorelines MUST agree for the same seed (QA determinism test). **`MatchResult`
+gains engine-stamped goal minutes** so the sim's scoreboard rail can tick every match
+without a full timeline — stamped inside the shared score core (one rng draw per goal),
+NOT fabricated UI-side (fabrication would desync from the real timeline and break MP):
+
+```ts
+export interface MatchResult {
+  homeId: string; awayId: string;
+  homeGoals: number; awayGoals: number;
+  goals: { minute: number; team: Team }[];   // NEW — deterministic, in the shared core
+}
+```
+
+Per-match seed derives deterministically from `(tournamentSeed, round, matchIndex)`
+so a server names a match by coordinates (sim §6, engine §4.1).
 
 ---
 
 ## 5. Playback contract (🎬 sim owns, multiplayer-critical)
 
-Playback is a **pure function of `(timeline, elapsedMs)`** — no local randomness,
-no per-frame engine calls. This is the hinge the multiplayer memo swings on.
+Playback is a **pure function of `(timeline, elapsedMs)`** — no local randomness, no
+per-frame engine calls. (Sim §6 ratified this; it's the hinge of the MP memo.)
 
 ```ts
 export interface PlaybackState {
-  virtualMinute: number;                 // derived from elapsedMs & duration
-  score: { home: number; away: number }; // goals with minute <= virtualMinute
-  ballPosition: number;                  // interpolated between ticks
+  virtualMinute: number;                  // pure linear map from elapsedMs
+  clockLabel: string;                     // "45' HT", "90' FT"
+  score: { home: number; away: number };  // goals with minute <= virtualMinute
+  ballPosition: number;                   // interpolated between ticks
+  momentum: number;                       // interpolated
   possession: Team;
-  activeEvent: TimelineEvent | null;     // event firing at ~this moment (for captions)
+  ticker: TimelineEvent[];                // events at/before now, last ~3
+  celebrating: TimelineEvent | null;      // a goal within [t, t+CELEBRATION_MS]
 }
-
 export type RenderPlayback = (timeline: MatchTimeline, elapsedMs: number) => PlaybackState;
+
+// Shared MP-critical constants (sim §5e) — belong in CONTRACT, not a component:
+export const MATCH_DURATION_MS = 45000;   // wall-clock per match @1× (sim Q1)
+export const VIRTUAL_MINUTES   = 90;
+export const CELEBRATION_MS    = 2600;
 ```
 
-- Fixed wall-clock duration per match (ASSUMPTION 45s ≙ 90 virtual min; sim plan
-  sets it). `elapsedMs → virtualMinute` is a pure linear map.
-- Headless/tests pass `elapsedMs = ∞` (or duration) to get the final frame
-  instantly — preserves the `animate={false}` synchronous path.
+`animate === false` (headless/tests) ⇒ clock returns `end` immediately, `RenderPlayback`
+yields the final frame synchronously; playback is skipped, `intro → results` directly.
 
 ---
 
-## 6. Game state deltas (🔒 shape / reconcile with draft + sim)
-
-Additions to `src/game/state.ts`. Current shape kept where unchanged.
+## 6. Game state deltas (🔒 shape / reconciled with draft + sim)
 
 ```ts
-// Screens: +'setup' (formation/style before draft). Battle gains a playback view.
 export type Screen = 'home' | 'setup' | 'draft' | 'battle' | 'steal' | 'end';
 export type BattleView = 'intro' | 'playback' | 'results';
+export type DraftMode = 'classic' | 'memory';
 
 export interface ManagerV2 {
   id: string;
   name: string;
   isHuman: boolean;
   tactics: Tactics;
-  xi: XiSlotV2[];              // fielded 11 (see below)
-  rolledTeams: RolledTeam[];  // every (nation,year) this manager rolled — feeds steal pool v2
+  xi: XiSlotV2[];               // fielded 11 (dense — see invariant)
+  rolledSquads: RolledTeam[];   // every (nation,year) rolled — feeds steal pool v2
   alive: boolean;
 }
+export interface XiSlotV2 { position: Position; player: PlayerV2; }
 
-export interface XiSlotV2 {
-  position: Position;         // the formation slot this fills
-  player: PlayerV2;
-}
-
-// Draft state changes: spin yields a ROLL (nation+year), not a bare nation, and
-// free placement means slots fill out of order. Track filled slots explicitly
-// instead of a single advancing index (drop `draftSlotIndex`).
-export type DraftMode = 'classic' | 'memory'; // Memory = ratings hidden (7a0 Almanaque)
-
+// Draft: spin yields a ROLL; free placement fills slots in any order.
 export interface DraftStateDelta {
-  formation: Formation;                 // chosen pre-draft (setup phase)
+  formation: Formation;                 // chosen in 'setup'
   mode: DraftMode;                      // Classic vs Memory (draft §2b)
-  respinTokens: number;                 // remaining re-spins (draft §2c, ASSUMPTION 3)
-  spunRoll: RolledTeam | null;          // was `spunNation: string | null`
-  // XI during draft is a fixed-length slate; null = open slot.
-  humanSlate: (XiSlotV2 | null)[];      // length = formation.slots.length; indexed by slot
+  respinTokens: number;                 // ASSUMPTION 3 (draft §2c)
+  spunRoll: RolledTeam | null;          // was `spunNation`
+  humanSlate: (XiSlotV2 | null)[];      // length = formation.slots.length
 }
 
-// INVARIANT (frozen): a Manager's `xi` is SPARSE — `(XiSlotV2|null)[]` — ONLY
-// during the draft phase. Entering 'battle' requires a COMPLETE XI (no nulls);
-// teamStrength / match / steal only ever see a dense 11. This keeps every
-// engine consumer on a dense array while letting the draft fill slots in any
-// order. The reducer's draft-complete check = `humanSlate.every(s => s !== null)`
-// (replaces `draftSlotIndex >= FORMATION.length`).
-
-// Playback state during battle:
+// Sim: matchday drives playback (sim §5a).
 export interface BattleStateDelta {
-  currentTimeline: MatchTimeline | null; // the human's watched match; null when summarized
+  matchday: {
+    featured: MatchTimeline[];          // your 1..3 watched matches, in order
+    featuredIndex: number;
+    rail: { matchId: string; homeId: string; awayId: string;
+            goals: { minute: number; team: Team }[] }[]; // all other matches
+  } | null;
 }
 ```
 
-**Steal pool v2 (🗄️+🔒):** loot = full `Squad` rosters of every `rolledTeam`
-belonging to eliminated managers, deduped by `PlayerV2.id`, minus players already
-on the stealing XI. Signature stays `stealPool(eliminated: ManagerV2[]): PlayerV2[]`
-but its BODY now expands `rolledTeams → squads → players` instead of reading only
-fielded XIs.
+**INVARIANT (frozen):** a manager's `xi` is SPARSE (`(XiSlotV2|null)[]`) ONLY during
+the draft phase (`humanSlate`). Entering `'battle'` requires a COMPLETE XI (no nulls);
+`teamStrength`/match/steal only ever see a dense 11. Draft-complete check =
+`humanSlate.every(s => s !== null)` (replaces `draftSlotIndex >= FORMATION.length`).
 
-**Reducer actions (renames/additions, draft plan finalizes):**
-`SPIN {nation}` → `SPIN {roll: RolledTeam}`; `PICK {player}` →
-`PICK {player, slotIndex}`; new `SET_FORMATION {formation}`, `SET_MODE {mode}`,
-`SET_TACTICS {tactics}` (style + levers), `RESPIN` (burns a token, re-rolls);
-new `PLAY_MATCH {timeline}` (enter playback) → existing `ROUND_PLAYED` (reveal
-table after playback). `PICK` no longer advances a single `draftSlotIndex`; it
-fills `humanSlate[slotIndex]`.
+**Steal pool v2 (🗄️+🔒):** loot = deduped union of the FULL `SquadEntry` rosters of
+every `rolledSquads` entry belonging to eliminated managers, minus already-owned ids
+(database §6). Signature `stealPool(eliminated: ManagerV2[]): PlayerV2[]`; body now
+expands `rolledSquads → squadByRef → players`. Data layer supplies
+`squadByRef(nation, year): SquadEntry`. A late round can dump ~thousands of entries —
+scope to THIS round's eliminations, dedup by id, UI ranks by `pickValue` (open Q7).
+
+**Reducer actions:** `SET_FORMATION`, `SET_MODE`, `SET_TACTICS`, `RESPIN`,
+`SPIN {roll}`, `PICK {player, slotIndex}`, `ENTER_PLAYBACK`, `NEXT_FEATURED`,
+`WATCH_MARQUEE {timeline}`, `PLAYBACK_DONE`/`ROUND_PLAYED`.
 
 ---
 
@@ -346,53 +403,54 @@ fills `humanSlate[slotIndex]`.
 Keeps `main` playable while data/engine v2 land behind flags.
 
 ```ts
-// Coarse→detailed representative mapping for the CURRENT 4-position data, so the
-// old squads.json still drafts into a 12-position formation until data v2 ships.
+// Coarse→detailed representative mapping for the CURRENT 4-position data.
 export const COARSE_TO_DETAILED: Record<'GK'|'DF'|'MF'|'FW', Position> = {
   GK: 'GK', DF: 'CB', MF: 'CM', FW: 'ST',
 };
+// Detailed→coarse (database §2 rollup) via POSITION_ZONE for the reverse adapter.
 ```
 
-- Old `Player` → `PlayerV2` via `{ ...p, position: COARSE_TO_DETAILED[p.pos],
-  id: 'legacy-' + p.id }` behind a `dataV2` flag.
-- Placeholder `AffinityMatrix` = diagonal 1.0 + `0.75` off-diagonal reproduces
-  today's flat behavior exactly, so engine v1 and v2 agree until real values land.
-- `Tactics` default = `{ formationId: '4-3-3', style: 'balanced' }` reproduces the
-  current fixed 4-3-3.
+- Old `Player` → `PlayerV2`: `{ position: COARSE_TO_DETAILED[pos], year: 2026,
+  id: 'legacy-'+id, ... }` behind `dataV2` flag.
+- Placeholder `AffinityMatrix` = diagonal 1.0 + `0.75` off-diagonal reproduces today's
+  flat behavior exactly (bounds-safe, >0), so engine v1≡v2 until real values land.
+- Default `Tactics = { formationId: '4-3-3', style: 'balanced' }` reproduces fixed 4-3-3.
 
 ---
 
 ## Open contract questions (for Lucca / peers)
 
-1. **Squad size** for the steal pool: full 23-man roster or trimmed 16-18? (db plan)
-2. **Secondary positions** on `PlayerV2`: support in v2, or primary-only for the
-   hackathon? (db plan — affects affinity vs secondary lookups)
-3. **Formation locked at kickoff**, or re-choosable between rounds on the tactics
-   board? (draft plan — changes whether `Tactics` is per-round state)
-4. **Which extra tactical levers** are real for Tier A vs Tier B (pressing / line
-   height / tempo / man-mark)? (engine plan — I reserved all four)
-5. **Virtual match duration** and wall-clock (90 min ≙ ?s). (sim plan)
-6. **Cards** in the timeline: in scope or cut? (engine + sim)
-7. **Steal-pool v2 mechanics** (flagged by BOTH draft §5 Q10 and QA): does a
-   stolen player REPLACE a fielded starter (keeps `xi` a dense 11 — my default)
-   or EXPAND a bench the UI then manages (adds a `bench` field to `ManagerV2`,
-   a bigger shape change)? **Contract default = replace-a-starter** until Lucca
-   says otherwise; noted here because it's the one steal decision that changes a
-   shared type.
-8. **Off-position model** (draft §5 Q1): affinity-with-penalty (any slot
-   placeable, my `compatibleThreshold` low) vs 7a0-strict eligibility
-   (`compatibleThreshold` high). The SHAPE supports both; Lucca's answer only
-   sets the threshold value — no contract change either way.
+1. **Squad size** for the steal pool: 16–18 (db rec) or fuller 23? (db Q8)
+2. **Secondary positions** `secondary`/`altPos`: keep lightweight (db rec) or drop and
+   let the matrix do all the work? (db Q7)
+3. **Formation locked at kickoff**, or re-choosable between rounds? (draft Q3)
+4. **Which extra `Tactics` levers** in Tier A vs B — engine recommends **line height**
+   in Tier A; pressing/tempo/man-mark Tier B. (engine Q9/Q12)
+5. **Match duration** `MATCH_DURATION_MS` — engine/sim propose 45s ≙ 90 virtual min. (sim Q1)
+6. **Cards** in the timeline: in scope or cut? (engine/sim — currently Tier B)
+7. **Steal-pool v2 mechanics**: stolen player REPLACES a fielded starter (default,
+   keeps `xi` dense) or EXPANDS a bench (adds `bench` to `ManagerV2`)? (draft Q10, QA)
+8. **Off-position model**: affinity-with-penalty (low `compatibleThreshold`) vs 7a0-strict
+   eligibility (high). Shape supports both; answer only sets the value. (draft Q1)
+9. **⚠️ Chemistry redefinition (conflict 6).** Same-`(nation,year)` is near-dead under
+   the new draft. Options: **(a)** same-`(nation,year)` — effectively removes chemistry;
+   **(b)** same-nation-any-year — revives it cheaply (roll Brazil twice across years and
+   it counts); **(c)** club/era cohesion (needs `club` on players, currently Tier-B
+   flavor); **(d)** drop nation chem, replace with **formation cohesion** (adjacent
+   filled slots) which is reliably earnable under free-pick. **My recommendation: (b)
+   for Tier A** (one-line change, keeps the national-spine fantasy, all fields already
+   present), consider **(d)** for Tier B. Lucca decides.
 
 _Reconciliation log:_
-- **v0.1** — authored pre-peer-plans from the six briefs + engine source.
-- **v0.2** — folded in PLAN-draft (affinity arg order flipped to canonical;
-  `year` on player; `mode`/`respinTokens`; sparse-XI invariant; formation shape;
-  off-position via threshold) and PLAN-qa (affinity declared asymmetric-allowed
-  → bounds+diagonal tests only; steal-pool mechanics surfaced as Q7). **Note:**
-  `samples/brazil-2002.json` and `samples/match-playback.html` have landed but
-  `PLAN-database.md` / `PLAN-sim.md` have NOT — those samples are provisional.
-- **Next:** fold in PLAN-database (squad size, id scheme, secondaries, rating
-  bounds) and PLAN-engine (affinity VALUES, which `Tactics` levers, timeline
-  producer details) and PLAN-sim (match duration → `MatchTimeline.durationMinutes`
-  + the wall-clock constant).
+- **v0.1** — pre-peer draft from the six briefs + engine source.
+- **v0.2** — folded PLAN-draft + PLAN-qa (affinity arg order, `year` on player,
+  `mode`/`respinTokens`, sparse-XI, off-position threshold, asymmetric affinity).
+- **v0.3** — folded PLAN-engine, PLAN-database, PLAN-sim and resolved the seven
+  orchestrator conflicts (affinity transposition + family expansion; canonical
+  formation set; timeline field set/ranges + boxScore + nullable team + goal
+  scoreAfter + `counter`; `MatchResult.goals`; affinity strictly-`>0`; chemistry
+  design flag; Tier-A demo contract → PLAN-architecture). Field-name reconciliation
+  `pos/altPos`↔`position/secondary`, `Squad`→`SquadEntry`, `rolledTeams`→`rolledSquads`.
+- **Next:** freeze on Lucca's answers to the questionnaires (esp. Q9 chemistry, the
+  affinity/rating calibration, and the Tier-A lever set), then this becomes v1.0 and
+  implementation begins per the sequencing in `PLAN-architecture.md`.
