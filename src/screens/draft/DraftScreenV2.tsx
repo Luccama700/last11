@@ -100,9 +100,10 @@ export default function DraftScreenV2(props: {
     <div className="bg-stadium min-h-screen text-ink-100">
       {/* One-viewport desktop layout (Lucca's Image-#4 direction): LEFT rail =
           tactics + the rolled squad card, CENTER = pitch with the big gold SPIN
-          beneath it, RIGHT = box score. The rail scrolls internally; the pitch
-          flexes to the leftover height so the page itself never scrolls. */}
-      <div className="mx-auto grid max-w-7xl gap-5 px-4 py-4 lg:h-screen lg:grid-cols-[21rem_1fr_15rem]">
+          beneath it, RIGHT = the slot machine (while drawing) over the box score.
+          The machine lives in the RIGHT RAIL so the pitch column NEVER reflows
+          mid-draft (Lucca's rule); rails scroll internally. */}
+      <div className="mx-auto grid max-w-7xl gap-5 px-4 py-4 lg:h-screen lg:grid-cols-[21rem_1fr_17rem]">
         {/* Left: tactics rail + squad flow */}
         <aside className="order-2 space-y-4 lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
           <TacticsRail
@@ -175,35 +176,44 @@ export default function DraftScreenV2(props: {
                   ENTER THE ARENA →
                 </button>
               </div>
-            ) : props.spunRoll !== null && !revealed ? (
-              <SpinReveal
-                target={props.spunRoll}
-                nations={nations}
-                animate={props.animate}
-                onSettled={() => setSettled(true)}
-              />
-            ) : props.spunRoll !== null ? (
-              <p className="py-2 text-center text-xs text-ink-500">
-                Pick from the <span className="font-bold text-gold-300">squad card</span> — best
-                boosts first{props.respinTokens > 0 ? ' · or re-spin' : ''}.
-              </p>
             ) : (
-              <div className="flex items-center justify-center gap-6 py-1">
+              // Stable-height action row: the button NEVER unmounts mid-draft, so
+              // the pitch above keeps its exact size through spin → pick → repeat.
+              <div className="flex items-center justify-center gap-4 py-1">
                 <button
                   type="button"
                   onClick={props.onSpin}
+                  disabled={props.spunRoll !== null}
                   data-tour="spin-button"
-                  className="btn-gold headline cursor-pointer rounded-full px-16 py-4 text-2xl"
+                  className={`headline rounded-full px-16 py-4 text-2xl transition ${
+                    props.spunRoll === null
+                      ? 'btn-gold cursor-pointer'
+                      : 'cursor-default border border-night-600 bg-night-800 text-ink-500 opacity-60'
+                  }`}
                 >
                   SPIN 🎡
                 </button>
+                {props.spunRoll !== null && revealed && (
+                  <p className="max-w-[14rem] text-xs text-ink-500">
+                    Pick from the <span className="font-bold text-gold-300">squad card</span> —
+                    best boosts first{props.respinTokens > 0 ? ' · or re-spin' : ''}.
+                  </p>
+                )}
               </div>
             )}
           </div>
         </main>
 
-        {/* Right: box score */}
-        <aside className="order-3 lg:min-h-0 lg:overflow-y-auto">
+        {/* Right: the draw machine (while rolling) over the box score */}
+        <aside className="order-3 space-y-4 lg:min-h-0 lg:overflow-y-auto">
+          {props.spunRoll !== null && !revealed && (
+            <SpinReveal
+              target={props.spunRoll}
+              nations={nations}
+              animate={props.animate}
+              onSettled={() => setSettled(true)}
+            />
+          )}
           <BoxScorePanel slate={humanSlate} />
         </aside>
       </div>

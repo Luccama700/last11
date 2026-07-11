@@ -69,20 +69,22 @@ export default function SpinReveal(props: {
   const bothLocked = nationLocked && yearLocked;
 
   return (
+    // Rail-sized machine: fills the right rail (~17rem) without ever touching the
+    // pitch column's layout. Compact reels, same drama.
     <div
-      className={`card-gloss relative mx-auto flex max-w-md flex-col items-center gap-3 rounded-2xl !border-gold-600/60 p-5 ${
+      className={`card-gloss relative flex w-full flex-col items-center gap-2.5 rounded-2xl !border-gold-600/60 p-3.5 ${
         bothLocked ? 'animate-gold-pulse' : ''
       }`}
     >
       <p className="headline text-[10px] tracking-[0.4em] text-gold-400">THE DRAW</p>
 
-      <div className="flex items-stretch gap-3">
+      <div className="flex items-stretch gap-2">
         <LampRail locked={bothLocked} />
         <Reel
           items={nationSeq.map((code) => (
-            <span className="flex items-center gap-2">
-              <span className="text-3xl">{flagOf(code)}</span>
-              <span className="headline text-lg text-ink-100">{code}</span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-2xl">{flagOf(code)}</span>
+              <span className="headline text-base text-ink-100">{code}</span>
             </span>
           ))}
           landMs={NATION_LAND_MS}
@@ -91,7 +93,7 @@ export default function SpinReveal(props: {
         />
         <Reel
           items={yearSeq.map((y) => (
-            <span className="headline text-2xl tabular-nums text-ink-100">{y}</span>
+            <span className="headline text-xl tabular-nums text-ink-100">{y}</span>
           ))}
           landMs={YEAR_LAND_MS}
           locked={yearLocked}
@@ -100,7 +102,7 @@ export default function SpinReveal(props: {
       </div>
 
       {bothLocked ? (
-        <p className="animate-kick-pop headline text-xl text-ink-100">
+        <p className="animate-kick-pop headline text-lg text-ink-100">
           {flagOf(props.target.nation)} {props.target.nation}{' '}
           <span className="headline-gold">{props.target.year}</span>
         </p>
@@ -143,7 +145,7 @@ function Reel(props: { items: React.ReactNode[]; landMs: number; locked: boolean
       ref={frameRef}
       className={`relative overflow-hidden rounded-xl border bg-night-950 ${
         props.locked ? 'border-gold-400 animate-slot-shake' : 'border-night-600'
-      } ${props.wide ? 'w-36' : 'w-24'}`}
+      } ${props.wide ? 'w-[6.6rem]' : 'w-[4.4rem]'}`}
       style={{ height: ROW_H * 3 }}
     >
       {/* the moving column */}
