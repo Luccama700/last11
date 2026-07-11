@@ -11,6 +11,11 @@ import {
   upsetRateByGap,
 } from './balance.report';
 
+// This file runs under Vitest/Node, where `process` is a real global, but the
+// app's tsconfig has no `@types/node` (browser-lib project). Declare just
+// enough of the shape we use rather than pulling in a new devDependency.
+declare const process: { env: Record<string, string | undefined> };
+
 describe('goalsStats', () => {
   it('computes mean/median/max/rates over a tiny synthetic sample', () => {
     const matches = [
