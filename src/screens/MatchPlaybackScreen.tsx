@@ -299,19 +299,34 @@ function Pitch(props: {
         style={{ left: `${pb.ball.x * 100}%`, top: `${pb.ball.y * 100}%` }}
       />
 
-      {/* goal celebration: gold flash + confetti burst */}
+      {/* goal celebration: gold flash + confetti; stacked goals escalate to
+          "2x GOAL"/"3x GOAL" with hotter colors (multigoal, Lucca's request) */}
       {pb.celebrating && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <Confetti />
-          <span className="headline text-[11vw] text-gold-300 drop-shadow-[0_0_34px_rgba(232,196,104,.8)]">
-            GOAL
-          </span>
+          <GoalShout count={(pb as { celebratingCount?: number }).celebratingCount ?? 1} />
         </div>
       )}
 
       {/* shootout overlay mounts HERE — on the pitch, never below the fold */}
       {props.children}
     </div>
+  );
+}
+
+/** GOAL / 2x GOAL / 3x GOAL — escalating color heat for stacked goals. */
+function GoalShout(props: { count: number }) {
+  const n = Math.max(1, props.count);
+  const heat =
+    n >= 3
+      ? 'text-loss drop-shadow-[0_0_38px_rgba(240,85,77,.85)]'
+      : n === 2
+        ? 'text-orange-400 drop-shadow-[0_0_36px_rgba(251,146,60,.85)]'
+        : 'text-gold-300 drop-shadow-[0_0_34px_rgba(232,196,104,.8)]';
+  return (
+    <span className={`headline animate-kick-pop text-[11vw] ${heat}`}>
+      {n > 1 ? `${n}x GOAL` : 'GOAL'}
+    </span>
   );
 }
 

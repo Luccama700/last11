@@ -238,6 +238,15 @@
   animation: confetti-fall 3.2s linear both;
 }
 
+/* Invisible scrollbars for rails that scroll internally (content still scrolls). */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-pop,
   .animate-row-in,

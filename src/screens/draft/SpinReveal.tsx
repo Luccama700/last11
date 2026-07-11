@@ -20,9 +20,13 @@ export default function SpinReveal(props: {
   nations: readonly { code: string; name: string }[];
   animate: boolean;
   onSettled: () => void;
+  /** false = static display of an already-landed draw (machine stays mounted
+   *  between spins — no reels, no timers, no onSettled). Default true. */
+  active?: boolean;
 }) {
-  const [nationLocked, setNationLocked] = useState(false);
-  const [yearLocked, setYearLocked] = useState(false);
+  const active = props.active ?? true;
+  const [nationLocked, setNationLocked] = useState(!active);
+  const [yearLocked, setYearLocked] = useState(!active);
 
   // Deterministic per-roll variety: rotate the reel order by a hash of the roll.
   const seed = useMemo(() => {
@@ -51,6 +55,7 @@ export default function SpinReveal(props: {
   }, [props.target.year, seed]);
 
   useEffect(() => {
+    if (!active) return; // static display — nothing to run
     if (!props.animate) {
       props.onSettled();
       return;
@@ -64,7 +69,7 @@ export default function SpinReveal(props: {
       window.clearTimeout(t3);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.target.nation, props.target.year]);
+  }, [active, props.target.nation, props.target.year]);
 
   const bothLocked = nationLocked && yearLocked;
 
@@ -87,7 +92,7 @@ export default function SpinReveal(props: {
               <span className="headline text-base text-ink-100">{code}</span>
             </span>
           ))}
-          landMs={NATION_LAND_MS}
+          landMs={active ? NATION_LAND_MS : 0}
           locked={nationLocked}
           wide
         />
@@ -95,7 +100,7 @@ export default function SpinReveal(props: {
           items={yearSeq.map((y) => (
             <span className="headline text-xl tabular-nums text-ink-100">{y}</span>
           ))}
-          landMs={YEAR_LAND_MS}
+          landMs={active ? YEAR_LAND_MS : 0}
           locked={yearLocked}
         />
         <LampRail locked={bothLocked} />

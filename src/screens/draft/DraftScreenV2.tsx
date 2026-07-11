@@ -54,12 +54,18 @@ export default function DraftScreenV2(props: {
 
   const [settled, setSettled] = useState(false);
   const [pending, setPending] = useState<{ player: PlayerV2; glow: Set<number> } | null>(null);
-
-  // A fresh roll (or a cleared one after placing) resets the reveal + place-mode.
+  // Last landed roll + a spin nonce: the machine stays mounted (static layout,
+  // shows the previous result between spins), and the nonce remounts the reels so
+  // EVERY roll re-animates — including a re-spin that lands the same (nation, year)
+  // (RESPIN+ROLL batch into one render; the roll object's identity is the signal).
+  const [lastRoll, setLastRoll] = useState<RolledTeam | null>(null);
+  const [spinNonce, setSpinNonce] = useState(0);
   useEffect(() => {
-    if (props.spunRoll === null) {
-      setSettled(false);
-      setPending(null);
+    setSettled(false);
+    setPending(null);
+    if (props.spunRoll !== null) {
+      setLastRoll(props.spunRoll);
+      setSpinNonce((n) => n + 1);
     }
   }, [props.spunRoll]);
 
@@ -105,7 +111,7 @@ export default function DraftScreenV2(props: {
           mid-draft (Lucca's rule); rails scroll internally. */}
       <div className="mx-auto grid max-w-7xl gap-5 px-4 py-4 lg:h-screen lg:grid-cols-[21rem_1fr_17rem]">
         {/* Left: tactics rail + squad flow */}
-        <aside className="order-2 space-y-4 lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
+        <aside className="order-2 space-y-4 scrollbar-hide lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
           <TacticsRail
             formationName={formation.name}
             style={props.style}
@@ -116,22 +122,26 @@ export default function DraftScreenV2(props: {
             filled={filled}
             slotCount={slotCount}
           />
-          {props.spunRoll !== null && revealed && !draftDone && (
-            <SquadCard
-              roll={props.spunRoll}
-              squadName={squadByRef(props.spunRoll.nation, props.spunRoll.year).name}
-              options={ranked}
-              mode={props.mode}
-              onPick={pickPlayer}
-              respinTokens={props.respinTokens}
-              onRespin={props.respinTokens > 0 ? props.onRespin : undefined}
-            />
-          )}
-          {props.spunRoll === null && !draftDone && (
-            <div className="card-gloss rounded-2xl p-4 text-center text-xs leading-relaxed text-ink-500">
-              Spin to draw a national team and a World Cup — the squad lands here.
-            </div>
-          )}
+          {/* Squad panel is ALWAYS mounted (static layout): content swaps inside
+              one stable card instead of panels popping in and out. */}
+          {!draftDone &&
+            (props.spunRoll !== null && revealed ? (
+              <SquadCard
+                roll={props.spunRoll}
+                squadName={squadByRef(props.spunRoll.nation, props.spunRoll.year).name}
+                options={ranked}
+                mode={props.mode}
+                onPick={pickPlayer}
+                respinTokens={props.respinTokens}
+                onRespin={props.respinTokens > 0 ? props.onRespin : undefined}
+              />
+            ) : (
+              <div className="card-gloss flex min-h-[9rem] items-center justify-center rounded-2xl p-4 text-center text-xs leading-relaxed text-ink-500">
+                {props.spunRoll !== null
+                  ? 'Drawing…'
+                  : 'Spin to draw a national team and a World Cup — the squad lands here.'}
+              </div>
+            ))}
         </aside>
 
         {/* Center: pitch + spin flow */}
@@ -204,15 +214,23 @@ export default function DraftScreenV2(props: {
           </div>
         </main>
 
-        {/* Right: the draw machine (while rolling) over the box score */}
-        <aside className="order-3 space-y-4 lg:min-h-0 lg:overflow-y-auto">
-          {props.spunRoll !== null && !revealed && (
+        {/* Right: THE DRAW machine (always mounted — spins live, then holds the
+            last result) over the box score. */}
+        <aside className="order-3 space-y-4 scrollbar-hide lg:min-h-0 lg:overflow-y-auto">
+          {lastRoll !== null || props.spunRoll !== null ? (
             <SpinReveal
-              target={props.spunRoll}
+              key={spinNonce}
+              target={props.spunRoll ?? lastRoll!}
               nations={nations}
               animate={props.animate}
               onSettled={() => setSettled(true)}
+              active={props.spunRoll !== null && !revealed}
             />
+          ) : (
+            <div className="card-gloss flex min-h-[12rem] flex-col items-center justify-center gap-2 rounded-2xl !border-gold-600/40 p-3.5">
+              <p className="headline text-[10px] tracking-[0.4em] text-gold-400">THE DRAW</p>
+              <p className="text-center text-xs text-ink-500">Hit SPIN to fire the reels.</p>
+            </div>
           )}
           <BoxScorePanel slate={humanSlate} />
         </aside>

@@ -70,9 +70,7 @@ export default function BattleScreen(props: {
           </div>
         </header>
 
-        {standingsOpen ? (
-          <Standings state={state} onClose={() => setStandingsOpen(false)} />
-        ) : state.battleView === 'intro' ? (
+        {state.battleView === 'intro' ? (
           <RoundIntro
             state={state}
             onPlayRound={props.onPlayRound}
@@ -90,6 +88,10 @@ export default function BattleScreen(props: {
           <RoundResults state={state} onContinue={props.onContinue} humanAlive={human.alive} />
         )}
       </div>
+
+      {/* Standings is a POPUP over the battle view — the playback underneath keeps
+          its clock and never unmounts (opening it mid-match no longer resets). */}
+      {standingsOpen && <Standings state={state} onClose={() => setStandingsOpen(false)} />}
     </div>
   );
 }
@@ -343,20 +345,31 @@ function Standings(props: { state: GameState; onClose: () => void }) {
     .sort((a, b) => Number(b.m.alive) - Number(a.m.alive) || b.strength - a.strength);
 
   return (
-    <div className="card-gloss rounded-2xl p-5">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="headline text-xs tracking-[0.25em] text-ink-500">
-          Standings · every squad in the lobby
-        </h3>
-        <button
-          type="button"
-          onClick={props.onClose}
-          className="cursor-pointer rounded px-2 py-0.5 text-xs font-bold text-ink-500 hover:text-gold-300"
-        >
-          ← back
-        </button>
-      </div>
-      <div className="max-h-[70vh] overflow-y-auto pr-1">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/70 backdrop-blur-[2px] p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Standings"
+      onClick={props.onClose}
+    >
+      <div
+        className="card-gloss animate-pop w-full max-w-2xl rounded-2xl p-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="headline text-xs tracking-[0.25em] text-ink-500">
+            Standings · every squad in the lobby
+          </h3>
+          <button
+            type="button"
+            onClick={props.onClose}
+            className="cursor-pointer rounded px-2 py-0.5 text-sm font-bold text-ink-500 hover:text-gold-300"
+            aria-label="Close standings"
+          >
+            ✕ close
+          </button>
+        </div>
+        <div className="scrollbar-hide max-h-[70vh] overflow-y-auto pr-1">
         <table className="w-full text-sm">
           <thead className="text-left text-xs uppercase text-ink-500">
             <tr>
@@ -392,6 +405,7 @@ function Standings(props: { state: GameState; onClose: () => void }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
