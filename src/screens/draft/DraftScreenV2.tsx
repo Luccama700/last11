@@ -96,9 +96,12 @@ export default function DraftScreenV2(props: {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto grid max-w-6xl gap-5 px-4 py-6 lg:grid-cols-[16rem_1fr_15rem]">
+      {/* On desktop the whole draft fits ONE viewport: the grid is h-screen, the
+          pitch flexes to the leftover height (aspect keeps it in proportion), and
+          the squad card scrolls internally instead of growing the page. */}
+      <div className="mx-auto grid max-w-6xl gap-5 px-4 py-4 lg:h-screen lg:grid-cols-[16rem_1fr_15rem]">
         {/* Left: tactics rail */}
-        <aside className="order-2 lg:order-1">
+        <aside className="order-2 lg:order-1 lg:min-h-0 lg:overflow-y-auto">
           <TacticsRail
             formationName={formation.name}
             style={props.style}
@@ -112,8 +115,8 @@ export default function DraftScreenV2(props: {
         </aside>
 
         {/* Center: pitch + spin/squad flow */}
-        <main className="order-1 lg:order-2">
-          <header className="mb-4 flex items-baseline justify-between">
+        <main className="order-1 lg:order-2 lg:flex lg:min-h-0 lg:flex-col">
+          <header className="mb-3 flex shrink-0 items-baseline justify-between">
             <h1 className="text-xl font-black tracking-tight">
               Last<span className="text-emerald-400">11</span>
               <span className="ml-2 text-xs font-semibold text-slate-500">THE DRAFT</span>
@@ -129,16 +132,18 @@ export default function DraftScreenV2(props: {
             )}
           </header>
 
-          <PitchBoard
-            formation={formation}
-            slate={humanSlate}
-            mode={props.mode}
-            glowSlots={pending?.glow ?? null}
-            clickableSlots={pending ? openSlotSet : null}
-            onSlotClick={pending ? placeAt : undefined}
-          />
+          <div className="lg:flex lg:min-h-0 lg:flex-1 lg:justify-center">
+            <PitchBoard
+              formation={formation}
+              slate={humanSlate}
+              mode={props.mode}
+              glowSlots={pending?.glow ?? null}
+              clickableSlots={pending ? openSlotSet : null}
+              onSlotClick={pending ? placeAt : undefined}
+            />
+          </div>
 
-          <div className="mt-4">
+          <div className="mt-3 lg:max-h-[44vh] lg:shrink-0 lg:overflow-y-auto">
             {draftDone ? (
               <div className="flex flex-col items-center gap-3 rounded-2xl border border-emerald-500/30 bg-slate-900 p-6 text-center">
                 <p className="text-2xl font-black">Your XI is locked in 🔒</p>

@@ -12,14 +12,16 @@ export interface SlotXY {
   y: number;
 }
 
-/** Depth band per position (y). Rows read GK → back → pivots → mids → AM → wide → ST. */
+/** Depth band per position (y). Rows read GK → back → pivots → mids → AM → wide → ST.
+ *  The whole back line shares ONE band — RB/CB/LB must lay out as a single row of
+ *  four/five, not two overlapping rows (the 4-2-3-1 stacking bug). */
 const BAND_Y: Record<Position, number> = {
   GK: 0.07,
-  RB: 0.26, CB: 0.24, LB: 0.26,
+  RB: 0.25, CB: 0.25, LB: 0.25,
   CDM: 0.4,
   CM: 0.55, RM: 0.55, LM: 0.55,
   CAM: 0.67,
-  RW: 0.75, LW: 0.75,
+  RW: 0.78, LW: 0.78,
   ST: 0.9,
 };
 
@@ -38,9 +40,10 @@ const LANE: Record<Position, number> = {
 const bandKey = (pos: Position): number => Math.round(BAND_Y[pos] * 100);
 
 /**
- * Lay a formation's 11 ordered slots onto the pitch. Slots sharing a depth band
- * are spread across x from right (+1 lane) to left (-1 lane); ties keep formation
- * order. Deterministic and pure — same slots ⇒ same coords every call.
+ * Lay a formation's 11 ordered slots onto the pitch, lane-aware: wide positions
+ * (±1 lane) hug their touchline; centre-lane duplicates (two CBs, a double pivot,
+ * three CMs) spread symmetrically around the middle instead of drifting under the
+ * wide slots. Deterministic and pure — same slots ⇒ same coords every call.
  */
 export function layoutFormation(slots: readonly Position[]): SlotXY[] {
   const bands = new Map<number, number[]>();
@@ -52,15 +55,24 @@ export function layoutFormation(slots: readonly Position[]): SlotXY[] {
 
   const out: SlotXY[] = new Array(slots.length);
   for (const indices of bands.values()) {
-    const ordered = [...indices].sort((a, b) => {
-      const dl = LANE[slots[b]] - LANE[slots[a]];
-      return dl !== 0 ? dl : a - b;
+    const wideR = indices.filter((i) => LANE[slots[i]] === 1);
+    const wideL = indices.filter((i) => LANE[slots[i]] === -1);
+    const centre = indices.filter((i) => LANE[slots[i]] === 0);
+
+    // Touchline huggers. Same-lane duplicates (rare) nudge inward slightly.
+    wideR.forEach((slotIndex, j) => {
+      out[slotIndex] = { slotIndex, position: slots[slotIndex], x: 0.86 - j * 0.08, y: BAND_Y[slots[slotIndex]] };
     });
-    const n = ordered.length;
-    ordered.forEach((slotIndex, j) => {
-      const x = n === 1 ? 0.5 : 0.85 - (0.7 * j) / (n - 1);
-      const pos = slots[slotIndex];
-      out[slotIndex] = { slotIndex, position: pos, x, y: BAND_Y[pos] };
+    wideL.forEach((slotIndex, j) => {
+      out[slotIndex] = { slotIndex, position: slots[slotIndex], x: 0.14 + j * 0.08, y: BAND_Y[slots[slotIndex]] };
+    });
+
+    // Centre-lane row: symmetric around 0.5 — pivot pair .39/.61, trio .28/.5/.72.
+    const k = centre.length;
+    const step = k > 1 ? Math.min(0.22, 0.6 / (k - 1)) : 0;
+    centre.forEach((slotIndex, j) => {
+      const x = 0.5 + (j - (k - 1) / 2) * step;
+      out[slotIndex] = { slotIndex, position: slots[slotIndex], x, y: BAND_Y[slots[slotIndex]] };
     });
   }
   return out;
