@@ -35,6 +35,24 @@ function battleState(): GameState {
   };
 }
 
+describe('MOVE_PLACED — mid-draft move to an open slot', () => {
+  function draftState(): GameState {
+    const slate: (XiSlotV2 | null)[] = new Array(11).fill(null);
+    slate[9] = { position: F433.slots[9], player: bra[0] };
+    return { ...initialState, screen: 'draft', managers: [], formation: F433, humanSlate: slate };
+  }
+  it('moves the placed player and clears the source slot', () => {
+    const next = reducer(draftState(), { type: 'MOVE_PLACED', from: 9, to: 2 });
+    expect(next.humanSlate![9]).toBeNull();
+    expect(next.humanSlate![2]!.player.id).toBe(bra[0].id);
+    expect(next.humanSlate![2]!.position).toBe(F433.slots[2]);
+  });
+  it('no-ops on the v1 path (no humanSlate)', () => {
+    const v1: GameState = { ...initialState, screen: 'draft' };
+    expect(reducer(v1, { type: 'MOVE_PLACED', from: 0, to: 1 })).toBe(v1);
+  });
+});
+
 describe('REARRANGE_XI — re-slot persists to humanSlate AND coarse manager.xi', () => {
   it('updates the detailed slate, keeping each slot position', () => {
     const swapped = swapSlots(slate, 1, 9);
