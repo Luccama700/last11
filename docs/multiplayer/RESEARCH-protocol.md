@@ -91,20 +91,25 @@ Decision rule (to be finalised with game-engine's numbers):
 | **diverges**, but 1 host is canonical | `kind:'timelines'` from host | measure: watched-match timelines dominate — game-engine to gzip a round | host only |
 | diverges + ranked (cheat-proof) | `kind:'timelines'` from **server** (option c certify) | same, server-signed | server |
 
-Game-engine must report the gzip size of one round's `matchday` (the 1–3 *watched*
-timelines are the only heavy objects; the other ~45 matches are score-only `rail`
-stamps). If that number is small (my estimate: a full `MatchTimeline` is ~90 ticks ×
-a handful of floats + a short event list ⇒ low single-digit KB gzipped, and only the
-*featured* matches need full fidelity), **`timelines` is affordable even at MVP**, and
-we could skip the cross-engine risk entirely by never replaying. My recommendation
-**pending their number**: prefer `replay` for its near-zero bytes *iff* bit-identical;
-otherwise `timelines` from the host — the protocol above lets us flip that switch with
-a one-line payload change, no state-machine rework.
+**RESOLVED (game-engine `RESEARCH-determinism.md`, commit `34cf4a5`):** the engine is
+bit-identical across engines *except* a single `Math.exp` in `poisson()` — a ~10⁻¹⁵
+cross-engine asterisk that agrees in practice on V8/JSC/Gecko but isn't *guaranteed*.
+A **watched** timeline is **3.6 KB gzipped**, and a client only ever needs the match it
+is watching (not the whole 48-match round), so realistic cost is **~3.6 KB per watched
+match**. Their recommendation, which I adopt for this protocol: **`kind:'timelines'` is
+the online default for BOTH MVP and ranked** — paying ~KB/round removes the determinism
+question outright, kills the cross-browser golden-test burden, and is the same path
+ranked certification already needs. `kind:'replay'` stays a *valid* fallback in the
+schema (near-zero bytes if we ever want it), but is not the default.
 
-> **Coordinate item for game-engine:** (1) cross-engine verdict; (2) gzipped bytes of
-> one round's featured timelines; (3) confirm `matchSeed` + `moraleByManager` are the
-> *entire* determinism input (they are, per `PlayRoundEngine`) so `replay` inputs are
-> fully specified by `{seed, round, per-manager tactics+XI, morale}`.
+Net effect on THIS doc: **nothing structural.** The state machine, schema, driver seam,
+and migration inventory are identical; the authority simply always broadcasts
+`{kind:'timelines', matchday, results}` and clients never call the engine on the hot
+path. This is exactly the switch the payload-agnostic design above was built to absorb.
+
+> **Confirmed with game-engine:** `matchSeed` + `moraleByManager` + tactics/XI are the
+> *entire* determinism input (`PlayRoundEngine`), so the authority can compute
+> timelines from collected inputs with no hidden state.
 
 ---
 
@@ -419,9 +424,9 @@ them and turns them on for ranked without touching the state machine.
 
 ## 9. Open questions / decisions for Lucca (and cross-worker coordination)
 
-1. **Determinism verdict (BLOCKING the payload choice, not the state machine)** —
-   game-engine: bit-identical cross-engine? + gzipped bytes of one round's featured
-   timelines. Drives `replay` vs `timelines` (§2). *The protocol ships either way.*
+1. ~~**Determinism verdict**~~ **RESOLVED** (game-engine `34cf4a5`): one `Math.exp`
+   asterisk + 3.6 KB/watched-match ⇒ **`timelines` is the online default for both
+   tiers** (§2). No longer blocking; no state-machine impact.
 2. **MVP authority: host-client or serverless from day one?** Host-client is far less
    work and fine for friends; serverless is required for ranked. Recommend host-client
    MVP → serverless v2. (Transport doc informs feasibility.)
@@ -464,6 +469,7 @@ External patterns (well-established, not novel claims):
 
 ---
 
-*Status: research complete for R2. Blocking dependency: game-engine's determinism
-verdict + timeline byte size (§2, §9.1) selects the `resolution` payload — the state
-machine, schema, and driver seam above are final regardless of that choice.*
+*Status: research complete for R2. Determinism dependency now RESOLVED (game-engine
+`34cf4a5`): server-computed `timelines` is the online default for both tiers; the
+`replay` payload stays in the schema as an unused fallback. The state machine, schema,
+driver seam, and migration inventory are final.*
