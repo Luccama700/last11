@@ -127,7 +127,12 @@ export interface PlaybackState {
   momentum: number; // -1..+1
   possession: Team;
   ticker: TimelineEvent[]; // up to the last 3 non-shootout events fired
-  celebrating: TimelineEvent | null; // a goal within [t, t+CELEBRATION_MS]
+  celebrating: TimelineEvent | null; // the freshest goal within [t, t+CELEBRATION_MS]
+  /** How many goal events have a live celebration window right now (stacked adjacent
+   *  goals). 0 = no celebration, 1 = single, ≥2 = multigoal ("2× GOAL"). */
+  celebratingCount: number;
+  /** Distinct team(s) that scored the currently-celebrating goals, first-seen order. */
+  celebratingTeams: Team[];
   shootout: ShootoutView | null;
 }
 
@@ -172,13 +177,19 @@ export function projectMatch(timeline: MatchTimeline, elapsedMs: number): Playba
     if (e.type === 'goal' && e.scoreAfter && eventMs(e.minute) <= regMs) score = e.scoreAfter;
   }
 
-  // celebration window → ball resets to the centre spot
-  let celebrating: TimelineEvent | null = null;
+  // celebration window(s) → ball resets to centre. Goals in adjacent minutes stack:
+  // collect EVERY goal whose window is live now so the UI can show a multigoal beat.
+  const activeGoals: TimelineEvent[] = [];
   for (const e of timeline.events) {
     if (e.type !== 'goal') continue;
     const t = eventMs(e.minute);
-    if (regMs >= t && regMs < t + CELEBRATION_MS) celebrating = e;
+    if (regMs >= t && regMs < t + CELEBRATION_MS) activeGoals.push(e);
   }
+  const celebrating = activeGoals.length ? activeGoals[activeGoals.length - 1] : null; // freshest
+  const celebratingCount = activeGoals.length; // ≥2 ⇒ multigoal
+  const celebratingTeams = [
+    ...new Set(activeGoals.map((e) => e.team).filter((t): t is Team => t !== null)),
+  ]; // distinct scoring teams, first-seen order
 
   const ball = celebrating
     ? { x: 0.5, y: 0.5 }
@@ -242,6 +253,8 @@ export function projectMatch(timeline: MatchTimeline, elapsedMs: number): Playba
     possession,
     ticker,
     celebrating,
+    celebratingCount,
+    celebratingTeams,
     shootout,
   };
 }

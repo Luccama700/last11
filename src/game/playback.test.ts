@@ -104,6 +104,68 @@ describe('projectMatch — regulation', () => {
   });
 });
 
+describe('projectMatch — multigoal celebrations', () => {
+  // two home goals one minute apart → overlapping celebration windows
+  const stacked: MatchTimeline = {
+    ...base,
+    events: [
+      { minute: 0, type: 'kickoff', team: null, text: 'ko' },
+      { minute: 30, type: 'goal', team: 'home', text: 'g1', scoreAfter: { home: 1, away: 0 } },
+      { minute: 31, type: 'goal', team: 'home', text: 'g2', scoreAfter: { home: 2, away: 0 } },
+      { minute: 90, type: 'fulltime', team: null, text: 'ft' },
+    ],
+    finalScore: { home: 2, away: 0 },
+  };
+
+  it('reports a single live celebration before the second goal lands', () => {
+    const s = projectMatch(stacked, goalMs(30) + 100);
+    expect(s.celebratingCount).toBe(1);
+    expect(s.celebrating?.text).toBe('g1');
+    expect(s.celebratingTeams).toEqual(['home']);
+  });
+
+  it('counts both goals while their windows overlap (multigoal), freshest is primary', () => {
+    const s = projectMatch(stacked, goalMs(31) + 100);
+    expect(s.celebratingCount).toBe(2);
+    expect(s.celebrating?.text).toBe('g2'); // freshest goal drives the primary display
+    expect(s.celebratingTeams).toEqual(['home']);
+    expect(s.ball).toEqual({ x: 0.5, y: 0.5 }); // ball still centred during the stacked beat
+  });
+
+  it('clears once both windows expire', () => {
+    const s = projectMatch(stacked, goalMs(31) + CELEBRATION_MS + 100);
+    expect(s.celebratingCount).toBe(0);
+    expect(s.celebrating).toBeNull();
+    expect(s.celebratingTeams).toEqual([]);
+  });
+
+  it('lists both teams when each scores in the same minute', () => {
+    const bothTeams: MatchTimeline = {
+      ...base,
+      events: [
+        { minute: 0, type: 'kickoff', team: null, text: 'ko' },
+        { minute: 40, type: 'goal', team: 'home', text: 'gh', scoreAfter: { home: 1, away: 0 } },
+        { minute: 40, type: 'goal', team: 'away', text: 'ga', scoreAfter: { home: 1, away: 1 } },
+        { minute: 90, type: 'fulltime', team: null, text: 'ft' },
+      ],
+      finalScore: { home: 1, away: 1 },
+    };
+    const s = projectMatch(bothTeams, goalMs(40) + 100);
+    expect(s.celebratingCount).toBe(2);
+    expect([...s.celebratingTeams].sort()).toEqual(['away', 'home']);
+  });
+
+  it('a lone goal reads as count 1 (single, not multigoal)', () => {
+    const s = projectMatch(base, goalMs(30) + 100); // base scores home @30 only in this window
+    expect(s.celebratingCount).toBe(1);
+    expect(s.celebratingTeams).toEqual(['home']);
+  });
+
+  it('is deterministic', () => {
+    expect(projectMatch(stacked, goalMs(31) + 100)).toEqual(projectMatch(stacked, goalMs(31) + 100));
+  });
+});
+
 describe('projectMatch — shootout (6s-per-kick cadence)', () => {
   const kicks = [
     { team: 'home' as const, scored: true, playerId: 'h1' },
