@@ -175,7 +175,7 @@
       "players": [
         { "id": "ned-2026-verbruggen", "name": "Bart Verbruggen", "pos": "GK", "rating": 84 },
         { "id": "ned-2026-flekken", "name": "Mark Flekken", "pos": "GK", "rating": 80 },
-        { "id": "ned-2026-van-dijk", "name": "Virgil van Dijk", "pos": "CB", "rating": 89 },
+        { "id": "ned-2026-van-dijk", "name": "Virgil van Dijk", "pos": "CB", "rating": 91 },
         { "id": "ned-2026-van-de-ven", "name": "Micky van de Ven", "pos": "CB", "altPos": ["LB"], "rating": 85 },
         { "id": "ned-2026-ake", "name": "Nathan Aké", "pos": "LB", "altPos": ["CB"], "rating": 83 },
         { "id": "ned-2026-dumfries", "name": "Denzel Dumfries", "pos": "RB", "altPos": ["RM"], "rating": 84 },

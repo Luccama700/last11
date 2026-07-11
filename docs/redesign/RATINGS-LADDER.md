@@ -70,7 +70,7 @@ Leão −1, Enzo/Mac Allister/Lautaro/Álvarez −1).
 | **Spain** | Rodri **92** · Yamal 92 · Pedri 90 |
 | **Germany** | Musiala **91** · Wirtz 91 · Neuer 87 |
 | **Belgium** | Courtois **90** · De Bruyne 86 · Doku 85 |
-| **Netherlands** | van Dijk **89** · de Jong 88 · Reijnders 86 |
+| **Netherlands** | van Dijk **91** · de Jong 88 · Reijnders 86 |
 | **Morocco** | Hakimi **89** · Bounou 86 · Brahim Díaz 84 |
 | **Portugal** | Vitinha / Rúben Dias **88** · Nuno Mendes 87 |
 | **Croatia** | Gvardiol **88** · Modrić 85 · Kovačić 84 |
@@ -153,3 +153,46 @@ rated at his age each year:
     nation's ceiling be capped lower regardless of individual dominance?
 
 Change any number and I re-rate the squad + surrounding anchors to keep proportions sane.
+
+## Calibration heuristic (Lucca, 2026-07-11)
+
+When a player's rating is uncertain, anchor to their **best-ever base "Gold Rare" FIFA/
+EA FC card** as the ceiling, then scale the per-tournament snapshot down from it for
+aging/pre-peak years, keeping the defender-friendly lean (elite CB/GK sit ~+1 above their
+FIFA base). Applied example: **Virgil van Dijk 2026 → 91** (FIFA-21 base 90, +1 as the
+premier modern CB); he now tops the current CB tier just under Beckenbauer 93 / Cannavaro 92.
+
+## Flagged for re-verification (Lucca's morning pass — NOT re-checked yet)
+
+Roster/position accuracy I'd double-check before locking. Ratings are separate (above);
+this is about *who's in the squad* and *what detailed position they're mapped to*.
+
+**2026 squads — knowledge-based portions (rosters mostly verified, some picks/positions inferred):**
+- **Morocco 2026** — new coach (Ouahbi); confirmed changes solid (En-Nesyri/Boufal/Ziyech out,
+  Bouaddi in), but the *attack* (El Kaabi, Ezzalzouli, Rahimi, Talbi) and exact forward
+  positions lean on form + a secondary roster list, not a primary source.
+- **Japan 2026** — Mitoma-out confirmed; verify winger/forward slotting (Kubo/Doan/Maeda/
+  Nakamura RW vs LW) and whether the back line positions match usage.
+- **Croatia 2026** — Juranović and Vlašić added from squad-pool knowledge (full 26 not
+  fetched); confirm both are in and the RB depth.
+
+**Pre-1960 squads — detailed 12-positions are a *mapping* onto era formations (2-3-5 / WM),
+not source-stated; roles are approximate:**
+- **Uruguay 1930 & 1950** — shirt numbers omitted (unverified); positions approximated to
+  the 1930s–50s system.
+- **Italy 1934** — half-back / inside-forward → CDM/CM/CAM mapping is loose.
+- **Hungary 1954** — Hidegkuti as the deep-lying centre-forward (mapped CAM/ST); the Magyars'
+  fluid front five don't map cleanly to fixed slots.
+- **Sweden 1958, West Germany 1954** — inside-forward/half-back roles approximated.
+
+**Fluid / wing-back systems — 12-position mapping is inherently lossy (flag the caveat):**
+- **England 2018** (Southgate 3-5-2): Trippier/Young are RM/LM here but were wing-backs;
+  Walker is CB but a right-of-three.
+- **Argentina 1986** (Bilardo 3-5-2): Giusti/Olarticoechea wing-backs mapped to CM/LB.
+- **Netherlands 1974** (Total Football): all outfield roles are best-fit, not fixed.
+
+**Authored-position squads (names/numbers verified, positions from knowledge):**
+- **USA 1994** — template gave names + numbers only; detailed positions + clubs authored.
+
+Nothing above is *wrong* to my knowledge — these are the lowest-confidence cells where a
+quick source check would tighten accuracy. Give the word and I re-verify any of them inline.
