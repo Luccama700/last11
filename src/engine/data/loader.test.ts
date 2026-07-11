@@ -97,6 +97,17 @@ describe('ratings rubric anchors (Lucca DECISIONS.md — lock these)', () => {
     expect(r).toBeGreaterThanOrEqual(89);
     expect(r).toBeLessThanOrEqual(90);
   });
+
+  it('all-time-great peaks sit at 95 (Zidane 98, Cruyff 74, Romário 94)', () => {
+    expect(find('fra-1998-zidane')?.rating).toBe(95);
+    expect(find('ned-1974-cruyff')?.rating).toBe(95);
+    expect(find('bra-1994-romario')?.rating).toBe(95);
+  });
+
+  it('Messi 2022 = 96 (crowning tournament), veteran-drops to his fixed 92 in 2026', () => {
+    expect(find('arg-2022-messi')?.rating).toBe(96);
+    expect(find('arg-2026-messi')?.rating).toBe(92);
+  });
 });
 
 describe('back-compat adapter (CONTRACT §7)', () => {

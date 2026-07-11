@@ -433,6 +433,54 @@
         { "id": "esp-2010-torres", "name": "Fernando Torres", "pos": "ST", "rating": 84, "shirt": 9, "club": "Liverpool" },
         { "id": "esp-2010-navas", "name": "Jesús Navas", "pos": "RW", "altPos": ["RM"], "rating": 82, "shirt": 22, "club": "Sevilla" }
       ]
+    },
+    {
+      "nation": "NED", "name": "Netherlands", "year": 1974, "result": "Runners-up",
+      "notes": "Michels' Total Football, fluid 4-3-3 orbiting Cruyff's free role. Shirts numbered alphabetically — Cruyff kept his famous 14, keeper Jongbloed wore 8.",
+      "players": [
+        { "id": "ned-1974-cruyff", "name": "Johan Cruyff", "pos": "CAM", "altPos": ["ST"], "rating": 95, "shirt": 14, "club": "Barcelona" },
+        { "id": "ned-1974-neeskens", "name": "Johan Neeskens", "pos": "CM", "altPos": ["CAM"], "rating": 89, "shirt": 13, "club": "Ajax" },
+        { "id": "ned-1974-van-hanegem", "name": "Wim van Hanegem", "pos": "CM", "altPos": ["CAM"], "rating": 87, "shirt": 3, "club": "Feyenoord" },
+        { "id": "ned-1974-krol", "name": "Ruud Krol", "pos": "LB", "altPos": ["CB"], "rating": 86, "shirt": 12, "club": "Ajax" },
+        { "id": "ned-1974-rensenbrink", "name": "Rob Rensenbrink", "pos": "LW", "rating": 85, "shirt": 15, "club": "Anderlecht" },
+        { "id": "ned-1974-rep", "name": "Johnny Rep", "pos": "RW", "rating": 84, "shirt": 16, "club": "Ajax" },
+        { "id": "ned-1974-jansen", "name": "Wim Jansen", "pos": "CDM", "altPos": ["CM"], "rating": 84, "shirt": 6, "club": "Feyenoord" },
+        { "id": "ned-1974-haan", "name": "Arie Haan", "pos": "CB", "altPos": ["CM"], "rating": 84, "shirt": 2, "club": "Ajax" },
+        { "id": "ned-1974-suurbier", "name": "Wim Suurbier", "pos": "RB", "rating": 82, "shirt": 20, "club": "Ajax" },
+        { "id": "ned-1974-rijsbergen", "name": "Wim Rijsbergen", "pos": "CB", "rating": 82, "shirt": 17, "club": "Feyenoord" },
+        { "id": "ned-1974-keizer", "name": "Piet Keizer", "pos": "LW", "altPos": ["LM"], "rating": 82, "shirt": 9, "club": "Ajax" },
+        { "id": "ned-1974-rene-vd-kerkhof", "name": "René van de Kerkhof", "pos": "RW", "altPos": ["RM"], "rating": 82, "shirt": 10, "club": "PSV Eindhoven" },
+        { "id": "ned-1974-willy-vd-kerkhof", "name": "Willy van de Kerkhof", "pos": "CM", "altPos": ["CDM"], "rating": 81, "shirt": 11, "club": "PSV Eindhoven" },
+        { "id": "ned-1974-jongbloed", "name": "Jan Jongbloed", "pos": "GK", "rating": 80, "shirt": 8, "club": "FC Amsterdam" },
+        { "id": "ned-1974-israel", "name": "Rinus Israël", "pos": "CB", "rating": 80, "shirt": 5, "club": "Feyenoord" },
+        { "id": "ned-1974-de-jong", "name": "Theo de Jong", "pos": "CM", "altPos": ["CDM"], "rating": 80, "shirt": 7, "club": "Feyenoord" },
+        { "id": "ned-1974-geels", "name": "Ruud Geels", "pos": "ST", "rating": 80, "shirt": 1, "club": "Club Brugge" },
+        { "id": "ned-1974-schrijvers", "name": "Piet Schrijvers", "pos": "GK", "rating": 78, "shirt": 18, "club": "FC Twente" }
+      ]
+    },
+    {
+      "nation": "ARG", "name": "Argentina", "year": 2022, "result": "Winners",
+      "notes": "Scaloni's champions — Messi's crowning tournament (Golden Ball, 7 goals). Beat France on penalties after a 3-3 final.",
+      "players": [
+        { "id": "arg-2022-messi", "name": "Lionel Messi", "pos": "CAM", "altPos": ["RW"], "rating": 96, "shirt": 10, "club": "Paris Saint-Germain" },
+        { "id": "arg-2022-e-martinez", "name": "Emiliano Martínez", "pos": "GK", "rating": 89, "shirt": 23, "club": "Aston Villa" },
+        { "id": "arg-2022-di-maria", "name": "Ángel Di María", "pos": "LW", "altPos": ["RW"], "rating": 89, "shirt": 11, "club": "Juventus" },
+        { "id": "arg-2022-julian-alvarez", "name": "Julián Álvarez", "pos": "ST", "rating": 87, "shirt": 9, "club": "Manchester City" },
+        { "id": "arg-2022-romero", "name": "Cristian Romero", "pos": "CB", "rating": 86, "shirt": 13, "club": "Tottenham Hotspur" },
+        { "id": "arg-2022-l-martinez", "name": "Lisandro Martínez", "pos": "CB", "altPos": ["LB"], "rating": 85, "shirt": 25, "club": "Manchester United" },
+        { "id": "arg-2022-de-paul", "name": "Rodrigo De Paul", "pos": "CM", "altPos": ["CDM"], "rating": 85, "shirt": 7, "club": "Atlético Madrid" },
+        { "id": "arg-2022-mac-allister", "name": "Alexis Mac Allister", "pos": "CM", "rating": 85, "shirt": 20, "club": "Brighton & Hove Albion" },
+        { "id": "arg-2022-enzo", "name": "Enzo Fernández", "pos": "CM", "altPos": ["CDM"], "rating": 85, "shirt": 24, "club": "Benfica" },
+        { "id": "arg-2022-otamendi", "name": "Nicolás Otamendi", "pos": "CB", "rating": 84, "shirt": 19, "club": "Benfica" },
+        { "id": "arg-2022-lautaro", "name": "Lautaro Martínez", "pos": "ST", "rating": 84, "shirt": 22, "club": "Internazionale" },
+        { "id": "arg-2022-dybala", "name": "Paulo Dybala", "pos": "CAM", "altPos": ["ST"], "rating": 84, "shirt": 21, "club": "Roma" },
+        { "id": "arg-2022-tagliafico", "name": "Nicolás Tagliafico", "pos": "LB", "rating": 82, "shirt": 3, "club": "Lyon" },
+        { "id": "arg-2022-acuna", "name": "Marcos Acuña", "pos": "LB", "altPos": ["LM"], "rating": 82, "shirt": 8, "club": "Sevilla" },
+        { "id": "arg-2022-molina", "name": "Nahuel Molina", "pos": "RB", "rating": 82, "shirt": 26, "club": "Atlético Madrid" },
+        { "id": "arg-2022-paredes", "name": "Leandro Paredes", "pos": "CDM", "altPos": ["CM"], "rating": 82, "shirt": 5, "club": "Juventus" },
+        { "id": "arg-2022-montiel", "name": "Gonzalo Montiel", "pos": "RB", "rating": 80, "shirt": 4, "club": "Sevilla" },
+        { "id": "arg-2022-armani", "name": "Franco Armani", "pos": "GK", "rating": 80, "shirt": 1, "club": "River Plate" }
+      ]
     }
   ]
 }
