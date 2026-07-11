@@ -32,6 +32,19 @@ export default function BattleScreen(props: {
   );
 }
 
+const TRASH_TALK = [
+  'My XI has more chemistry than a Nobel lab.',
+  "I've seen better defending in a charity match.",
+  'The wheel loves me. The table will too.',
+  "I didn't come here to make friends. I came to make GD.",
+  'Your striker plays like he is still in the parking lot.',
+  'Hope you saved a spot on your bench for regret.',
+  'Six rounds? I only need my back four.',
+  "Somebody's going home. I've already booked your cab.",
+  'You call that a midfield? I call it a welcome mat.',
+  'My goalkeeper could captain your whole squad.',
+];
+
 function RoundIntro(props: { state: GameState; onPlayRound: () => void }) {
   const { state } = props;
   const alive = aliveOf(state);
@@ -39,6 +52,9 @@ function RoundIntro(props: { state: GameState; onPlayRound: () => void }) {
   const target = SURVIVORS_PER_ROUND[state.roundIndex];
   const cut = alive.length - target;
   const isFinal = target === 1;
+  const bots = alive.filter((m) => !m.isHuman);
+  const talker = bots[(state.roundIndex * 7) % Math.max(1, bots.length)];
+  const line = TRASH_TALK[(state.roundIndex * 5 + alive.length) % TRASH_TALK.length];
 
   // your live rank among the alive, by strength
   const strengths = alive
@@ -71,6 +87,11 @@ function RoundIntro(props: { state: GameState; onPlayRound: () => void }) {
       >
         PLAY ROUND {state.roundIndex + 1} ▶
       </button>
+      {talker && (
+        <p className="mt-2 max-w-md rounded-xl bg-slate-950 px-4 py-2 text-sm italic text-slate-400">
+          💬 <span className="font-bold not-italic text-slate-300">{talker.name}:</span> “{line}”
+        </p>
+      )}
     </div>
   );
 }
@@ -137,7 +158,8 @@ function RoundResults(props: { state: GameState; onContinue: () => void; humanAl
                 return (
                   <tr
                     key={row.managerId}
-                    className={`${i === target ? 'border-t-2 border-rose-500/60' : 'border-t border-slate-800'} ${
+                    style={{ animationDelay: `${i * 30}ms` }}
+                    className={`animate-row-in ${i === target ? 'border-t-2 border-rose-500/60' : 'border-t border-slate-800'} ${
                       isYou ? 'bg-emerald-500/10 font-bold' : ''
                     } ${isOut ? 'text-rose-400/70 line-through decoration-rose-500/40' : ''}`}
                   >

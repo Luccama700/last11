@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
 afterEach(cleanup);
@@ -17,7 +17,7 @@ function draftFullXi() {
 
 describe('Last11 UI: draft flow', () => {
   it('walks home -> lobby -> full 11-pick draft -> locked XI -> arena', () => {
-    render(<App />);
+    render(<App animate={false} />);
 
     // Home
     expect(screen.getByText(/Last/)).toBeTruthy();
@@ -34,7 +34,7 @@ describe('Last11 UI: draft flow', () => {
   });
 
   it('plays the full battle royale to an ending and resets', () => {
-    render(<App />);
+    render(<App animate={false} />);
     fireEvent.click(screen.getByText('ENTER THE LOBBY'));
     draftFullXi();
     fireEvent.click(screen.getByText(/ENTER THE ARENA/));
@@ -66,7 +66,7 @@ describe('Last11 UI: draft flow', () => {
   });
 
   it('the steal window actually swaps a player into the XI', () => {
-    render(<App />);
+    render(<App animate={false} />);
     fireEvent.click(screen.getByText('ENTER THE LOBBY'));
     draftFullXi();
     fireEvent.click(screen.getByText(/ENTER THE ARENA/));
@@ -94,8 +94,28 @@ describe('Last11 UI: draft flow', () => {
     // If eliminated in round 1 there is no steal window — covered by the loop test.
   });
 
+  it('animated spin chases the wheel, then reveals the options', () => {
+    vi.useFakeTimers();
+    try {
+      render(<App />); // animation ON
+      fireEvent.click(screen.getByText('ENTER THE LOBBY'));
+      fireEvent.click(screen.getByText(/SPIN/));
+      // wheel is chasing, options hidden
+      expect(screen.getByText(/Spinning…/)).toBeTruthy();
+      expect(screen.queryAllByTitle(/Pick value/).length).toBe(0);
+      act(() => {
+        vi.advanceTimersByTime(10_000);
+      });
+      // settled: options revealed
+      expect(screen.queryByText(/Spinning…/)).toBeNull();
+      expect(screen.getAllByTitle(/Pick value/).length).toBeGreaterThan(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('sidebar fills as picks land and shows live strength', () => {
-    render(<App />);
+    render(<App animate={false} />);
     fireEvent.click(screen.getByText('ENTER THE LOBBY'));
 
     // Empty slots at the start (11 dashes)

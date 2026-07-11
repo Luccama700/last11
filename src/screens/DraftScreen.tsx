@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { NATIONS, nationName } from '../engine/data';
 import { draftOptions, pickValue } from '../engine/draft';
 import {
@@ -27,8 +28,53 @@ function PositionBadge(props: { position: Position }) {
   );
 }
 
+/** Roulette chase: highlight laps the flags with ease-out and lands on the target. */
+function SpinWheel(props: { targetCode: string; onSettled: () => void }) {
+  const [highlight, setHighlight] = useState<number>(-1);
+  useEffect(() => {
+    const targetIndex = NATIONS.findIndex((n) => n.code === props.targetCode);
+    const steps = NATIONS.length + targetIndex; // one full lap, then land
+    let step = 0;
+    let timer: number;
+    const tick = () => {
+      step++;
+      setHighlight(step % NATIONS.length);
+      if (step >= steps) {
+        timer = window.setTimeout(props.onSettled, 400);
+        return;
+      }
+      const t = step / steps;
+      timer = window.setTimeout(tick, 45 + 220 * t * t);
+    };
+    timer = window.setTimeout(tick, 45);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.targetCode]);
+
+  return (
+    <div className="flex flex-col items-center gap-8 rounded-2xl border border-slate-800 bg-slate-900 p-10">
+      <div className="grid grid-cols-6 gap-3 text-4xl">
+        {NATIONS.map((n, i) => (
+          <span
+            key={n.code}
+            className={`rounded-lg p-1 transition-transform duration-75 ${
+              i === highlight
+                ? 'scale-125 bg-emerald-500/20 ring-2 ring-emerald-400'
+                : 'opacity-50'
+            }`}
+          >
+            {flagOf(n.code)}
+          </span>
+        ))}
+      </div>
+      <p className="animate-pulse font-bold text-slate-400">Spinning…</p>
+    </div>
+  );
+}
+
 export default function DraftScreen(props: {
   state: GameState;
+  animate: boolean;
   onSpin: () => void;
   onPick: (player: Player) => void;
   onEnterBattle: () => void;
@@ -39,6 +85,11 @@ export default function DraftScreen(props: {
   const currentSlot = draftDone ? null : FORMATION[state.draftSlotIndex];
   const options = state.spunNation ? draftOptions(human.xi, state.spunNation) : null;
   const strength = teamStrength(human.xi);
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    if (state.spunNation === null) setSettled(false);
+  }, [state.spunNation]);
+  const revealed = state.spunNation !== null && (settled || !props.animate);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -73,6 +124,8 @@ export default function DraftScreen(props: {
                 ENTER THE ARENA →
               </button>
             </div>
+          ) : state.spunNation !== null && !revealed ? (
+            <SpinWheel targetCode={state.spunNation} onSettled={() => setSettled(true)} />
           ) : options === null ? (
             <div className="flex flex-col items-center gap-8 rounded-2xl border border-slate-800 bg-slate-900 p-10">
               <div className="grid grid-cols-6 gap-3 text-4xl">
@@ -94,7 +147,7 @@ export default function DraftScreen(props: {
               </button>
             </div>
           ) : (
-            <div>
+            <div className="animate-pop">
               <div className="mb-4 flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900 px-5 py-3">
                 <span className="text-3xl">{flagOf(state.spunNation!)}</span>
                 <p className="text-lg font-bold">

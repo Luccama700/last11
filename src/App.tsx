@@ -18,7 +18,8 @@ import EndScreen from './screens/EndScreen';
 import HomeScreen from './screens/HomeScreen';
 import StealScreen from './screens/StealScreen';
 
-export default function App() {
+export default function App(props: { animate?: boolean }) {
+  const animate = props.animate ?? true;
   const [state, dispatch] = useReducer(reducer, initialState);
   const rngRef = useRef<Rng | null>(null);
 
@@ -128,6 +129,7 @@ export default function App() {
       return (
         <DraftScreen
           state={state}
+          animate={animate}
           onSpin={handleSpin}
           onPick={handlePick}
           onEnterBattle={handleEnterBattle}
