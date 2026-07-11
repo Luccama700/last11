@@ -16,6 +16,7 @@ import {
   swapSlots,
 } from './draft';
 import { squadByRef } from './data/loader';
+import { affinity as realAffinity } from './affinity';
 import { POSITIONS, type PlayerV2, type Position } from './data/schema';
 import { FORMATIONS, formationById, type AffinityFn, type XiSlotV2 } from './types';
 import { createRng } from './rng';
@@ -145,6 +146,29 @@ describe('pickBotFormation / pickBotStyle — deterministic + valid', () => {
     expect(pickBotFormation(createRng(3)).id).toBe(pickBotFormation(createRng(3)).id);
     expect(FORMATIONS).toContainEqual(pickBotFormation(createRng(3)));
     expect(['defensive', 'balanced', 'attacking']).toContain(pickBotStyle(createRng(3)));
+  });
+});
+
+describe('integration with game-engine AFFINITY_MATRIX (the wired-in values)', () => {
+  it('upholds the invariants the draft relies on: diagonal 1, every cell > 0', () => {
+    for (const a of POSITIONS)
+      for (const b of POSITIONS) {
+        const v = realAffinity(a, b);
+        expect(v).toBeGreaterThan(0); // never dead-ends the free-pick draft
+        expect(v).toBeLessThanOrEqual(1);
+        if (a === b) expect(v).toBe(1);
+      }
+  });
+  it('bots draft a full legal XI for every formation on the real matrix', () => {
+    for (const f of FORMATIONS) {
+      const slate = draftBotSlateV2(createRng(11), f, realAffinity);
+      expect(slate.every((s) => s !== null)).toBe(true);
+      expect(new Set(slate.map((s) => s.player.id)).size).toBe(f.slots.length);
+    }
+  });
+  it('rewards natural fit: a CB values a CB slot over a distant ST slot', () => {
+    const cb = bra2002.find((p) => p.position === 'CB')!;
+    expect(pickValueV2(cb, 'CB', realAffinity)).toBeGreaterThan(pickValueV2(cb, 'ST', realAffinity));
   });
 });
 

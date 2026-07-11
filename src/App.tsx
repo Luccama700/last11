@@ -3,10 +3,10 @@ import {
   draftBotSlateV2,
   pickBotFormation,
   pickBotStyle,
-  placeholderAffinity,
   spinNation,
   spinSquadV2,
 } from './engine/draft';
+import { affinity } from './engine/affinity';
 import { detailedToCoarse } from './engine/data/schema';
 import { createRng, type Rng } from './engine/rng';
 import {
@@ -67,7 +67,7 @@ function createV2Lobby(rng: Rng, humanName: string): Manager[] {
   for (let i = 0; i < LOBBY_SIZE - 1; i++) {
     const formation = pickBotFormation(rng);
     pickBotStyle(rng); // consumed for determinism + variety (coarse engine ignores style)
-    const slate = draftBotSlateV2(rng, formation, placeholderAffinity);
+    const slate = draftBotSlateV2(rng, formation, affinity);
     managers.push({
       id: `bot-${i + 1}`,
       name: names[i],
@@ -281,7 +281,7 @@ export default function App(props: { animate?: boolean }) {
             spunRoll={state.spunRoll ?? null}
             humanSlate={state.humanSlate}
             animate={animate}
-            affinity={placeholderAffinity}
+            affinity={affinity}
             onSpin={handleSpinV2}
             onRespin={handleRespinV2}
             onPlace={handlePlaceV2}
