@@ -337,6 +337,54 @@
         { "id": "arg-1986-trobbiani", "name": "Marcelo Trobbiani", "pos": "CM", "altPos": ["CAM"], "rating": 79, "shirt": 21, "club": "Elche" },
         { "id": "arg-1986-zelada", "name": "Héctor Zelada", "pos": "GK", "rating": 77, "shirt": 22, "club": "América" }
       ]
+    },
+    {
+      "nation": "FRA", "name": "France", "year": 1998, "result": "Winners",
+      "notes": "Hosts and champions; Zidane's coming-out (two headers in the final). Barthez started in #16 — the #1 shirt went to Lama.",
+      "players": [
+        { "id": "fra-1998-barthez", "name": "Fabien Barthez", "pos": "GK", "rating": 88, "shirt": 16, "club": "Monaco" },
+        { "id": "fra-1998-lama", "name": "Bernard Lama", "pos": "GK", "rating": 82, "shirt": 1, "club": "Paris Saint-Germain" },
+        { "id": "fra-1998-thuram", "name": "Lilian Thuram", "pos": "RB", "rating": 88, "shirt": 15, "club": "Parma" },
+        { "id": "fra-1998-lizarazu", "name": "Bixente Lizarazu", "pos": "LB", "rating": 85, "shirt": 3, "club": "Bayern Munich" },
+        { "id": "fra-1998-blanc", "name": "Laurent Blanc", "pos": "CB", "rating": 87, "shirt": 5, "club": "Marseille" },
+        { "id": "fra-1998-desailly", "name": "Marcel Desailly", "pos": "CB", "altPos": ["CDM"], "rating": 88, "shirt": 8, "club": "Milan" },
+        { "id": "fra-1998-leboeuf", "name": "Frank Lebœuf", "pos": "CB", "rating": 83, "shirt": 18, "club": "Chelsea" },
+        { "id": "fra-1998-candela", "name": "Vincent Candela", "pos": "LB", "altPos": ["CB"], "rating": 81, "shirt": 2, "club": "Roma" },
+        { "id": "fra-1998-deschamps", "name": "Didier Deschamps", "pos": "CDM", "rating": 84, "shirt": 7, "club": "Juventus" },
+        { "id": "fra-1998-petit", "name": "Emmanuel Petit", "pos": "CM", "altPos": ["CDM"], "rating": 84, "shirt": 17, "club": "Arsenal" },
+        { "id": "fra-1998-vieira", "name": "Patrick Vieira", "pos": "CM", "altPos": ["CDM"], "rating": 84, "shirt": 4, "club": "Arsenal" },
+        { "id": "fra-1998-karembeu", "name": "Christian Karembeu", "pos": "RM", "altPos": ["CM"], "rating": 82, "shirt": 19, "club": "Real Madrid" },
+        { "id": "fra-1998-zidane", "name": "Zinedine Zidane", "pos": "CAM", "rating": 95, "shirt": 10, "club": "Juventus" },
+        { "id": "fra-1998-djorkaeff", "name": "Youri Djorkaeff", "pos": "CAM", "altPos": ["ST"], "rating": 86, "shirt": 6, "club": "Internazionale" },
+        { "id": "fra-1998-pires", "name": "Robert Pires", "pos": "LM", "altPos": ["RM"], "rating": 82, "shirt": 11, "club": "Metz" },
+        { "id": "fra-1998-henry", "name": "Thierry Henry", "pos": "RW", "altPos": ["ST"], "rating": 85, "shirt": 12, "club": "Monaco" },
+        { "id": "fra-1998-guivarch", "name": "Stéphane Guivarc'h", "pos": "ST", "rating": 79, "shirt": 9, "club": "Auxerre" },
+        { "id": "fra-1998-trezeguet", "name": "David Trezeguet", "pos": "ST", "rating": 83, "shirt": 20, "club": "Monaco" }
+      ]
+    },
+    {
+      "nation": "BRA", "name": "Brazil", "year": 1994, "result": "Winners",
+      "notes": "Parreira's pragmatic 4-4-2 won on penalties. Romário's Golden Ball tournament; a 17-year-old Ronaldo travelled but never played.",
+      "players": [
+        { "id": "bra-1994-taffarel", "name": "Taffarel", "pos": "GK", "rating": 85, "shirt": 1, "club": "Reggiana" },
+        { "id": "bra-1994-romario", "name": "Romário", "pos": "ST", "rating": 95, "shirt": 11, "club": "Barcelona" },
+        { "id": "bra-1994-bebeto", "name": "Bebeto", "pos": "ST", "altPos": ["CAM"], "rating": 89, "shirt": 7, "club": "Deportivo La Coruña" },
+        { "id": "bra-1994-dunga", "name": "Dunga", "pos": "CDM", "rating": 85, "shirt": 8, "club": "VfB Stuttgart" },
+        { "id": "bra-1994-mauro-silva", "name": "Mauro Silva", "pos": "CDM", "rating": 84, "shirt": 5, "club": "Deportivo La Coruña" },
+        { "id": "bra-1994-jorginho", "name": "Jorginho", "pos": "RB", "rating": 83, "shirt": 2, "club": "Bayern Munich" },
+        { "id": "bra-1994-branco", "name": "Branco", "pos": "LB", "rating": 83, "shirt": 6, "club": "Fluminense" },
+        { "id": "bra-1994-aldair", "name": "Aldair", "pos": "CB", "rating": 86, "shirt": 13, "club": "Roma" },
+        { "id": "bra-1994-marcio-santos", "name": "Márcio Santos", "pos": "CB", "rating": 83, "shirt": 15, "club": "Bordeaux" },
+        { "id": "bra-1994-ricardo-rocha", "name": "Ricardo Rocha", "pos": "CB", "rating": 81, "shirt": 3, "club": "Vasco da Gama" },
+        { "id": "bra-1994-leonardo", "name": "Leonardo", "pos": "LB", "altPos": ["LM"], "rating": 84, "shirt": 16, "club": "São Paulo" },
+        { "id": "bra-1994-mazinho", "name": "Mazinho", "pos": "CM", "altPos": ["CDM"], "rating": 82, "shirt": 17, "club": "Palmeiras" },
+        { "id": "bra-1994-zinho", "name": "Zinho", "pos": "LM", "altPos": ["CM"], "rating": 83, "shirt": 9, "club": "Palmeiras" },
+        { "id": "bra-1994-rai", "name": "Raí", "pos": "CAM", "rating": 84, "shirt": 10, "club": "Paris Saint-Germain" },
+        { "id": "bra-1994-cafu", "name": "Cafu", "pos": "RB", "rating": 84, "shirt": 14, "club": "São Paulo" },
+        { "id": "bra-1994-muller", "name": "Müller", "pos": "ST", "altPos": ["RW"], "rating": 81, "shirt": 19, "club": "São Paulo" },
+        { "id": "bra-1994-viola", "name": "Viola", "pos": "ST", "altPos": ["RW"], "rating": 80, "shirt": 21, "club": "Corinthians" },
+        { "id": "bra-1994-ronaldo", "name": "Ronaldo", "pos": "ST", "rating": 80, "shirt": 20, "club": "Cruzeiro" }
+      ]
     }
   ]
 }
