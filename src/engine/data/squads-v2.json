@@ -625,6 +625,54 @@
         { "id": "mar-2022-el-khannouss", "name": "Bilal El Khannouss", "pos": "CAM", "altPos": ["CM"], "rating": 78, "shirt": 23, "club": "Genk" },
         { "id": "mar-2022-attiyat-allah", "name": "Yahia Attiyat Allah", "pos": "LB", "rating": 78, "shirt": 25, "club": "Wydad Casablanca" }
       ]
+    },
+    {
+      "nation": "URU", "name": "Uruguay", "year": 1930, "result": "Winners",
+      "notes": "Hosts and champions of the first-ever World Cup, beating Argentina 4-2 in the final. Nasazzi captained; Castro scored the winner with his one arm.",
+      "players": [
+        { "id": "uru-1930-nasazzi", "name": "José Nasazzi", "pos": "RB", "rating": 88, "club": "Bella Vista" },
+        { "id": "uru-1930-andrade", "name": "José Andrade", "pos": "CM", "altPos": ["CDM"], "rating": 89, "club": "Nacional" },
+        { "id": "uru-1930-scarone", "name": "Héctor Scarone", "pos": "CAM", "altPos": ["ST"], "rating": 87, "club": "Nacional" },
+        { "id": "uru-1930-castro", "name": "Héctor Castro", "pos": "ST", "rating": 85, "club": "Nacional" },
+        { "id": "uru-1930-cea", "name": "Pedro Cea", "pos": "ST", "altPos": ["CAM"], "rating": 85, "club": "Nacional" },
+        { "id": "uru-1930-mascheroni", "name": "Ernesto Mascheroni", "pos": "LB", "rating": 82, "club": "Olimpia" },
+        { "id": "uru-1930-gestido", "name": "Álvaro Gestido", "pos": "CDM", "altPos": ["CM"], "rating": 82, "club": "Peñarol" },
+        { "id": "uru-1930-fernandez", "name": "Lorenzo Fernández", "pos": "CM", "rating": 81, "club": "Peñarol" },
+        { "id": "uru-1930-dorado", "name": "Pablo Dorado", "pos": "RW", "rating": 81, "club": "Bella Vista" },
+        { "id": "uru-1930-urdinaran", "name": "Santos Urdinarán", "pos": "LW", "altPos": ["ST"], "rating": 80, "club": "Nacional" },
+        { "id": "uru-1930-petrone", "name": "Pedro Petrone", "pos": "ST", "rating": 84, "club": "Nacional" },
+        { "id": "uru-1930-ballestrero", "name": "Enrique Ballestrero", "pos": "GK", "rating": 80, "club": "Rampla Juniors" },
+        { "id": "uru-1930-capuccini", "name": "Miguel Capuccini", "pos": "GK", "rating": 76, "club": "Peñarol" },
+        { "id": "uru-1930-tejera", "name": "Domingo Tejera", "pos": "CB", "rating": 78, "club": "Nacional" },
+        { "id": "uru-1930-recoba", "name": "Emilio Recoba", "pos": "CB", "rating": 78, "club": "Nacional" },
+        { "id": "uru-1930-iriarte", "name": "Santos Iriarte", "pos": "LW", "rating": 79, "club": "Racing Club" },
+        { "id": "uru-1930-anselmo", "name": "Peregrino Anselmo", "pos": "ST", "rating": 78, "club": "Peñarol" },
+        { "id": "uru-1930-calvo", "name": "Juan Carlos Calvo", "pos": "ST", "rating": 77, "club": "Miramar Misiones" }
+      ]
+    },
+    {
+      "nation": "URU", "name": "Uruguay", "year": 1950, "result": "Winners",
+      "notes": "The Maracanazo: beat host Brazil 2-1 in front of ~200,000 in the deciding match of the final group. Schiaffino equalized, Ghiggia won it. Varela captained.",
+      "players": [
+        { "id": "uru-1950-schiaffino", "name": "Juan Schiaffino", "pos": "CAM", "rating": 90, "club": "Peñarol" },
+        { "id": "uru-1950-varela", "name": "Obdulio Varela", "pos": "CDM", "rating": 87, "club": "Peñarol" },
+        { "id": "uru-1950-ghiggia", "name": "Alcides Ghiggia", "pos": "RW", "rating": 85, "club": "Peñarol" },
+        { "id": "uru-1950-miguez", "name": "Óscar Míguez", "pos": "ST", "rating": 85, "club": "Peñarol" },
+        { "id": "uru-1950-gambetta", "name": "Schubert Gambetta", "pos": "CB", "altPos": ["RB"], "rating": 83, "club": "Nacional" },
+        { "id": "uru-1950-rodriguez-andrade", "name": "Víctor Rodríguez Andrade", "pos": "CB", "altPos": ["CM"], "rating": 83, "club": "Peñarol" },
+        { "id": "uru-1950-perez", "name": "Julio Pérez", "pos": "CAM", "altPos": ["CM"], "rating": 82, "club": "Peñarol" },
+        { "id": "uru-1950-moran", "name": "Rubén Morán", "pos": "LW", "rating": 82, "club": "Nacional" },
+        { "id": "uru-1950-gonzalez", "name": "Matías González", "pos": "RB", "rating": 80, "club": "Nacional" },
+        { "id": "uru-1950-tejera", "name": "Eusebio Tejera", "pos": "LB", "rating": 80, "club": "Defensor" },
+        { "id": "uru-1950-maspoli", "name": "Roque Máspoli", "pos": "GK", "rating": 84, "club": "Peñarol" },
+        { "id": "uru-1950-paz", "name": "Aníbal Paz", "pos": "GK", "rating": 76, "club": "Danubio" },
+        { "id": "uru-1950-vilches", "name": "Héctor Vilches", "pos": "LB", "rating": 78, "club": "Nacional" },
+        { "id": "uru-1950-martinez", "name": "William Martínez", "pos": "CB", "rating": 78, "club": "Nacional" },
+        { "id": "uru-1950-villamide", "name": "Hugo Villamide", "pos": "LM", "rating": 78, "club": "Nacional" },
+        { "id": "uru-1950-carambula", "name": "Santos Carámbula", "pos": "RM", "rating": 78, "club": "Rampla Juniors" },
+        { "id": "uru-1950-vidal", "name": "Ernesto Vidal", "pos": "LW", "rating": 79, "club": "Nacional" },
+        { "id": "uru-1950-britos", "name": "Julio César Britos", "pos": "RW", "rating": 78, "club": "Nacional" }
+      ]
     }
   ]
 }
