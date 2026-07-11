@@ -2,7 +2,7 @@ import { runTournament, type MatchResult, type TournamentLog } from './tournamen
 import { resolveMatch, type MatchSide } from './match';
 import { overallStrength } from './rating';
 import { moraleForManager, type MoraleMap } from './morale';
-import { FORMATIONS, type MatchResultV2 } from './types';
+import { FORMATIONS, type MatchResultV2, type PlayingStyle } from './types';
 import { createRng, type Rng } from './rng';
 import type { PlayerV2, Position } from './data/schema';
 
@@ -429,6 +429,98 @@ export function moraleSnowballBatch(
   };
 }
 
+export interface TacticsFormationStat {
+  formationId: string;
+  matches: number;
+  wins: number;
+  winRate: number;
+}
+
+export interface TacticsStyleStat {
+  style: PlayingStyle;
+  matches: number;
+  wins: number;
+  winRate: number;
+}
+
+export interface TacticsSpreadResult {
+  formations: TacticsFormationStat[];
+  styles: TacticsStyleStat[];
+  /** Formation/style labels whose win rate falls outside [0.35, 0.65] against
+   *  the full round-robin field AT EQUAL PLAYER STRENGTH — a signal that one
+   *  tactic choice dominates or under-performs regardless of talent (see
+   *  PLAN-qa.md Job 1 metric 5: "does 4-2-3-1 dominate everything?"). */
+  outliers: string[];
+}
+
+const OUTLIER_LOW = 0.35;
+const OUTLIER_HIGH = 0.65;
+
+function flatPlayer(id: string, position: Position, rating: number, nation: string): PlayerV2 {
+  return { id, name: `${position}-${id}`, nation, year: 2026, position, rating };
+}
+
+/**
+ * Now unblocked: bots draft varied formations/styles (draft-page's
+ * `draftBotSlateV2` + `pickBotFormation`/`pickBotStyle`), so there's a real
+ * matchup space. Every (formation, style) combo plays every OTHER combo once
+ * — a round-robin, not random pairings — on IDENTICAL flat-rated XIs (80
+ * across the board) so only tactics differ, isolating the tactics effect
+ * from talent the way random matchups (like `upsetRateByGapV2`'s samples)
+ * can't. 8 formations x 3 styles = 24 combos, C(24,2) = 276 matches — cheap.
+ */
+export function tacticsMatchupSpreadV2(seed = 0x7ac71c5): TacticsSpreadResult {
+  const combos = FORMATIONS.flatMap((formation) =>
+    (['defensive', 'balanced', 'attacking'] as const).map((style) => ({ formation, style })),
+  );
+  const sideFor = (combo: (typeof combos)[number], tag: string): MatchSide => ({
+    id: tag,
+    xi: combo.formation.slots.map((pos, i) => ({
+      position: pos,
+      player: flatPlayer(`${tag}-${i}`, pos, 80, 'BRA'),
+    })),
+    tactics: { formationId: combo.formation.id, style: combo.style },
+  });
+
+  const formationStats = new Map<string, { matches: number; wins: number }>();
+  const styleStats = new Map<PlayingStyle, { matches: number; wins: number }>();
+  const bump = <K,>(map: Map<K, { matches: number; wins: number }>, key: K, won: boolean) => {
+    const s = map.get(key) ?? { matches: 0, wins: 0 };
+    s.matches++;
+    if (won) s.wins++;
+    map.set(key, s);
+  };
+
+  let matchIndex = 0;
+  for (let i = 0; i < combos.length; i++) {
+    for (let j = i + 1; j < combos.length; j++) {
+      const home = sideFor(combos[i], `t${i}`);
+      const away = sideFor(combos[j], `t${j}`);
+      const r = resolveMatch(home, away, seed + matchIndex++);
+      // No draws exist under engineV2 (shootout resolves every level match).
+      const homeWon = r.shootout ? r.shootout.winner === 'home' : r.homeGoals > r.awayGoals;
+      bump(formationStats, combos[i].formation.id, homeWon);
+      bump(formationStats, combos[j].formation.id, !homeWon);
+      bump(styleStats, combos[i].style, homeWon);
+      bump(styleStats, combos[j].style, !homeWon);
+    }
+  }
+
+  const formations: TacticsFormationStat[] = FORMATIONS.map((f) => {
+    const s = formationStats.get(f.id)!;
+    return { formationId: f.id, matches: s.matches, wins: s.wins, winRate: s.wins / s.matches };
+  });
+  const styles: TacticsStyleStat[] = (['defensive', 'balanced', 'attacking'] as const).map((style) => {
+    const s = styleStats.get(style)!;
+    return { style, matches: s.matches, wins: s.wins, winRate: s.wins / s.matches };
+  });
+  const outliers = [
+    ...formations.filter((f) => f.winRate < OUTLIER_LOW || f.winRate > OUTLIER_HIGH).map((f) => f.formationId),
+    ...styles.filter((s) => s.winRate < OUTLIER_LOW || s.winRate > OUTLIER_HIGH).map((s) => s.style),
+  ];
+  return { formations, styles, outliers };
+}
+
 export interface BalanceReportV2 {
   sampleMatches: number;
   goals: GoalsStats;
@@ -437,6 +529,7 @@ export interface BalanceReportV2 {
   cleanSheetRate: number;
   upsets: UpsetBucket[];
   moraleSnowball: MoraleSnowballResult;
+  tacticsSpread: TacticsSpreadResult;
 }
 
 export function buildBalanceReportV2(
@@ -461,5 +554,6 @@ export function buildBalanceReportV2(
     cleanSheetRate: cleanSheetRate(results),
     upsets: upsetRateByGapV2(samples),
     moraleSnowball: moraleSnowballBatch(moraleSeeds),
+    tacticsSpread: tacticsMatchupSpreadV2(),
   };
 }

@@ -12,6 +12,7 @@ import {
   moraleSnowball,
   moraleSnowballBatch,
   postShootoutDrawRate,
+  tacticsMatchupSpreadV2,
   upsetRateByGap,
   upsetRateByGapV2,
   type MatchupSample,
@@ -248,6 +249,32 @@ describe('moraleSnowballBatch', () => {
   });
 });
 
+describe('tacticsMatchupSpreadV2', () => {
+  it('is deterministic and covers all 8 formations x 3 styles at equal strength', () => {
+    const a = tacticsMatchupSpreadV2(1);
+    const b = tacticsMatchupSpreadV2(1);
+    expect(a).toEqual(b);
+    expect(a.formations).toHaveLength(8);
+    expect(a.styles).toHaveLength(3);
+    // every combo played every OTHER combo once: 23 opponents per combo, and
+    // each formation appears in 3 combos (one per style) -> 3*23 matches.
+    for (const f of a.formations) expect(f.matches).toBe(3 * 23);
+    for (const s of a.styles) expect(s.matches).toBe(8 * 23);
+    // win rates are real fractions in [0,1], not NaN (every bucket has samples)
+    for (const f of a.formations) expect(f.winRate).toBeGreaterThanOrEqual(0);
+    for (const f of a.formations) expect(f.winRate).toBeLessThanOrEqual(1);
+  });
+
+  it('different seeds can shuffle which matches resolve on penalties but the total stays fixed', () => {
+    const a = tacticsMatchupSpreadV2(1);
+    const b = tacticsMatchupSpreadV2(2);
+    // same round-robin size regardless of seed
+    expect(a.formations.reduce((s, f) => s + f.matches, 0)).toBe(
+      b.formations.reduce((s, f) => s + f.matches, 0),
+    );
+  });
+});
+
 // Full-batch report: expensive-ish (N tournaments), gated behind BALANCE=1 so
 // `npm test` stays fast. Run with `npm run balance`. This is the v1 baseline
 // to diff engineV2/dataV2 against as they land (DECISIONS.md, Phase I).
@@ -364,6 +391,25 @@ describe.skipIf(!process.env.BALANCE)('balance report (v2 engine)', () => {
         maxMoraleDeltaObserved: report.moraleSnowball.maxMoraleDeltaObserved.toFixed(3),
       },
     ]);
+
+    console.log('\ntactics spread — equal-strength round robin, 8 formations x 3 styles:');
+    console.table(
+      report.tacticsSpread.formations.map((f) => ({
+        formation: f.formationId,
+        matches: f.matches,
+        winRate: (f.winRate * 100).toFixed(1) + '%',
+      })),
+    );
+    console.table(
+      report.tacticsSpread.styles.map((s) => ({
+        style: s.style,
+        matches: s.matches,
+        winRate: (s.winRate * 100).toFixed(1) + '%',
+      })),
+    );
+    if (report.tacticsSpread.outliers.length > 0) {
+      console.log(`outliers (win rate outside 35-65% at equal strength): ${report.tacticsSpread.outliers.join(', ')}`);
+    }
 
     // Same posture as the v1 report: this is a human-read report, not a hard
     // gate (game-engine's engine.v2.test.ts already owns the hard band
