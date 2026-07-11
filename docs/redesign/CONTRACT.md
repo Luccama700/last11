@@ -1,10 +1,16 @@
 # CONTRACT.md — shared types for the Last11 redesign
 
-Owner: worker-7 (integrator). Status: **v0.4 (2026-07-11) — PHASE I / BINDING.**
+Owner: **architect** (integrator). Status: **v0.4 (2026-07-11) — PHASE I / BINDING.**
 Folds `DECISIONS.md` (Lucca's rulings) over the six reconciled plans. This is the
 shape the Phase-I skeleton in `src/engine/types.ts` + `src/game/state.ts` is built
 against. Each block marks whether the SHAPE is frozen (mine) or whether VALUES/extra
 fields are owned by another workstream.
+
+> **Fleet roles (renamed 2026-07-11).** architect (was worker-7, integrator/CONTRACT) ·
+> game-engine (was hackathon-builder, match/affinity/timeline) · match-sim (was
+> codex-ui, playback UI) · players (was worker-6, data v2 in `src/engine/data/`) ·
+> QA (was test-hardening, balance/tests) · draft-page (was bug-hunt, draft UX) ·
+> Main (orchestrator). "Owner" tags throughout this file use the new names.
 
 ### v0.4 changes (from DECISIONS.md — supersede plan text)
 
