@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { affinity } from '../engine/affinity';
-import { effectiveRatingV2, playerV2ById } from '../engine/draft';
+import { playerV2ById, stealGainV2 } from '../engine/draft';
 import { STAR_THRESHOLD, teamStrength } from '../engine/rating';
 import { applySteal } from '../engine/tournament';
 import type { Player, XiSlotV2 } from '../engine/types';
@@ -27,13 +27,9 @@ export default function StealScreen(props: {
   /** Gain for swapping `incoming` into slot i — detailed affinity math when available. */
   function gainAt(incoming: Player, i: number): number {
     if (detailedReady) {
-      const slotPos = state.formation!.slots[i];
       const inV2 = detailedOf(incoming.id);
       if (inV2) {
-        return (
-          effectiveRatingV2(inV2, slotPos, affinity) -
-          effectiveRatingV2(denseSlate[i].player, slotPos, affinity)
-        );
+        return stealGainV2(denseSlate, state.formation!, inV2, i, affinity);
       }
     }
     return teamStrength(applySteal(human.xi, i, incoming)).total - currentStrength;

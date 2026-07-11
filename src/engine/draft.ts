@@ -394,6 +394,26 @@ export function sortByBoost(
     );
 }
 
+/**
+ * Effective-rating gain of dropping the current occupant of slot `slotIndex` for
+ * `incoming`, both rated at that slot's formation position via `effectiveRatingV2`.
+ * The single source of truth for "how much does this steal improve slot i" — the
+ * StealScreen delta, `rankStealCandidates`, and the bot auto-swap all read it, so a
+ * NATURAL incoming (affinity 1.0 at his slot) is credited his FULL base rating and a
+ * natural-into-natural swap of equal ratings is exactly 0 (bug A2 guard). Pure. The
+ * caller guarantees `slate[slotIndex]` is filled (a dense fielded XI).
+ */
+export function stealGainV2(
+  slate: readonly XiSlotV2[],
+  formation: Formation,
+  incoming: PlayerV2,
+  slotIndex: number,
+  aff: AffinityFn,
+): number {
+  const slot = formation.slots[slotIndex];
+  return effectiveRatingV2(incoming, slot, aff) - effectiveRatingV2(slate[slotIndex].player, slot, aff);
+}
+
 export interface StealCandidate {
   player: PlayerV2;
   /** Detailed position label (no coarse GK/DF/MF/FW). */
@@ -428,7 +448,7 @@ export function rankStealCandidates(
     let best: StealCandidate | null = null;
     for (let i = 0; i < slate.length; i++) {
       const slot = formation.slots[i];
-      const gain = effectiveRatingV2(player, slot, aff) - effectiveRatingV2(slate[i].player, slot, aff);
+      const gain = stealGainV2(slate, formation, player, i, aff);
       if (!best || gain > best.gain) {
         best = { player, position: player.position, bestSlotIndex: i, bestPosition: slot, gain };
       }

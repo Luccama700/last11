@@ -2,7 +2,7 @@ import { FORMATION } from '../engine/rating';
 import { DEFAULT_TACTICS, SURVIVORS_PER_ROUND, stealPool, toMatchSide } from '../engine/tournament';
 import type { Manager, RoundResult } from '../engine/tournament';
 import { simulateMatchTimeline } from '../engine/timeline';
-import { movePlaced } from '../engine/draft';
+import { movePlaced, playerV2ById } from '../engine/draft';
 import { formationById } from '../engine/types';
 import type { Player, XI } from '../engine/types';
 import type {
@@ -247,17 +247,23 @@ export function reducer(state: GameState, action: Action): GameState {
         humanSlate = state.humanSlate.map((slot, i) => {
           const coarse = newHumanXi[i]?.player;
           if (!slot || !coarse || slot.player.id === coarse.id) return slot;
-          return {
-            position: formation.slots[i],
-            player: {
-              id: coarse.id,
-              name: coarse.name,
-              nation: coarse.nation,
-              year: 2026,
-              position: COARSE_TO_DETAILED[coarse.position],
-              rating: coarse.rating,
-            },
+          // Recover the stolen player's TRUE detailed record by id — ids are stable
+          // across the coarse projection (loader §2), so playerV2ById lifts him back
+          // to his real natural position + secondaries. The coarse steal pool only
+          // carries GK/DF/MF/FW, and rebuilding from COARSE_TO_DETAILED flattened a
+          // stolen winger to ST (FW→ST); dropped into his natural LW/RW slot he then
+          // rated at affinity(ST, LW) < 1 — a natural player shown BELOW his base
+          // rating (bug A2). Fall back to the coarse projection only for a non-v2 id.
+          const detailed = playerV2ById(coarse.id);
+          const player: PlayerV2 = detailed ?? {
+            id: coarse.id,
+            name: coarse.name,
+            nation: coarse.nation,
+            year: 2026,
+            position: COARSE_TO_DETAILED[coarse.position],
+            rating: coarse.rating,
           };
+          return { position: formation.slots[i], player };
         });
       }
       return { ...state, managers, humanSlate, screen: 'battle', battleView: 'intro', pool: [] };
