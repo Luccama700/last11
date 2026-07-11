@@ -577,6 +577,54 @@
         { "id": "por-2006-pauleta", "name": "Pauleta", "pos": "ST", "rating": 83, "shirt": 9, "club": "Paris Saint-Germain" },
         { "id": "por-2006-nuno-gomes", "name": "Nuno Gomes", "pos": "ST", "rating": 81, "shirt": 21, "club": "Benfica" }
       ]
+    },
+    {
+      "nation": "ENG", "name": "England", "year": 2018, "result": "Fourth place",
+      "notes": "Southgate's semi-finalists in a 3-5-2 with attacking wing-backs. Kane won the Golden Boot (6 goals); Trippier's free-kick opened the semi-final vs Croatia.",
+      "players": [
+        { "id": "eng-2018-pickford", "name": "Jordan Pickford", "pos": "GK", "rating": 83, "shirt": 1, "club": "Everton" },
+        { "id": "eng-2018-walker", "name": "Kyle Walker", "pos": "CB", "altPos": ["RB"], "rating": 84, "shirt": 2, "club": "Manchester City" },
+        { "id": "eng-2018-stones", "name": "John Stones", "pos": "CB", "rating": 83, "shirt": 5, "club": "Manchester City" },
+        { "id": "eng-2018-maguire", "name": "Harry Maguire", "pos": "CB", "rating": 83, "shirt": 6, "club": "Leicester City" },
+        { "id": "eng-2018-trippier", "name": "Kieran Trippier", "pos": "RM", "altPos": ["RB"], "rating": 83, "shirt": 12, "club": "Tottenham Hotspur" },
+        { "id": "eng-2018-young", "name": "Ashley Young", "pos": "LM", "altPos": ["LB"], "rating": 81, "shirt": 18, "club": "Manchester United" },
+        { "id": "eng-2018-rose", "name": "Danny Rose", "pos": "LB", "altPos": ["LM"], "rating": 80, "shirt": 3, "club": "Tottenham Hotspur" },
+        { "id": "eng-2018-dier", "name": "Eric Dier", "pos": "CDM", "altPos": ["CB"], "rating": 81, "shirt": 4, "club": "Tottenham Hotspur" },
+        { "id": "eng-2018-henderson", "name": "Jordan Henderson", "pos": "CDM", "rating": 83, "shirt": 8, "club": "Liverpool" },
+        { "id": "eng-2018-alli", "name": "Dele Alli", "pos": "CAM", "altPos": ["CM"], "rating": 83, "shirt": 20, "club": "Tottenham Hotspur" },
+        { "id": "eng-2018-lingard", "name": "Jesse Lingard", "pos": "CAM", "altPos": ["RW"], "rating": 82, "shirt": 7, "club": "Manchester United" },
+        { "id": "eng-2018-sterling", "name": "Raheem Sterling", "pos": "RW", "altPos": ["ST"], "rating": 85, "shirt": 10, "club": "Manchester City" },
+        { "id": "eng-2018-kane", "name": "Harry Kane", "pos": "ST", "rating": 88, "shirt": 9, "club": "Tottenham Hotspur" },
+        { "id": "eng-2018-rashford", "name": "Marcus Rashford", "pos": "ST", "altPos": ["LW"], "rating": 82, "shirt": 19, "club": "Manchester United" },
+        { "id": "eng-2018-vardy", "name": "Jamie Vardy", "pos": "ST", "rating": 82, "shirt": 11, "club": "Leicester City" },
+        { "id": "eng-2018-loftus-cheek", "name": "Ruben Loftus-Cheek", "pos": "CM", "altPos": ["CAM"], "rating": 80, "shirt": 21, "club": "Chelsea" },
+        { "id": "eng-2018-delph", "name": "Fabian Delph", "pos": "CM", "altPos": ["LB"], "rating": 79, "shirt": 17, "club": "Manchester City" },
+        { "id": "eng-2018-taa", "name": "Trent Alexander-Arnold", "pos": "RB", "rating": 80, "shirt": 22, "club": "Liverpool" }
+      ]
+    },
+    {
+      "nation": "MAR", "name": "Morocco", "year": 2022, "result": "Fourth place",
+      "notes": "Regragui's history-makers — first African/Arab World Cup semi-finalists. Bounou saved two penalties in the shootout that eliminated Spain; Amrabat anchored a 4-1-4-1.",
+      "players": [
+        { "id": "mar-2022-hakimi", "name": "Achraf Hakimi", "pos": "RB", "rating": 87, "shirt": 2, "club": "Paris Saint-Germain" },
+        { "id": "mar-2022-bounou", "name": "Yassine Bounou", "pos": "GK", "rating": 86, "shirt": 1, "club": "Sevilla" },
+        { "id": "mar-2022-amrabat", "name": "Sofyan Amrabat", "pos": "CDM", "rating": 84, "shirt": 4, "club": "Fiorentina" },
+        { "id": "mar-2022-ziyech", "name": "Hakim Ziyech", "pos": "RW", "altPos": ["CAM"], "rating": 83, "shirt": 7, "club": "Chelsea" },
+        { "id": "mar-2022-mazraoui", "name": "Noussair Mazraoui", "pos": "LB", "altPos": ["RB"], "rating": 82, "shirt": 3, "club": "Bayern Munich" },
+        { "id": "mar-2022-aguerd", "name": "Nayef Aguerd", "pos": "CB", "rating": 82, "shirt": 5, "club": "West Ham United" },
+        { "id": "mar-2022-ounahi", "name": "Azzedine Ounahi", "pos": "CM", "altPos": ["CAM"], "rating": 82, "shirt": 8, "club": "Angers" },
+        { "id": "mar-2022-en-nesyri", "name": "Youssef En-Nesyri", "pos": "ST", "rating": 82, "shirt": 19, "club": "Sevilla" },
+        { "id": "mar-2022-saiss", "name": "Romain Saïss", "pos": "CB", "rating": 81, "shirt": 6, "club": "Beşiktaş" },
+        { "id": "mar-2022-boufal", "name": "Sofiane Boufal", "pos": "LW", "rating": 81, "shirt": 17, "club": "Angers" },
+        { "id": "mar-2022-amallah", "name": "Selim Amallah", "pos": "CM", "rating": 80, "shirt": 15, "club": "Standard Liège" },
+        { "id": "mar-2022-sabiri", "name": "Abdelhamid Sabiri", "pos": "CAM", "altPos": ["CM"], "rating": 80, "shirt": 11, "club": "Sampdoria" },
+        { "id": "mar-2022-aboukhlal", "name": "Zakaria Aboukhlal", "pos": "RW", "altPos": ["ST"], "rating": 80, "shirt": 14, "club": "Toulouse" },
+        { "id": "mar-2022-dari", "name": "Achraf Dari", "pos": "CB", "rating": 79, "shirt": 20, "club": "Stade Brestois" },
+        { "id": "mar-2022-el-yamiq", "name": "Jawad El Yamiq", "pos": "CB", "rating": 79, "shirt": 18, "club": "Real Valladolid" },
+        { "id": "mar-2022-hamdallah", "name": "Abderrazak Hamdallah", "pos": "ST", "rating": 79, "shirt": 9, "club": "Al-Ittihad" },
+        { "id": "mar-2022-el-khannouss", "name": "Bilal El Khannouss", "pos": "CAM", "altPos": ["CM"], "rating": 78, "shirt": 23, "club": "Genk" },
+        { "id": "mar-2022-attiyat-allah", "name": "Yahia Attiyat Allah", "pos": "LB", "rating": 78, "shirt": 25, "club": "Wydad Casablanca" }
+      ]
     }
   ]
 }
