@@ -1007,6 +1007,54 @@
         { "id": "bra-1982-edinho", "name": "Edinho", "pos": "GK", "rating": 76, "shirt": 16, "club": "Fluminense" },
         { "id": "bra-1982-batista", "name": "Batista", "pos": "CDM", "rating": 76, "shirt": 18, "club": "Flamengo" }
       ]
+    },
+    {
+      "nation": "CMR", "name": "Cameroon", "year": 1990, "result": "Quarter-final",
+      "notes": "The Indomitable Lions - first African team to reach a World Cup quarterfinal. Beat defending champions Argentina 1-0 in the opener; 38-year-old Roger Milla came off the bench to score four goals and dance at the corner flag, becoming a global icon. Lost the QF to England 3-2 (a.e.t.).",
+      "players": [
+        { "id": "cmr-1990-milla", "name": "Roger Milla", "pos": "ST", "rating": 87, "shirt": 9, "club": "JS Saint-Pierroise" },
+        { "id": "cmr-1990-bell", "name": "Joseph-Antoine Bell", "pos": "GK", "rating": 81, "shirt": 1, "club": "Marseille" },
+        { "id": "cmr-1990-nkono", "name": "Thomas N'Kono", "pos": "GK", "rating": 84, "shirt": 16, "club": "Espanyol" },
+        { "id": "cmr-1990-omam-biyik", "name": "François Omam-Biyik", "pos": "ST", "altPos": ["RW"], "rating": 80, "shirt": 7, "club": "Rennes" },
+        { "id": "cmr-1990-makanaky", "name": "Cyrille Makanaky", "pos": "CAM", "altPos": ["CM"], "rating": 80, "shirt": 20, "club": "Toulon" },
+        { "id": "cmr-1990-tataw", "name": "Stephen Tataw", "pos": "RB", "rating": 79, "shirt": 14, "club": "Léopard Douala" },
+        { "id": "cmr-1990-kunde", "name": "Emmanuel Kundé", "pos": "CB", "rating": 79, "shirt": 6, "club": "Union Douala" },
+        { "id": "cmr-1990-kana-biyik", "name": "André Kana-Biyik", "pos": "CB", "rating": 78, "shirt": 2, "club": "Laval" },
+        { "id": "cmr-1990-ekeke", "name": "Eugène Ekéké", "pos": "ST", "altPos": ["RW"], "rating": 78, "shirt": 11, "club": "Saint-Étienne" },
+        { "id": "cmr-1990-mbouh", "name": "Émile Mbouh", "pos": "CDM", "rating": 77, "shirt": 8, "club": "Union Douala" },
+        { "id": "cmr-1990-ebwelle", "name": "Bertin Ebwellé", "pos": "LB", "rating": 77, "shirt": 5, "club": "Canon Yaoundé" },
+        { "id": "cmr-1990-mfede", "name": "Louis-Paul M'Fédé", "pos": "CM", "rating": 77, "shirt": 10, "club": "Canon Yaoundé" },
+        { "id": "cmr-1990-ndip", "name": "Victor N'Dip", "pos": "LB", "altPos": ["RB"], "rating": 76, "shirt": 17, "club": "Union Douala" },
+        { "id": "cmr-1990-massing", "name": "Benjamin Massing", "pos": "CB", "rating": 76, "shirt": 4, "club": "US Alger" },
+        { "id": "cmr-1990-feutmba", "name": "Roger Feutmba", "pos": "RM", "rating": 76, "shirt": 19, "club": "Union Douala" },
+        { "id": "cmr-1990-maboang", "name": "Emmanuel Maboang", "pos": "CM", "rating": 75, "shirt": 21, "club": "Tonnerre Yaoundé" },
+        { "id": "cmr-1990-onana", "name": "Jules Onana", "pos": "CB", "rating": 75, "shirt": 3, "club": "Canon Yaoundé" },
+        { "id": "cmr-1990-songoo", "name": "Jacques Songo'o", "pos": "GK", "rating": 76, "shirt": 22, "club": "Toulouse" }
+      ]
+    },
+    {
+      "nation": "USA", "name": "United States", "year": 1994, "result": "Round of 16",
+      "notes": "Hosts, made the knockout stage in their own tournament before losing 1-0 to eventual champions Brazil. Beat Colombia 2-1 in the group stage (Stewart's winner, the match remembered for Escobar's own goal). Verified names/numbers from the squad template; positions/clubs are not in that source, so authored from established US soccer history and omitted where uncertain.",
+      "players": [
+        { "id": "usa-1994-ramos", "name": "Tab Ramos", "pos": "CM", "altPos": ["CAM"], "rating": 82, "club": "Real Betis" },
+        { "id": "usa-1994-dooley", "name": "Thomas Dooley", "pos": "CDM", "rating": 81, "club": "1. FC Kaiserslautern" },
+        { "id": "usa-1994-wynalda", "name": "Eric Wynalda", "pos": "ST", "rating": 81, "club": "Saarbrücken" },
+        { "id": "usa-1994-balboa", "name": "Marcelo Balboa", "pos": "CB", "rating": 80, "club": "San Diego Sockers" },
+        { "id": "usa-1994-harkes", "name": "John Harkes", "pos": "CM", "rating": 80, "club": "Derby County" },
+        { "id": "usa-1994-meola", "name": "Tony Meola", "pos": "GK", "rating": 79, "club": "New York/New Jersey MetroStars" },
+        { "id": "usa-1994-stewart", "name": "Earnie Stewart", "pos": "RW", "altPos": ["ST"], "rating": 79, "club": "Willem II" },
+        { "id": "usa-1994-lalas", "name": "Alexi Lalas", "pos": "CB", "rating": 78, "club": "New England Revolution" },
+        { "id": "usa-1994-jones", "name": "Cobi Jones", "pos": "RM", "rating": 78, "club": "Coventry City" },
+        { "id": "usa-1994-caligiuri", "name": "Paul Caligiuri", "pos": "LB", "rating": 77, "club": "Hansa Rostock" },
+        { "id": "usa-1994-wegerle", "name": "Roy Wegerle", "pos": "ST", "rating": 77, "club": "Coventry City" },
+        { "id": "usa-1994-clavijo", "name": "Fernando Clavijo", "pos": "RB", "rating": 76, "club": "New England Revolution" },
+        { "id": "usa-1994-perez", "name": "Hugo Pérez", "pos": "CAM", "rating": 76, "club": "Puebla" },
+        { "id": "usa-1994-reyna", "name": "Claudio Reyna", "pos": "CM", "rating": 76, "club": "Bayer Leverkusen" },
+        { "id": "usa-1994-moore", "name": "Joe-Max Moore", "pos": "ST", "altPos": ["RW"], "rating": 76, "club": "New England Revolution" },
+        { "id": "usa-1994-friedel", "name": "Brad Friedel", "pos": "GK", "rating": 76, "club": "UCLA" },
+        { "id": "usa-1994-kooiman", "name": "Cle Kooiman", "pos": "CB", "rating": 75, "club": "San Diego Sockers" },
+        { "id": "usa-1994-sommer", "name": "Juergen Sommer", "pos": "GK", "rating": 75, "club": "Luton Town" }
+      ]
     }
   ]
 }
