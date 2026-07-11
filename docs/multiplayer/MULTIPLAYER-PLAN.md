@@ -1,7 +1,39 @@
 # Last11 Multiplayer — The Plan (Phase R2 synthesis)
 
-Status: **DRAFT v0.1** (Main, 2026-07-12) — product design written; architecture
-verdict, feasibility numbers and roadmap PENDING the six RESEARCH-*.md docs.
+Status: **v1.0** (Main, 2026-07-12) — synthesized from the six RESEARCH-*.md docs.
+(RESEARCH-testing.md landing last; its harness plan slots into §6 unchanged.)
+
+## 0. The verdict
+
+**Feasible, and cheaper than expected.** The two classically hard problems are
+already solved by the codebase's own discipline: the engine is pure+seeded, and
+playback is `pure(timeline, elapsedMs)` — the sync doc PROVES playback.ts needs
+ZERO changes (late-join seek is free). The one genuine hazard found is
+`Math.exp` in the Poisson sampler (implementation-defined precision across JS
+engines), which kills naive cross-browser client replay — and the architecture
+routes around it entirely:
+
+- **MVP (2–8 friends, casual): HOST-AUTHORITATIVE.** The host's browser is the
+  room authority — it owns the seed, phase deadlines and action ordering, runs
+  the ONE engine instance, and broadcasts computed `MatchTimeline`s (KB-scale)
+  plus `startAt` through **Supabase Realtime** (Broadcast + Presence + a
+  Postgres input-log for reconnect). One JS engine computes ⇒ bit-identical for
+  everyone by construction; clients are pure playback. $0 at MVP scale, and
+  Supabase is already in Lucca's stack.
+- **v2 (32 seats, ranked): SERVER-CERTIFIED.** The same pure engine moves into a
+  serverless function as the authority (host-migration + anti-cheat solved in
+  one move), commit–reveal on simultaneous decisions, engine-version handshake.
+  Strictly additive on the same message schema.
+
+**The single hard code change** (protocol doc §3): today `playRound()` resolves a
+whole round synchronously inside a click handler. Multiplayer needs resolution
+split at the input-collection deadline — actions in, authority resolves,
+timelines out — behind a **Driver interface** (`LocalDriver` = today's handlers
+verbatim; `OnlineDriver` = the room channel feeding the SAME reducer actions).
+Engine, reducer, screens: unchanged.
+
+**Effort:** MVP ≈ a focused weekend (driver seam + room channel + lobby UI +
+deadline timers); v2 ≈ a second comparable chunk. No rewrite anywhere.
 
 ## 1. Product design (Main's lane — this section is the design)
 
