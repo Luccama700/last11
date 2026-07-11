@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   affinityForV2,
   autoArrange,
+  BOT_FORMATION_WEIGHTS,
   botBestPlacement,
   draftBotSlateV2,
   draftOptionsV2,
@@ -152,6 +153,36 @@ describe('pickBotFormation / pickBotStyle — deterministic + valid', () => {
     expect(pickBotFormation(createRng(3)).id).toBe(pickBotFormation(createRng(3)).id);
     expect(FORMATIONS).toContainEqual(pickBotFormation(createRng(3)));
     expect(['defensive', 'balanced', 'attacking']).toContain(pickBotStyle(createRng(3)));
+  });
+});
+
+describe('BOT_FORMATION_WEIGHTS — sensible spread, no shape starved or overweighted', () => {
+  const catalog = new Set(FORMATIONS.map((f) => f.id));
+  const weights = Object.entries(BOT_FORMATION_WEIGHTS);
+
+  it('every weighted id is a real catalog formation (no typo → silent 4-3-3 fallback)', () => {
+    for (const [id] of weights) expect(catalog.has(id)).toBe(true);
+  });
+
+  it('every catalog formation carries a positive weight — none starved', () => {
+    // Tripwire: when a new shape (e.g. the 4-1-2-1-2 diamonds) lands in FORMATIONS,
+    // this goes red until its weight is added to BOT_FORMATION_WEIGHTS.
+    for (const f of FORMATIONS) {
+      expect(BOT_FORMATION_WEIGHTS[f.id] ?? 0).toBeGreaterThan(0);
+    }
+  });
+
+  it('no shape is grossly overweighted (heaviest ≤ 4× lightest)', () => {
+    const ws = weights.map(([, w]) => w);
+    expect(Math.max(...ws)).toBeLessThanOrEqual(4 * Math.min(...ws));
+    for (const w of ws) expect(w).toBeGreaterThanOrEqual(1);
+  });
+
+  it('pickBotFormation actually reaches every catalog shape across seeds', () => {
+    const seen = new Set<string>();
+    for (let seed = 0; seed < 4000; seed++) seen.add(pickBotFormation(createRng(seed)).id);
+    for (const f of FORMATIONS) expect(seen.has(f.id)).toBe(true);
+    for (const id of seen) expect(catalog.has(id)).toBe(true); // never an out-of-catalog fallback
   });
 });
 

@@ -281,14 +281,29 @@ export function movePlaced(
   return next;
 }
 
+/**
+ * Bot formation weights (favours the common shapes). Every key MUST be a real
+ * FORMATIONS id, and every catalog shape should carry a positive weight so none is
+ * starved. Exported so the distribution is directly testable — when a new shape lands
+ * in FORMATIONS (e.g. the 4-1-2-1-2 diamonds), add its weight here or the reachability
+ * test goes red. Keep the spread sane (no shape grossly heavier than another).
+ */
+export const BOT_FORMATION_WEIGHTS: Readonly<Record<string, number>> = {
+  '4-3-3': 3,
+  '4-4-2': 2,
+  '4-2-3-1': 2,
+  '3-5-2': 1,
+  '5-3-2': 1,
+  '4-5-1': 1,
+  '4-2-4': 1,
+  '3-4-3': 1,
+};
+
 /** Weighted-sane seeded formation for a bot (favours the common shapes). */
 export function pickBotFormation(rng: Rng): Formation {
-  const weighted: string[] = [
-    '4-3-3', '4-3-3', '4-3-3',
-    '4-4-2', '4-4-2',
-    '4-2-3-1', '4-2-3-1',
-    '3-5-2', '5-3-2', '4-5-1', '4-2-4', '3-4-3',
-  ];
+  const weighted: string[] = [];
+  for (const [id, w] of Object.entries(BOT_FORMATION_WEIGHTS))
+    for (let i = 0; i < w; i++) weighted.push(id);
   const id = rng.pick(weighted);
   return FORMATIONS.find((f) => f.id === id) ?? FORMATIONS[0];
 }
