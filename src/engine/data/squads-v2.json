@@ -913,6 +913,52 @@
         { "id": "ita-1938-monzeglio", "name": "Eraldo Monzeglio", "pos": "RB", "rating": 76, "club": "Roma" },
         { "id": "ita-1938-masetti", "name": "Guido Masetti", "pos": "GK", "rating": 76, "club": "Roma" }
       ]
+    },
+    {
+      "nation": "BRA", "name": "Brazil", "year": 1962, "result": "Winners",
+      "notes": "Back-to-back champions, matching Italy's feat, beating Czechoslovakia 3-1. Pele injured after match two; Amarildo stepped in and starred. Garrincha carried the team and won the Golden Ball - widely considered his single greatest tournament.",
+      "players": [
+        { "id": "bra-1962-garrincha", "name": "Garrincha", "pos": "RW", "rating": 92, "club": "Botafogo" },
+        { "id": "bra-1962-pele", "name": "Pelé", "pos": "CAM", "altPos": ["ST"], "rating": 90, "club": "Santos" },
+        { "id": "bra-1962-didi", "name": "Didi", "pos": "CM", "altPos": ["CAM"], "rating": 88, "club": "Botafogo" },
+        { "id": "bra-1962-amarildo", "name": "Amarildo", "pos": "ST", "altPos": ["CAM"], "rating": 85, "club": "Botafogo" },
+        { "id": "bra-1962-nilton-santos", "name": "Nílton Santos", "pos": "LB", "rating": 85, "club": "Botafogo" },
+        { "id": "bra-1962-gilmar", "name": "Gilmar", "pos": "GK", "rating": 85, "club": "Santos" },
+        { "id": "bra-1962-vava", "name": "Vavá", "pos": "ST", "rating": 85, "club": "Palmeiras" },
+        { "id": "bra-1962-djalma-santos", "name": "Djalma Santos", "pos": "RB", "rating": 84, "club": "Palmeiras" },
+        { "id": "bra-1962-zito", "name": "Zito", "pos": "CDM", "rating": 82, "club": "Santos" },
+        { "id": "bra-1962-mauro-ramos", "name": "Mauro Ramos", "pos": "CB", "rating": 81, "club": "Santos" },
+        { "id": "bra-1962-zagallo", "name": "Zagallo", "pos": "LW", "rating": 81, "club": "Botafogo" },
+        { "id": "bra-1962-zozimo", "name": "Zózimo", "pos": "CB", "rating": 79, "club": "Botafogo" },
+        { "id": "bra-1962-coutinho", "name": "Coutinho", "pos": "CAM", "altPos": ["ST"], "rating": 79, "club": "Santos" },
+        { "id": "bra-1962-pepe", "name": "Pepe", "pos": "LW", "rating": 79, "club": "Santos" },
+        { "id": "bra-1962-bellini", "name": "Bellini", "pos": "CB", "rating": 79, "club": "Vasco da Gama" },
+        { "id": "bra-1962-mengalvio", "name": "Mengálvio", "pos": "CM", "rating": 77, "club": "Santos" },
+        { "id": "bra-1962-jurandir", "name": "Jurandir", "pos": "CB", "rating": 76, "club": "Botafogo" },
+        { "id": "bra-1962-castilho", "name": "Carlos Castilho", "pos": "GK", "rating": 76, "club": "Fluminense" }
+      ]
+    },
+    {
+      "nation": "SWE", "name": "Sweden", "year": 1958, "result": "Runners-up",
+      "notes": "Hosts, lost the final 5-2 to Pele's Brazil. Built around the aging 'Gre-No-Li' pair (Gren and Liedholm, reunited from their AC Milan trio) plus young winger Hamrin. Squad depth below the front-line names is less firmly documented.",
+      "players": [
+        { "id": "swe-1958-liedholm", "name": "Nils Liedholm", "pos": "CM", "altPos": ["CAM"], "rating": 85, "shirt": 4, "club": "AC Milan" },
+        { "id": "swe-1958-gren", "name": "Gunnar Gren", "pos": "CAM", "rating": 84, "shirt": 8, "club": "Fiorentina" },
+        { "id": "swe-1958-hamrin", "name": "Kurt Hamrin", "pos": "RW", "rating": 84, "shirt": 7, "club": "Padova" },
+        { "id": "swe-1958-skoglund", "name": "Lennart Skoglund", "pos": "LW", "rating": 82, "shirt": 11, "club": "Internazionale" },
+        { "id": "swe-1958-simonsson", "name": "Agne Simonsson", "pos": "ST", "rating": 81, "shirt": 9, "club": "Örgryte IS" },
+        { "id": "swe-1958-svensson", "name": "Kalle Svensson", "pos": "GK", "rating": 81, "shirt": 1, "club": "Helsingborgs IF" },
+        { "id": "swe-1958-bergmark", "name": "Orvar Bergmark", "pos": "RB", "rating": 80, "club": "Örebro SK" },
+        { "id": "swe-1958-axbom", "name": "Sven Axbom", "pos": "LB", "rating": 79, "club": "IFK Norrköping" },
+        { "id": "swe-1958-selmosson", "name": "Arne Selmosson", "pos": "CAM", "altPos": ["ST"], "rating": 79, "shirt": 10, "club": "Lazio" },
+        { "id": "swe-1958-parling", "name": "Sigge Parling", "pos": "CDM", "rating": 78, "club": "IFK Norrköping" },
+        { "id": "swe-1958-gustavsson", "name": "Bengt Gustavsson", "pos": "CB", "rating": 77, "club": "AIK" },
+        { "id": "swe-1958-berndtsson", "name": "Bengt Berndtsson", "pos": "CM", "rating": 77, "club": "IFK Göteborg" },
+        { "id": "swe-1958-lofgren", "name": "Gösta Löfgren", "pos": "CDM", "rating": 76, "club": "IFK Norrköping" },
+        { "id": "swe-1958-borjesson", "name": "Reino Börjesson", "pos": "RM", "rating": 76, "club": "IFK Göteborg" },
+        { "id": "swe-1958-jonsson", "name": "Torbjörn Jonsson", "pos": "CB", "rating": 76, "club": "AIK" },
+        { "id": "swe-1958-brostrom", "name": "Lars Broström", "pos": "LB", "rating": 76, "club": "Djurgårdens IF" }
+      ]
     }
   ]
 }
