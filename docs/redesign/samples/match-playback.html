@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Last11 — Match Playback wireframe</title>
+<style>
+  /* Static wireframe of the watched-match screen. Palette matches the app
+     (slate-950 bg, emerald accent, rose danger). The clock is driven by a
+     single rAF loop reading a HARD-CODED demo timeline — the same
+     pure(timeline, elapsed) contract the real component will use. */
+  :root {
+    --bg:#020617; --panel:#0f172a; --panel2:#1e293b; --line:#1e293b;
+    --ink:#f1f5f9; --dim:#94a3b8; --dim2:#64748b;
+    --home:#34d399; --away:#f87171; --gold:#fbbf24;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .wrap { max-width:900px; margin:0 auto; padding:20px 16px 60px; }
+  .hdr { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; }
+  .logo { font-weight:900; letter-spacing:-.02em; font-size:20px; }
+  .logo b { color:var(--home); }
+  .tag { font-size:11px; color:var(--dim2); letter-spacing:.25em; font-weight:700; }
+  .alive { font-size:12px; color:var(--dim); font-weight:700; }
+
+  /* scoreboard */
+  .board { background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:16px 18px; display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:center; }
+  .team { display:flex; flex-direction:column; gap:2px; }
+  .team.away { text-align:right; }
+  .team .nm { font-weight:800; font-size:15px; }
+  .team .str { font-size:11px; color:var(--dim2); }
+  .team.home .nm { color:var(--home); }
+  .score { font-weight:900; font-size:34px; letter-spacing:.04em; text-align:center;
+    display:flex; align-items:center; gap:10px; }
+  .clock { text-align:center; font-size:12px; color:var(--gold); font-weight:700; margin-top:2px; }
+  .youchip { font-size:9px; background:var(--home); color:#022; border-radius:6px;
+    padding:1px 5px; font-weight:900; align-self:flex-start; margin-bottom:2px; }
+  .team.away .youchip { align-self:flex-end; }
+
+  /* momentum bar */
+  .mom { margin:16px 0 6px; }
+  .mom-label { display:flex; justify-content:space-between; font-size:10px; color:var(--dim2);
+    text-transform:uppercase; letter-spacing:.15em; margin-bottom:5px; }
+  .mom-track { position:relative; height:56px; background:linear-gradient(90deg,#0b1220,#111a2e,#0b1220);
+    border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .mom-mid { position:absolute; left:50%; top:0; bottom:0; width:1px; background:#334155; }
+  /* the momentum fill: width = |pressure|, side depends on sign */
+  .mom-fill { position:absolute; top:0; bottom:0; opacity:.28; transition:none; }
+  .mom-fill.home { left:50%; background:var(--home); }
+  .mom-fill.away { right:50%; background:var(--away); }
+  /* the ball marker rides ballX (0=home goal .. 1=away goal) */
+  .pitch-mini { position:absolute; inset:0; display:flex; align-items:center; padding:0 6px; }
+  .ball { position:absolute; top:50%; width:14px; height:14px; margin-top:-7px; margin-left:-7px;
+    background:radial-gradient(circle at 35% 30%,#fff,#cbd5e1); border-radius:50%;
+    box-shadow:0 0 10px rgba(255,255,255,.6); transition:none; }
+  .goalmouth { position:absolute; top:18%; bottom:18%; width:3px; background:#475569; }
+  .goalmouth.l { left:2px; } .goalmouth.r { right:2px; }
+
+  /* ticker */
+  .ticker { margin-top:10px; min-height:46px; background:var(--panel); border:1px solid var(--line);
+    border-radius:10px; padding:8px 12px; display:flex; flex-direction:column; gap:3px; justify-content:center; }
+  .evt { font-size:13px; display:flex; gap:8px; align-items:baseline; }
+  .evt .mn { color:var(--gold); font-weight:800; width:34px; flex:none; }
+  .evt.goal .tx { color:var(--gold); font-weight:800; }
+  .evt.home .mn { color:var(--home); } .evt.away .mn { color:var(--away); }
+  .evt.dim { opacity:.45; font-size:12px; }
+
+  /* controls */
+  .ctl { display:flex; gap:8px; justify-content:center; margin:14px 0 6px; }
+  .btn { background:var(--panel2); border:1px solid #334155; color:var(--ink);
+    border-radius:8px; padding:7px 14px; font:inherit; font-weight:700; cursor:pointer; }
+  .btn.on { background:var(--home); color:#022; border-color:var(--home); }
+  .btn.skip { background:transparent; color:var(--dim); }
+
+  /* goal flash overlay */
+  .flash { position:fixed; inset:0; pointer-events:none; display:flex; align-items:center;
+    justify-content:center; opacity:0; }
+  .flash.show { opacity:1; }
+  .flash .big { font-size:15vw; font-weight:900; color:var(--gold);
+    text-shadow:0 0 40px rgba(251,191,36,.6); animation:pop .5s ease-out; letter-spacing:.05em; }
+  @keyframes pop { 0%{transform:scale(.4);opacity:0} 40%{transform:scale(1.15);opacity:1} 100%{transform:scale(1)} }
+
+  /* other-matches rail */
+  .rail { margin-top:22px; }
+  .rail h3 { font-size:11px; color:var(--dim2); text-transform:uppercase; letter-spacing:.18em; margin:0 0 8px; }
+  .rail-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:6px; }
+  .mini { background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:6px 10px; display:flex; justify-content:space-between; align-items:center; font-size:12px; }
+  .mini .sc { font-weight:800; font-variant-numeric:tabular-nums; }
+  .mini.live .sc { color:var(--gold); }
+  .mini .mk { font-size:9px; color:var(--dim2); }
+  .mini.marquee { border-color:#3f3f5f; cursor:pointer; }
+  .note { margin-top:20px; font-size:11px; color:var(--dim2); border-top:1px dashed var(--line);
+    padding-top:12px; line-height:1.7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div><span class="logo">Last<b>11</b></span> <span class="tag">MATCHDAY · R2</span></div>
+    <div class="alive">16 managers alive</div>
+  </div>
+
+  <!-- SCOREBOARD -->
+  <div class="board">
+    <div class="team home">
+      <span class="youchip">YOU</span>
+      <span class="nm">You</span>
+      <span class="str">str 71.4 · 4-3-3 attacking</span>
+    </div>
+    <div>
+      <div class="score"><span id="gh">0</span><span style="color:#475569">–</span><span id="ga">0</span></div>
+      <div class="clock" id="clk">0'</div>
+    </div>
+    <div class="team away">
+      <span class="nm">José Moanrinho</span>
+      <span class="str">str 68.9 · 5-4-1 defensive</span>
+    </div>
+  </div>
+
+  <!-- MOMENTUM METER -->
+  <div class="mom">
+    <div class="mom-label"><span style="color:var(--home)">◀ You attacking</span>
+      <span>ball position &amp; momentum</span>
+      <span style="color:var(--away)">Moanrinho attacking ▶</span></div>
+    <div class="mom-track">
+      <div class="mom-mid"></div>
+      <div class="goalmouth l"></div>
+      <div class="goalmouth r"></div>
+      <div class="mom-fill home" id="fh"></div>
+      <div class="mom-fill away" id="fa"></div>
+      <div class="pitch-mini"><div class="ball" id="ball"></div></div>
+    </div>
+  </div>
+
+  <!-- EVENT TICKER -->
+  <div class="ticker" id="ticker"></div>
+
+  <!-- CONTROLS (solo only) -->
+  <div class="ctl">
+    <button class="btn on" data-sp="1">1×</button>
+    <button class="btn" data-sp="2">2×</button>
+    <button class="btn skip" id="skip">skip ▸▸</button>
+  </div>
+
+  <!-- OTHER MATCHES RAIL -->
+  <div class="rail">
+    <h3>Elsewhere this round · tap a marquee to watch</h3>
+    <div class="rail-grid" id="rail"></div>
+  </div>
+
+  <div class="note">
+    <b>Wireframe only.</b> The clock is a single <code>requestAnimationFrame</code> loop reading a
+    hard-coded demo timeline; every visual (score, ball X, momentum fill, ticker, goal flash) is a
+    <b>pure function of <code>(timeline, elapsedMs)</code></b> — no incremental randomness. A server
+    can later hand every client the same timeline + start timestamp and all screens stay in lockstep.
+    Fixed canonical duration = 45s / 90′. 2× and skip are solo-only affordances.
+  </div>
+</div>
+
+<div class="flash" id="flash"><div class="big" id="flashtxt">GOAL</div></div>
+
+<script>
+// ---- demo timeline (the shape the engine will emit; values here are hand-authored) ----
+const DUR_MS = 45000;               // canonical wall-clock for 90'
+const CELEB_MS = 2600;              // goal celebration window
+// per-minute momentum samples: pressure in [-1(away)..+1(you)], ballX in [0(your goal)..1(their goal)]
+const ticks = Array.from({length:91}, (_,m)=>{
+  const wave = Math.sin(m/6) *0.5 + Math.sin(m/13)*0.4 + (m<45?0.12:-0.05);
+  const pressure = Math.max(-1,Math.min(1, wave));
+  return { minute:m, pressure, ballX: 0.5 + pressure*0.42 };
+});
+const events = [
+  {minute:0,  type:'kickoff', team:null, text:'Kick-off. You start on the front foot.'},
+  {minute:12, type:'chance',  team:'home', text:'Chance! Your ST turns in the box…'},
+  {minute:13, type:'save',    team:'away', text:'Save — Moanrinho’s keeper stands tall.'},
+  {minute:23, type:'goal',    team:'home', text:'GOAL! Your winger curls it far post.', score:[1,0]},
+  {minute:39, type:'chance',  team:'away', text:'Counter! They break 3-on-2…'},
+  {minute:45, type:'halftime',team:null, text:'Half-time. You lead 1–0.'},
+  {minute:58, type:'goal',    team:'away', text:'GOAL. Moanrinho equalises against the run.', score:[1,1]},
+  {minute:71, type:'chance',  team:'home', text:'Big chance! Header rattles the bar.'},
+  {minute:84, type:'goal',    team:'home', text:'GOAL! Late header wins it — the arena erupts!', score:[2,1]},
+  {minute:90, type:'fulltime',team:null, text:'Full-time. You win 2–1 and survive.'},
+];
+const evAt = e => (e.minute/90)*DUR_MS;
+const goals = events.filter(e=>e.type==='goal');
+
+// other-manager matches: only goal-minute stamps needed to tick the rail cheaply
+const others = [
+  {h:'Pep Talkiola', a:'Xavi Hernandeus', goals:[{m:15,s:'h'},{m:66,s:'h'},{m:80,s:'a'}], marquee:true},
+  {h:'Klopp-out',    a:'Zizou Zidone',    goals:[{m:33,s:'a'}], marquee:true},
+  {h:'Anceloco',     a:'Simehome',        goals:[{m:9,s:'h'},{m:51,s:'h'}]},
+  {h:'Tuchill',      a:'ten Haggle',      goals:[]},
+  {h:'Artetacos',    a:'van Goal',        goals:[{m:44,s:'a'},{m:77,s:'a'}]},
+  {h:'Content',      a:'Whinger',         goals:[{m:5,s:'h'},{m:60,s:'a'},{m:88,s:'h'}]},
+];
+
+// ---- pure render from elapsed ----
+const $=id=>document.getElementById(id);
+function tickAt(ms){ const v=Math.max(0,Math.min(90,(ms/DUR_MS)*90)); const i=Math.floor(v);
+  const a=ticks[i], b=ticks[Math.min(90,i+1)], f=v-i;
+  return { minute:v, pressure:a.pressure+(b.pressure-a.pressure)*f, ballX:a.ballX+(b.ballX-a.ballX)*f }; }
+function scoreAt(ms){ let h=0,a=0; for(const g of goals) if(evAt(g)<=ms){ h=g.score[0]; a=g.score[1]; } return [h,a]; }
+function celebAt(ms){ for(const g of goals){ const t=evAt(g); if(ms>=t && ms<t+CELEB_MS) return g; } return null; }
+
+function render(ms){
+  const t=tickAt(ms), [h,a]=scoreAt(ms), celeb=celebAt(ms);
+  // clock: freeze at 45' during HT beat, show 90' at end
+  const mn=Math.floor(t.minute);
+  $('clk').textContent = mn>=90?"90'  FT":(mn===45?"45'  HT":mn+"'");
+  $('gh').textContent=h; $('ga').textContent=a;
+  // momentum fill: half-width * |pressure|
+  const p=t.pressure, w=Math.abs(p)*50;
+  $('fh').style.width=(p>0?w:0)+'%'; $('fa').style.width=(p<0?w:0)+'%';
+  // ball rides ballX, but on a goal resets to center for the celebration
+  const bx = celeb? 0.5 : t.ballX;
+  $('ball').style.left=(6+bx*(($('ticker').clientWidth||600)>0?1:1)*0+ bx*100)+'%';
+  // ticker: last 3 events fired
+  const fired=events.filter(e=>evAt(e)<=ms);
+  const show=fired.slice(-3);
+  $('ticker').innerHTML = show.map((e,i)=>{
+    const cls=[e.type==='goal'?'goal':'', e.team||'', i<show.length-1?'dim':''].join(' ');
+    return `<div class="evt ${cls}"><span class="mn">${e.minute}'</span><span class="tx">${e.text}</span></div>`;
+  }).join('') || `<div class="evt dim"><span class="mn">0'</span><span class="tx">…</span></div>`;
+  // goal flash
+  const fl=$('flash'); if(celeb){ fl.classList.add('show'); $('flashtxt').textContent = celeb.team==='home'?'GOAL!':'GOAL'; }
+  else fl.classList.remove('show');
+  // other matches rail — score ticks at each goal minute
+  $('rail').innerHTML = others.map(o=>{
+    let gh=0,ga=0; for(const g of o.goals){ if((g.m/90)*DUR_MS<=ms){ g.s==='h'?gh++:ga++; } }
+    const live=mn<90;
+    return `<div class="mini ${live?'live':''} ${o.marquee?'marquee':''}">
+      <span>${o.h} <span class="mk">v</span> ${o.a}</span>
+      <span class="sc">${gh}–${ga}${o.marquee?' <span class="mk">▸watch</span>':''}</span></div>`;
+  }).join('');
+}
+
+// ---- driver: single rAF clock (the only stateful piece; swappable for server startTs) ----
+let start=null, speed=1, done=false;
+function loop(now){ if(done) return; if(start===null) start=now;
+  const elapsed=(now-start)*speed; render(elapsed);
+  if(elapsed>=DUR_MS+CELEB_MS){ done=true; render(DUR_MS+CELEB_MS); return; }
+  requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+document.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('[data-sp]').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  // preserve elapsed when changing speed: re-anchor start
+  const prev=speed; speed=+b.dataset.sp;
+});
+$('skip').onclick=()=>{ done=true; render(DUR_MS+CELEB_MS); $('clk').textContent="90'  FT"; };
+</script>
+</body>
+</html>
