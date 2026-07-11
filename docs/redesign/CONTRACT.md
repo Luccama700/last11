@@ -510,6 +510,22 @@ Bots in the legacy tournament path still use v1 `evaluateSteal` (coarse data has
 detailed positions to exploit); switching them to `evaluateStealV2` awaits v2 bot data +
 a QA balance re-baseline.
 
+**One squad-rating metric everywhere (MORNING JOB 1).** The leaderboard "Squad" value
+must match the draft rail. Use `squad-rating.ts::displayedSquadRating(Manager | slate)`
+— the **Σ `effectiveRatingV2(player, slotPosition, affinity)`** the board already shows
+(DISPLAY sum; distinct from the engine's internal `overallStrength` AVERAGE for xG). For
+the human pass the DETAILED `humanSlate`; for bots pass the `Manager` (coarse XI is
+projected). Every surface (draft rail, round table, standings, intro rank) reads this
+one function. Note: `TableRow.strength` stays coarse `teamStrength` as the internal
+tiebreak (determinism) — it is NOT the displayed value.
+
+**Per-player tournament stats (MORNING JOB 2).** `GameState.playerStats?:
+Record<playerId, {goals, assists}>`, accrued from `resultsV2[].goals`
+(`playerId`/`assistPlayerId`) on `ROUND_PLAYED` (live rounds) + `FINISHED` (fast-forward
+tail) — each round folded exactly once. `game/player-stats.ts` exports the pure
+`accrueStats`, `topScorers`/`topAssists` (name-resolved `StatLine[]`), and
+`buildNameLookup(managers)`. Powers Golden Boot / Playmaker (Main renders the UI).
+
 **End-of-run recap (NIGHT-SHIFT JOB 2).** `GameState` gains `champion?: Manager` and
 `finalTimeline?: MatchTimeline`. On `FINISHED` (fast-forward after a human is eliminated)
 the reducer records the champion and REBUILDS the final match's full `MatchTimeline` —

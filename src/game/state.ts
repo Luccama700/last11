@@ -2,6 +2,7 @@ import { FORMATION } from '../engine/rating';
 import { DEFAULT_TACTICS, SURVIVORS_PER_ROUND, stealPool, toMatchSide } from '../engine/tournament';
 import type { Manager, RoundResult } from '../engine/tournament';
 import { simulateMatchTimeline } from '../engine/timeline';
+import { movePlaced } from '../engine/draft';
 import { formationById } from '../engine/types';
 import type { Player, XI } from '../engine/types';
 import type {
@@ -15,6 +16,7 @@ import type {
 } from '../engine/types';
 import { COARSE_TO_DETAILED, detailedToCoarse } from '../engine/data/schema';
 import type { PlayerV2 } from '../engine/data/schema';
+import { accrueStats, type PlayerStats } from './player-stats';
 
 /** Project a detailed v2 slate to the coarse XI the (current) engine reads via
  *  toMatchSide — the same projection App uses at battle entry, kept here so a
@@ -92,6 +94,10 @@ export interface GameState {
    *  an eliminated human can still watch the final (JOB 2). Deterministic — rebuilt
    *  from the final result's stamped seed + morale. Absent on the v1 path. */
   finalTimeline?: MatchTimeline;
+  /** Cumulative per-player goals + assists across the whole tournament (incl.
+   *  fast-forwarded rounds). Accrued on ROUND_PLAYED + FINISHED from resultsV2.goals.
+   *  Powers Golden Boot / Playmaker (topScorers/topAssists). Empty on the v1 path. */
+  playerStats?: PlayerStats;
 }
 
 export const initialState: GameState = {
@@ -129,6 +135,7 @@ export type Action =
   | { type: 'RESPIN' }
   | { type: 'ROLL'; roll: RolledTeam }
   | { type: 'PLACE'; player: PlayerV2; slotIndex: number }
+  | { type: 'MOVE_PLACED'; from: number; to: number }
   | { type: 'REARRANGE_XI'; managerId: string; xi: (XiSlotV2 | null)[] }
   | { type: 'ENTER_PLAYBACK'; matchday: Matchday }
   | { type: 'NEXT_FEATURED' }
@@ -197,6 +204,7 @@ export function reducer(state: GameState, action: Action): GameState {
         battleView: 'results',
         pool: stealPool(eliminatedManagers),
         humanPlacement,
+        playerStats: accrueStats(state.playerStats ?? {}, [action.result]),
       };
     }
 
@@ -265,6 +273,9 @@ export function reducer(state: GameState, action: Action): GameState {
         screen: 'end',
         champion,
         finalTimeline,
+        // Accrue the fast-forwarded rounds' goals/assists (live rounds already folded
+        // in via ROUND_PLAYED; each round appears in exactly one path → no double count).
+        playerStats: accrueStats(state.playerStats ?? {}, action.rounds),
       };
     }
 
@@ -318,6 +329,17 @@ export function reducer(state: GameState, action: Action): GameState {
       const slate = [...state.humanSlate];
       slate[action.slotIndex] = { position: state.formation.slots[action.slotIndex], player: action.player };
       return { ...state, humanSlate: slate, spunRoll: null };
+    }
+
+    case 'MOVE_PLACED': {
+      // Mid-draft: move an already-placed player to an OPEN slot (Lucca's "found a
+      // better player for a position"). Pure engine helper enforces from-filled /
+      // to-open; invalid moves are a no-op. Only touches the draft slate.
+      if (!state.humanSlate || !state.formation) return state;
+      return {
+        ...state,
+        humanSlate: movePlaced(state.humanSlate, state.formation, action.from, action.to),
+      };
     }
 
     case 'REARRANGE_XI': {
