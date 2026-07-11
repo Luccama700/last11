@@ -673,6 +673,54 @@
         { "id": "uru-1950-vidal", "name": "Ernesto Vidal", "pos": "LW", "rating": 79, "club": "Nacional" },
         { "id": "uru-1950-britos", "name": "Julio César Britos", "pos": "RW", "rating": 78, "club": "Nacional" }
       ]
+    },
+    {
+      "nation": "GER", "name": "West Germany", "year": 1954, "result": "Winners",
+      "notes": "The Miracle of Bern: beat Hungary 3-2 in the final after losing 3-8 to them in the group stage. Rahn scored the winner; Fritz Walter captained.",
+      "players": [
+        { "id": "ger-1954-turek", "name": "Toni Turek", "pos": "GK", "rating": 83, "shirt": 1, "club": "Fortuna Düsseldorf" },
+        { "id": "ger-1954-kohlmeyer", "name": "Werner Kohlmeyer", "pos": "LB", "rating": 80, "shirt": 3, "club": "1. FC Kaiserslautern" },
+        { "id": "ger-1954-bauer", "name": "Hans Bauer", "pos": "CB", "rating": 78, "shirt": 4, "club": "Bayern Munich" },
+        { "id": "ger-1954-erhardt", "name": "Herbert Erhardt", "pos": "CB", "rating": 78, "shirt": 5, "club": "SpVgg Fürth" },
+        { "id": "ger-1954-eckel", "name": "Horst Eckel", "pos": "CDM", "altPos": ["CM"], "rating": 80, "shirt": 6, "club": "1. FC Kaiserslautern" },
+        { "id": "ger-1954-posipal", "name": "Josef Posipal", "pos": "RB", "rating": 80, "shirt": 7, "club": "Hamburger SV" },
+        { "id": "ger-1954-mai", "name": "Karl Mai", "pos": "CM", "rating": 79, "shirt": 8, "club": "SpVgg Fürth" },
+        { "id": "ger-1954-liebrich", "name": "Werner Liebrich", "pos": "CB", "rating": 81, "shirt": 10, "club": "1. FC Kaiserslautern" },
+        { "id": "ger-1954-metzner", "name": "Karl-Heinz Metzner", "pos": "CM", "rating": 77, "shirt": 11, "club": "KSV Hessen Kassel" },
+        { "id": "ger-1954-rahn", "name": "Helmut Rahn", "pos": "RW", "rating": 84, "shirt": 12, "club": "Rot-Weiss Essen" },
+        { "id": "ger-1954-morlock", "name": "Max Morlock", "pos": "CAM", "altPos": ["ST"], "rating": 83, "shirt": 13, "club": "1. FC Nürnberg" },
+        { "id": "ger-1954-klodt", "name": "Bernhard Klodt", "pos": "RW", "rating": 77, "shirt": 14, "club": "FC Schalke 04" },
+        { "id": "ger-1954-o-walter", "name": "Ottmar Walter", "pos": "ST", "rating": 83, "shirt": 15, "club": "1. FC Kaiserslautern" },
+        { "id": "ger-1954-f-walter", "name": "Fritz Walter", "pos": "CAM", "rating": 88, "shirt": 16, "club": "1. FC Kaiserslautern" },
+        { "id": "ger-1954-herrmann", "name": "Richard Herrmann", "pos": "LW", "rating": 77, "shirt": 17, "club": "FSV Frankfurt" },
+        { "id": "ger-1954-pfaff", "name": "Alfred Pfaff", "pos": "CM", "rating": 78, "shirt": 19, "club": "Eintracht Frankfurt" },
+        { "id": "ger-1954-schafer", "name": "Hans Schäfer", "pos": "LW", "rating": 81, "shirt": 20, "club": "1. FC Köln" },
+        { "id": "ger-1954-kwiatkowski", "name": "Heinz Kwiatkowski", "pos": "GK", "rating": 76, "shirt": 22, "club": "Borussia Dortmund" }
+      ]
+    },
+    {
+      "nation": "HUN", "name": "Hungary", "year": 1954, "result": "Runners-up",
+      "notes": "The Mighty Magyars — unbeaten for over 4 years, hammered England 6-3 and 7-1, beat this same West German side 8-3 in the group. Lost only the final, 2-3. Often called the greatest team never to win the World Cup.",
+      "players": [
+        { "id": "hun-1954-grosics", "name": "Gyula Grosics", "pos": "GK", "rating": 84, "shirt": 1, "club": "Budapesti Honvéd" },
+        { "id": "hun-1954-buzanszky", "name": "Jenő Buzánszky", "pos": "RB", "rating": 81, "shirt": 2, "club": "Dorogi Bányász" },
+        { "id": "hun-1954-lorant", "name": "Gyula Lóránt", "pos": "CB", "rating": 82, "shirt": 3, "club": "Budapesti Honvéd" },
+        { "id": "hun-1954-lantos", "name": "Mihály Lantos", "pos": "LB", "rating": 80, "shirt": 4, "club": "Budapesti Vörös Lobogó" },
+        { "id": "hun-1954-bozsik", "name": "József Bozsik", "pos": "CM", "rating": 87, "shirt": 5, "club": "Budapesti Honvéd" },
+        { "id": "hun-1954-zakarias", "name": "József Zakariás", "pos": "CDM", "rating": 80, "shirt": 6, "club": "Budapesti Vörös Lobogó" },
+        { "id": "hun-1954-j-toth", "name": "József Tóth", "pos": "RW", "rating": 80, "shirt": 7, "club": "Csepeli Vasas" },
+        { "id": "hun-1954-kocsis", "name": "Sándor Kocsis", "pos": "ST", "rating": 91, "shirt": 8, "club": "Budapesti Honvéd" },
+        { "id": "hun-1954-hidegkuti", "name": "Nándor Hidegkuti", "pos": "CAM", "altPos": ["ST"], "rating": 89, "shirt": 9, "club": "Budapesti Vörös Lobogó" },
+        { "id": "hun-1954-puskas", "name": "Ferenc Puskás", "pos": "CAM", "altPos": ["ST"], "rating": 95, "shirt": 10, "club": "Budapesti Honvéd" },
+        { "id": "hun-1954-czibor", "name": "Zoltán Czibor", "pos": "LW", "rating": 85, "shirt": 11, "club": "Budapesti Honvéd" },
+        { "id": "hun-1954-karpati", "name": "Béla Kárpáti", "pos": "LB", "altPos": ["CB"], "rating": 78, "shirt": 12, "club": "Győri Vasas" },
+        { "id": "hun-1954-varhidi", "name": "Pál Várhidi", "pos": "CB", "rating": 77, "shirt": 13, "club": "Budapesti Dózsa" },
+        { "id": "hun-1954-kovacs", "name": "Imre Kovács", "pos": "CM", "rating": 77, "shirt": 14, "club": "Budapesti Vörös Lobogó" },
+        { "id": "hun-1954-szojka", "name": "Ferenc Szojka", "pos": "CM", "rating": 76, "shirt": 15, "club": "Salgótarjáni BTC" },
+        { "id": "hun-1954-budai", "name": "László Budai", "pos": "RW", "altPos": ["RM"], "rating": 80, "shirt": 16, "club": "Budapesti Honvéd" },
+        { "id": "hun-1954-palotas", "name": "Péter Palotás", "pos": "ST", "altPos": ["CAM"], "rating": 78, "shirt": 19, "club": "Budapesti Vörös Lobogó" },
+        { "id": "hun-1954-geller", "name": "Sándor Gellér", "pos": "GK", "rating": 76, "shirt": 21, "club": "Budapesti Vörös Lobogó" }
+      ]
     }
   ]
 }
