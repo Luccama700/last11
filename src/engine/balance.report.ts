@@ -1,23 +1,34 @@
 import { runTournament, type MatchResult, type TournamentLog } from './tournament';
-import { resolveMatch, type MatchSide } from './match';
+import { matchVerdict, resolveMatch, type MatchSide } from './match';
 import { overallStrength } from './rating';
 import { moraleForManager, type MoraleMap } from './morale';
 import { FORMATIONS, type MatchResultV2, type PlayingStyle } from './types';
 import { createRng, type Rng } from './rng';
 import type { PlayerV2, Position } from './data/schema';
 
-/** Real-football-inspired targets, revised by Lucca (DECISIONS.md, 2026-07-11
- *  morning): spicier-than-real goal rate, and draws are eliminated by
- *  shootouts rather than tolerated. See PLAN-qa.md Job 1 for the sourcing;
- *  these numbers supersede that document's original 2.6-2.9g/22-29%d bands. */
+/**
+ * Real-football-inspired targets, revised by Lucca (DECISIONS.md, 2026-07-11
+ * morning) and RESTATED for the NIGHT-SHIFT staged-shootout rule (`ce6c5b4`,
+ * same night): shootouts only run when a round starts with ≤16 alive
+ * (`SHOOTOUT_ALIVE_MAX`/`shootoutEnabledForRound`, tournament.ts). Rounds
+ * that start with MORE than 16 alive (32, 24 — R1/R2 of the BR) keep classic
+ * draws; rounds with 16 or fewer alive (R3-R6) never end level. Draw-rate
+ * targets are therefore regime-specific, not a single number:
+ *
+ * - `earlyRoundDrawRate` — the >16-alive regime (shootoutEnabled=false).
+ *   This IS the final draw rate there too (nothing resolves it further).
+ * - `lateRoundFinalDrawRate` — the ≤16-alive regime (shootoutEnabled=true).
+ *   Must be exactly 0 — every level match there gets a shootout winner.
+ *
+ * `goalsPerMatch` is unaffected by the staged rule (shootouts don't add
+ * regulation goals) and stays a single target across both regimes.
+ */
 export const TARGETS = {
   goalsPerMatch: 3.4,
-  /** Drawn-after-90 rate BEFORE the shootout resolves it. Engine v2 only —
-   *  v1 has no shootout, so v1's plain draw rate is reported for context,
-   *  not graded against this band. */
-  preShootoutDrawRate: 0.15,
-  /** Once shootouts land, no match should end level in the final table. */
-  postShootoutDrawRate: 0,
+  /** >16-alive rounds (shootoutEnabled=false): the real, final draw rate. */
+  earlyRoundDrawRate: 0.15,
+  /** ≤16-alive rounds (shootoutEnabled=true): must be exactly 0. */
+  lateRoundFinalDrawRate: 0,
 } as const;
 
 export interface GoalsStats {
@@ -273,14 +284,35 @@ function randomSide(id: string, rng: Rng): MatchSide {
 }
 
 /**
- * Should be exactly 0: every level regulation match carries a shootout with
- * a definite winner (DECISIONS.md — "no drawn matches exist"), so nothing
- * should ever reach the table undecided. A non-zero rate here means the
- * shootout-only-after-drawn-regulation invariant broke somewhere upstream.
+ * "Undecided" = a match where a shootout was SUPPOSED to run (shootoutEnabled)
+ * and a level regulation score didn't get one — a genuine engine bug, since
+ * `resolveMatchOutcome` should always draw the shootout in that case. Should
+ * be exactly 0, always, in both regimes.
+ *
+ * NIGHT-SHIFT rule (`ce6c5b4`): a level match where `shootoutEnabled` is
+ * false (>16-alive rounds) is a LEGITIMATE draw, not undecided — do NOT flag
+ * it. `MatchResultV2.shootoutEnabled` is stamped per-match by the real
+ * tournament (`playRound`); this harness's own `resolveMatch(...)` calls
+ * don't explicitly set it either, so `?? true` mirrors `resolveMatch`'s own
+ * default (shootoutEnabled=true) rather than silently miscounting them.
  */
 export function postShootoutDrawRate(results: readonly MatchResultV2[]): number {
-  const undecided = results.filter((r) => r.homeGoals === r.awayGoals && !r.shootout).length;
+  const undecided = results.filter(
+    (r) => r.homeGoals === r.awayGoals && !r.shootout && (r.shootoutEnabled ?? true),
+  ).length;
   return undecided / results.length;
+}
+
+/**
+ * The REAL, final draw rate — matches whose canonical verdict
+ * (`matchVerdict`) is a genuine draw. Under `shootoutEnabled=true` this
+ * should be exactly 0 (same invariant as `postShootoutDrawRate`, restated
+ * positively); under `shootoutEnabled=false` (early rounds) this IS the
+ * meaningful draw-rate metric — nothing resolves those draws further.
+ */
+export function finalDrawRate(results: readonly MatchResultV2[]): number {
+  const draws = results.filter((r) => matchVerdict(r).decidedBy === 'draw').length;
+  return draws / results.length;
 }
 
 const UPSET_BUCKET_BOUNDS_V2 = [
@@ -302,17 +334,27 @@ export interface MatchupSample {
  * own tuning anchor is "+10 zonal strength ~= +0.75 xG", so a 10-point gap is
  * already a meaningfully large edge on this scale — 0-5/5-15/15+ brackets
  * "small", "the tuned-example size", and "large" gaps around that anchor.
+ *
+ * Uses `matchVerdict` (NIGHT-SHIFT fix, `ce6c5b4`) rather than comparing raw
+ * goals — the raw-goals check used to `continue` (exclude) EVERY level
+ * result, including shootout-decided ones, which silently dropped every
+ * shootout winner from upset stats (a real undercount, not just a style
+ * nit — in ≤16-alive rounds many matches go level then resolve on pens).
+ * Only a GENUINE draw (`decidedBy === 'draw'`, possible in >16-alive rounds
+ * under the staged rule) is excluded now — it doesn't resolve an upset
+ * either way; a shootout winner is a real decisive result and counts.
  */
 export function upsetRateByGapV2(samples: readonly MatchupSample[]): UpsetBucket[] {
   const buckets = UPSET_BUCKET_BOUNDS_V2.map((b) => ({ ...b, decisiveMatches: 0, weakerWins: 0 }));
   for (const { homeStrength, awayStrength, result } of samples) {
-    if (result.homeGoals === result.awayGoals) continue; // pre-shootout regulation level; excluded like v1
+    const v = matchVerdict(result);
+    if (v.decidedBy === 'draw') continue; // genuine draw — excluded, same as before
     const gap = Math.abs(homeStrength - awayStrength);
     const bucket = buckets.find((b) => gap >= b.minGap && gap < b.maxGap);
     if (!bucket) continue;
     bucket.decisiveMatches++;
     const weakerWasHome = homeStrength < awayStrength;
-    const weakerWon = weakerWasHome ? result.homeGoals > result.awayGoals : result.awayGoals > result.homeGoals;
+    const weakerWon = weakerWasHome ? v.winner === 'home' : v.winner === 'away';
     if (weakerWon) bucket.weakerWins++;
   }
   return buckets.map((b) => ({
@@ -521,11 +563,37 @@ export function tacticsMatchupSpreadV2(seed = 0x7ac71c5): TacticsSpreadResult {
   return { formations, styles, outliers };
 }
 
+/**
+ * Sample N random matchups at a FIXED shootout regime — the shared batch
+ * generator for both the late-round (shootoutEnabled=true) and early-round
+ * (shootoutEnabled=false) reports. Stamps `shootoutEnabled` on each result,
+ * mirroring what `playRound` itself does in the real tournament — this
+ * harness's `resolveMatch(...)` calls don't set it automatically, and
+ * `postShootoutDrawRate`/`finalDrawRate` both key off that field.
+ */
+function sampleMatchups(seeds: readonly number[], shootoutEnabled: boolean): MatchupSample[] {
+  // Team-generation rng is independent of the per-match outcome seed, same
+  // separation-of-concerns engine.v2.test.ts's own harness uses.
+  const genRng = createRng(0x11a1e);
+  return seeds.map((seed) => {
+    const home = randomSide(`h${seed}`, genRng);
+    const away = randomSide(`a${seed}`, genRng);
+    const result = resolveMatch(home, away, seed, shootoutEnabled);
+    result.shootoutEnabled = shootoutEnabled;
+    return { homeStrength: overallStrength(home.xi), awayStrength: overallStrength(away.xi), result };
+  });
+}
+
+/** The ≤16-alive, shootoutEnabled=true regime — shootouts fire, final draws must be 0. */
 export interface BalanceReportV2 {
   sampleMatches: number;
   goals: GoalsStats;
   preShootoutDrawRate: number;
-  postShootoutDrawRate: number;
+  /** Bug detector (was named `postShootoutDrawRate`): must always be 0 — a
+   *  level match with shootoutEnabled that got no shootout. */
+  undecidedRate: number;
+  /** The real final draw rate. Must be 0 in THIS regime (shootoutEnabled=true). */
+  finalDrawRate: number;
   cleanSheetRate: number;
   upsets: UpsetBucket[];
   moraleSnowball: MoraleSnowballResult;
@@ -536,24 +604,44 @@ export function buildBalanceReportV2(
   matchupSeeds: readonly number[],
   moraleSeeds: readonly number[] = [0xba1a, 0xba1b, 0xba1c, 0xba1d, 0xba1e, 0xba1f, 0xba20, 0xba21],
 ): BalanceReportV2 {
-  // Team-generation rng is independent of the per-match outcome seed, same
-  // separation-of-concerns engine.v2.test.ts's own harness uses.
-  const genRng = createRng(0x11a1e);
-  const samples: MatchupSample[] = matchupSeeds.map((seed) => {
-    const home = randomSide(`h${seed}`, genRng);
-    const away = randomSide(`a${seed}`, genRng);
-    const result = resolveMatch(home, away, seed);
-    return { homeStrength: overallStrength(home.xi), awayStrength: overallStrength(away.xi), result };
-  });
+  const samples = sampleMatchups(matchupSeeds, true);
   const results = samples.map((s) => s.result);
   return {
     sampleMatches: results.length,
     goals: goalsStats(results),
     preShootoutDrawRate: drawRate(results),
-    postShootoutDrawRate: postShootoutDrawRate(results),
+    undecidedRate: postShootoutDrawRate(results),
+    finalDrawRate: finalDrawRate(results),
     cleanSheetRate: cleanSheetRate(results),
     upsets: upsetRateByGapV2(samples),
     moraleSnowball: moraleSnowballBatch(moraleSeeds),
     tacticsSpread: tacticsMatchupSpreadV2(),
+  };
+}
+
+/** The >16-alive, shootoutEnabled=false regime — real draws stand; nothing
+ *  resolves them further, so `drawRate` here IS the final draw rate. */
+export interface EarlyRoundBalanceReportV2 {
+  sampleMatches: number;
+  goals: GoalsStats;
+  drawRate: number;
+  /** Sanity: must be 0 — with shootoutEnabled=false no shootout should EVER
+   *  fire, so there's nothing to be "undecided" about; a non-zero value here
+   *  means `resolveMatchOutcome` ignored the flag somewhere. */
+  undecidedRate: number;
+  cleanSheetRate: number;
+  upsets: UpsetBucket[];
+}
+
+export function buildEarlyRoundBalanceReportV2(matchupSeeds: readonly number[]): EarlyRoundBalanceReportV2 {
+  const samples = sampleMatchups(matchupSeeds, false);
+  const results = samples.map((s) => s.result);
+  return {
+    sampleMatches: results.length,
+    goals: goalsStats(results),
+    drawRate: drawRate(results),
+    undecidedRate: postShootoutDrawRate(results),
+    cleanSheetRate: cleanSheetRate(results),
+    upsets: upsetRateByGapV2(samples),
   };
 }
