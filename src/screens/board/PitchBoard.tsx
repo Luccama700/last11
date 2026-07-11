@@ -39,7 +39,12 @@ function BoardSlot(props: BoardSlotProps) {
       className={`absolute -translate-x-1/2 -translate-y-1/2 ${clickable ? 'cursor-pointer' : 'cursor-default'}`}
       data-slot-position={props.position}
     >
-      <span className={`${base} ${size} ${look}${accent}`}>
+      {/* key = player id: a NEW occupant remounts the circle, replaying the
+          drop-pop + gold ring ripple (juice pass). */}
+      <span
+        key={slot?.player.id ?? 'empty'}
+        className={`${base} ${size} ${look}${accent}${slot ? ' animate-slot-drop animate-ring-ripple' : ''}`}
+      >
         {slot ? (
           <>
             <span className="text-base leading-none">{flagOf(slot.player.nation)}</span>

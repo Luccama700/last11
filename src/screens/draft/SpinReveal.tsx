@@ -36,11 +36,17 @@ export default function SpinReveal(props: {
     return h;
   }, [props.target.nation, props.target.year]);
 
+  // Both reels put the target two rows from the END: the payline lands with
+  // visible symbols still below it, so where it stops isn't telegraphed by the
+  // column simply running out (Lucca's note).
   const nationSeq = useMemo(() => {
     const pool = props.nations.length > 0 ? props.nations.map((n) => n.code) : [props.target.nation];
     const rotated = pool.map((_, i) => pool[(i + seed) % pool.length]);
-    // three laps of variety, then the target lands on the payline
-    return [...rotated, ...rotated, ...rotated.slice(0, Math.max(2, rotated.length >> 1)), props.target.nation];
+    const after = [rotated[0] ?? props.target.nation, rotated[1 % rotated.length] ?? props.target.nation];
+    return {
+      items: [...rotated, ...rotated, ...rotated.slice(0, Math.max(2, rotated.length >> 1)), props.target.nation, ...after],
+      targetIndex: rotated.length * 2 + Math.max(2, rotated.length >> 1),
+    };
   }, [props.nations, props.target.nation, seed]);
 
   const yearSeq = useMemo(() => {
@@ -50,8 +56,9 @@ export default function SpinReveal(props: {
     const laps = Math.max(3, Math.ceil(24 / pool.length));
     const seq: number[] = [];
     for (let l = 0; l < laps; l++) seq.push(...rotated);
-    seq.push(props.target.year);
-    return seq;
+    const targetIndex = seq.length;
+    seq.push(props.target.year, rotated[0] ?? props.target.year, rotated[1 % rotated.length] ?? props.target.year);
+    return { items: seq, targetIndex };
   }, [props.target.year, seed]);
 
   useEffect(() => {
@@ -86,20 +93,22 @@ export default function SpinReveal(props: {
       <div className="flex items-stretch gap-2">
         <LampRail locked={bothLocked} />
         <Reel
-          items={nationSeq.map((code) => (
+          items={nationSeq.items.map((code) => (
             <span className="flex items-center gap-1.5">
               <span className="text-2xl">{flagOf(code)}</span>
               <span className="headline text-base text-ink-100">{code}</span>
             </span>
           ))}
+          targetIndex={nationSeq.targetIndex}
           landMs={active ? NATION_LAND_MS : 0}
           locked={nationLocked}
           wide
         />
         <Reel
-          items={yearSeq.map((y) => (
+          items={yearSeq.items.map((y) => (
             <span className="headline text-xl tabular-nums text-ink-100">{y}</span>
           ))}
+          targetIndex={yearSeq.targetIndex}
           landMs={active ? YEAR_LAND_MS : 0}
           locked={yearLocked}
         />
@@ -122,15 +131,22 @@ export default function SpinReveal(props: {
 
 /** One vertical reel: a translating column behind a 3-row window with a gold
  *  payline. Blurred while fast; overshoot easing sells the mechanical stop. */
-function Reel(props: { items: React.ReactNode[]; landMs: number; locked: boolean; wide?: boolean }) {
+function Reel(props: {
+  items: React.ReactNode[];
+  /** Index of the item that must land on the payline (rows exist after it). */
+  targetIndex: number;
+  landMs: number;
+  locked: boolean;
+  wide?: boolean;
+}) {
   const [offset, setOffset] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
 
-  // Target index sits last; final offset centres it on the middle visible row:
-  // item i's on-screen top = i·ROW_H + offset + ROW_H, and the payline row starts
-  // at ROW_H ⇒ offset = -(len-1)·ROW_H centres the last item exactly.
-  const finalOffset = -(props.items.length - 1) * ROW_H;
+  // Item i's on-screen top = i·ROW_H + offset + ROW_H, and the payline row starts
+  // at ROW_H ⇒ offset = -targetIndex·ROW_H centres the target on the payline —
+  // with look-ahead rows still visible beneath it.
+  const finalOffset = -props.targetIndex * ROW_H;
 
   useEffect(() => {
     setOffset(0);

@@ -76,7 +76,8 @@ export default function StealScreen(props: {
                     data-testid="loot-card"
                     disabled={owned}
                     onClick={() => setSelected(p)}
-                    className={`card-gloss cursor-pointer rounded-lg p-3 text-left text-sm transition ${
+                    style={{ animationDelay: `${Math.min(pool.indexOf(p), 14) * 25}ms` }}
+                    className={`card-gloss animate-flip-in cursor-pointer rounded-lg p-3 text-left text-sm transition ${
                       isSelected
                         ? '!border-gold-500'
                         : owned

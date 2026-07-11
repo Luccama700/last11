@@ -79,7 +79,10 @@ export default function TacticsRail(props: {
       <div className="border-t border-night-600 pt-3">
         <p className="flex items-baseline justify-between text-sm">
           <span className="font-semibold text-ink-500">Strength</span>
-          <span className="headline text-2xl text-gold-300">{props.strength.toFixed(0)}</span>
+          {/* key = value: remounts on change so the number bumps (juice pass) */}
+          <span key={props.strength.toFixed(0)} className="headline animate-score-bump text-2xl text-gold-300">
+            {props.strength.toFixed(0)}
+          </span>
         </p>
         <p className="mt-1 flex justify-between text-[11px] text-ink-500">
           <span>Drafted</span>

@@ -194,9 +194,14 @@ function Scoreboard(props: {
       </div>
       <div className="text-center">
         <div className="headline flex items-center justify-center gap-2 text-4xl tabular-nums text-ink-100">
-          <span>{pb.score.home}</span>
+          {/* key = value: digits remount on change and bump (juice pass) */}
+          <span key={`h${pb.score.home}`} className="animate-score-bump">
+            {pb.score.home}
+          </span>
           <span className="text-night-600">–</span>
-          <span>{pb.score.away}</span>
+          <span key={`a${pb.score.away}`} className="animate-score-bump">
+            {pb.score.away}
+          </span>
         </div>
         <div className="headline mt-0.5 text-[11px] text-gold-400">{pb.clockLabel}</div>
         <div className="text-[9px] uppercase tracking-widest text-ink-500">
@@ -308,8 +313,35 @@ function Pitch(props: {
         </div>
       )}
 
+      {/* match-phase banner sweeping across the pitch (juice pass) */}
+      <PhaseBanner minute={pb.virtualMinute} shootout={!!pb.shootout} />
+
       {/* shootout overlay mounts HERE — on the pitch, never below the fold */}
       {props.children}
+    </div>
+  );
+}
+
+/** KICK-OFF / HALF-TIME / FULL-TIME sweep — pure from the virtual minute; keyed
+ *  by phase so each banner plays exactly once per phase. */
+function PhaseBanner(props: { minute: number; shootout: boolean }) {
+  const phase =
+    props.minute <= 2
+      ? 'KICK-OFF'
+      : props.minute >= 45 && props.minute < 47
+        ? 'HALF-TIME'
+        : props.minute >= 90 && !props.shootout
+          ? 'FULL-TIME'
+          : null;
+  if (!phase) return null;
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 overflow-hidden">
+      <div
+        key={phase}
+        className="animate-banner-sweep mx-auto w-fit rounded-lg border border-gold-500/60 bg-night-950/85 px-8 py-2"
+      >
+        <span className="headline text-2xl tracking-[0.3em] text-gold-300">{phase}</span>
+      </div>
     </div>
   );
 }

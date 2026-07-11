@@ -8,7 +8,7 @@ export default function HomeScreen(props: { onStart: () => void }) {
       </p>
       <h1 className="headline text-7xl tracking-tight">
         <span className="text-ink-100">Last</span>
-        <span className="headline-gold">11</span>
+        <span className="headline-shine">11</span>
       </h1>
       <p className="max-w-md text-center text-ink-500">
         {LOBBY_SIZE} managers. One draft wheel. Every round the weakest teams go home —

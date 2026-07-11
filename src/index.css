@@ -39,6 +39,20 @@
   --color-draw: #94a3b8;
 }
 
+/* No scrollbars anywhere (content still scrolls) and no white overscroll strip:
+   the page background is pinned to the theme even past the scroll edges. */
+html {
+  background: var(--color-night-950);
+  overscroll-behavior: none;
+}
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
 /* Stadium backdrop: vignette + faint floodlight beams. */
 .bg-stadium {
   background:
@@ -154,6 +168,119 @@
     opacity: 0.7;
   }
 }
+/* ── Juice pass (2026-07-12): shared micro-animations ──────────────────────── */
+/* Gold shine sweeping across display text (home title, champion banner). */
+@keyframes title-shine {
+  0%,
+  60% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+.headline-shine {
+  background: linear-gradient(
+    110deg,
+    var(--color-gold-500) 35%,
+    #fff7dd 50%,
+    var(--color-gold-500) 65%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: title-shine 3.5s ease-in-out infinite;
+}
+/* A player landing on a pitch slot: drop-pop + expanding gold ring. */
+@keyframes slot-drop {
+  0% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(0.94);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes ring-ripple {
+  0% {
+    box-shadow: 0 0 0 0 rgba(232, 196, 104, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 0 18px rgba(232, 196, 104, 0);
+  }
+}
+.animate-slot-drop {
+  animation: slot-drop 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.animate-ring-ripple {
+  animation: ring-ripple 0.7s ease-out both;
+}
+/* Scoreboard digits bump when the score changes. */
+@keyframes score-bump {
+  0% {
+    transform: scale(1.6);
+    color: var(--color-gold-300);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-score-bump {
+  display: inline-block;
+  animation: score-bump 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+/* Match-phase banner (KICK-OFF / HALF-TIME / FULL-TIME) sweeping across the pitch. */
+@keyframes banner-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-12deg);
+    opacity: 0;
+  }
+  18%,
+  78% {
+    transform: translateX(0) skewX(-12deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(120%) skewX(-12deg);
+    opacity: 0;
+  }
+}
+.animate-banner-sweep {
+  animation: banner-sweep 2s ease-in-out both;
+}
+/* Card entrance: quick flip-up, used with per-card animation-delay for staggers. */
+@keyframes flip-in {
+  0% {
+    transform: perspective(600px) rotateX(28deg) translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: perspective(600px) rotateX(0) translateY(0);
+    opacity: 1;
+  }
+}
+.animate-flip-in {
+  animation: flip-in 0.32s ease-out both;
+}
+/* Elimination cut line breathing red. */
+@keyframes cutline-pulse {
+  0%,
+  100% {
+    border-top-color: rgba(240, 85, 77, 0.55);
+  }
+  50% {
+    border-top-color: rgba(240, 85, 77, 1);
+  }
+}
+.animate-cutline-pulse {
+  animation: cutline-pulse 1.6s ease-in-out infinite;
+}
+
 /* Slot machine (the draw) */
 @keyframes slot-shake {
   0%,
@@ -252,7 +379,20 @@
   .animate-row-in,
   .animate-gold-pulse,
   .animate-kick-pop,
+  .animate-slot-shake,
+  .animate-slot-drop,
+  .animate-ring-ripple,
+  .animate-score-bump,
+  .animate-banner-sweep,
+  .animate-flip-in,
+  .animate-cutline-pulse,
+  .headline-shine,
+  .lamp,
   .confetti-piece {
     animation: none;
+  }
+  .headline-shine {
+    color: var(--color-gold-400);
+    background: none;
   }
 }

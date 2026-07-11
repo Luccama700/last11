@@ -313,7 +313,7 @@ function RoundResults(props: { state: GameState; onContinue: () => void; humanAl
                   <tr
                     key={row.managerId}
                     style={{ animationDelay: `${i * 30}ms` }}
-                    className={`animate-row-in ${i === target ? 'border-t-2 border-loss/60' : 'border-t border-night-700'} ${
+                    className={`animate-row-in ${i === target ? 'animate-cutline-pulse border-t-2 border-loss/60' : 'border-t border-night-700'} ${
                       isYou ? 'bg-gold-400/10 font-bold' : ''
                     } ${isOut ? 'text-loss/70 line-through decoration-loss/40' : ''}`}
                   >

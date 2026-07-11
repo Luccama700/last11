@@ -40,7 +40,8 @@ export default function SquadCard(props: {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      {/* keyed by roll so every fresh squad replays the staggered flip-in */}
+      <div key={`${props.roll.nation}-${props.roll.year}`} className="grid grid-cols-2 gap-2">
         {props.options.map((o, rank) => {
           const p = o.player;
           const fit = o.bestSlot;
@@ -52,7 +53,8 @@ export default function SquadCard(props: {
               type="button"
               data-testid="squad-player"
               onClick={() => props.onPick(p)}
-              className={`card-gloss group cursor-pointer rounded-xl p-2.5 text-left transition hover:-translate-y-0.5 ${
+              style={{ animationDelay: `${Math.min(rank, 11) * 35}ms` }}
+              className={`card-gloss animate-flip-in group cursor-pointer rounded-xl p-2.5 text-left transition hover:-translate-y-0.5 ${
                 best ? '!border-gold-500/70' : 'hover:!border-night-700'
               }`}
             >
