@@ -142,77 +142,92 @@ nuance. → Open decision Q7.*
   a 1970 "90" and a 2026 "90" would be treated as equal strength by the match engine
   when they are not comparable. **Cross-era play forces a single absolute scale.**
 - **But absolute ≠ "old players are athletically worse, downgrade them."** We rate
-  quality/dominance, so **prime Pelé and prime Messi both sit at the ceiling.** This
-  keeps legends legendary, matches genre convention (FIFA/7a0), and avoids the
-  feel-bad of "your heroes are trash." It's a game; fun > sports science.
+  quality/dominance, so **prime Pelé sits at the ceiling (97).** This keeps legends
+  legendary, matches genre convention (FIFA/7a0), and avoids the feel-bad of "your
+  heroes are trash." It's a game; fun > sports science.
 - **Per-tournament snapshot within that absolute scale.** The number is the player
-  AT that tournament: Messi 2014 = 97, Messi 2026 = 90; Ronaldo 2002 = 97,
-  Ronaldo 2006 = 88. This directly satisfies the brief and mirrors 7a0.
+  AT that tournament: Messi 2014 = 96, Messi 2026 = 92; Ronaldo 2002 = 96,
+  Ronaldo 2006 ≈ 88. This directly satisfies the brief and mirrors 7a0.
+  *(Exact anchor values are Lucca's, per §3.2/§3.3 and DECISIONS.md.)*
 
 *(7a0's own basis is contested per §1.1; 38-0 offers both a season and a peak number.
 Our snapshot rating IS effectively the "season" number; a career-peak field is an
 optional add — Q9.)*
 
-### 3.2 Fixing Lucca's compression complaint
+### 3.2 Fixing Lucca's compression complaint — RE-ANCHORED per DECISIONS.md
 
-Current squads live in a **76–94** band (18 pts). We **decompress to ~70–99** so the
-gap between a genuine great and a solid starter is legible:
-- Pull solid-but-not-elite starters DOWN into the low 80s.
-- Push true greats UP into the mid/high 90s.
-- Separate snapshots by year so prime ≠ veteran.
+> **Superseded (2026-07-11).** My first draft read Lucca's complaint as "decompress
+> downward" and put Magalhães at 83 on a 70–99 band. **Lucca corrected this:** the
+> complaint was that Magalhães was rated TOO LOW — so the scale is **tighter at the top
+> (97 ceiling, not 99), defender-friendly, and higher-floored.** Very good starters on
+> top teams live in the **high 80s**, not the low 80s. This section + §3.3 are rebuilt
+> around his five fixed points; the implemented data (`squads-v2.json`) uses these.
 
-On the new scale **Gabriel Magalhães 2026 ≈ 83** (very good PL CB, not elite) and
-**current Messi 2026 ≈ 90**, while **prime Messi 2014 = 97** — the gap opens up exactly
-where Lucca said it should. His complaint was two bugs at once: defenders squashed too
-high-relative-to-mids, and no prime/veteran separation. Both fixed.
+Five fixed anchors (binding):
 
-### 3.3 Anchor ladder (what each band MEANS)
+| Anchor | Rating |
+|---|---|
+| **Pelé 1970** | **97** — the ceiling; nobody higher, ever |
+| **Maradona 1986 · Messi 2014 · Ronaldo R9 2002** | **96** — inner-circle GOAT peak |
+| **Messi 2026** | **92** — veteran snapshot (−4 from his 2014 self) |
+| **Gabriel Magalhães 2026** | **89–90** — "an 89-90 kind of player"; very good starter |
+
+The move vs my first draft: **raise the floor** (WC squad players sit ~78–90, not 74–88),
+**lower the ceiling** (97 not 99, and only Pelé), and **do not punish defenders** — an
+elite CB/GK lives in the high 80s / low 90s right alongside elite attackers. Prime vs
+veteran still separates by year (Messi 2014 = 96, Messi 2026 = 92; R9 2002 = 96).
+
+### 3.3 Anchor ladder (what each band MEANS) — rebuilt around the five points
 
 | Band | Meaning | Example anchors (per-tournament) |
 |---|---|---|
-| **99** | Single greatest tournament peak ever. Ultra-rare. | Pelé 1970 |
-| **97–98** | Inner-circle GOAT peak. | Maradona 1986 (98); Messi 2014, Ronaldo R9 2002 (97) |
-| **94–96** | All-time great at peak. | Zidane 1998 (96), Cruyff 1974 (96), Romário 1994 (95), Mbappé 2022 (94) |
-| **90–93** | World-class; best player on a top team. | Baggio 1994 (93), Cannavaro 2006 (92), Bellingham 2026 (91), Rivaldo 2002 (91) |
-| **86–89** | Very good international starter; top-3 on a strong squad. | Cafu 2002, Roberto Carlos 2002 (89); Marcos 2002 (87) |
-| **82–85** | Solid starter on a good national team. | Lúcio 2002 (85), Gilberto Silva 2002 (84), Gabriel Magalhães 2026 (83) |
-| **78–81** | Squad player / weaker-nation starter / backup. | Kléberson, Belletti, Kaká-2002 (a teen squad kid) |
-| **74–77** | Fringe depth, 3rd-choice keeper, minnow starter. | Ânderson Polga 2002 (77) |
-| **≤73** | Deep bench / minnow-nation depth. | — |
+| **97** | The single greatest peak, ever. Unique — reserved for Pelé 1970. | Pelé 1970 |
+| **96** | Inner-circle GOAT peak; one player carrying a title run. | Maradona 1986, Messi 2014, Ronaldo R9 2002 |
+| **95** | All-time-great peak. | Zidane 1998, Cruyff 1974, Romário 1994 |
+| **93–94** | Era-topping superstar / the best current player. | Mbappé 2026 (93), Rivaldo 2002 (93), Baggio 1994 (93) |
+| **90–92** | World-class; the talisman of a top contender. | Messi 2026, Rodri/Yamal 2026 (92), Cafu 2002 & Roberto Carlos 2002 (91), Jairzinho 1970 (91), Bellingham/Kane 2026 (91), Vinícius 2026 (92) |
+| **88–90** | **Very good international starter** (Lucca's Magalhães band). | Gabriel Magalhães 2026 (89), Marquinhos/Rúben Dias/van Dijk 2026 (89), Lúcio 2002 (89), Gérson/Tostão 1970 (89), Marcos 2002 (88) |
+| **85–87** | Solid, dependable starter on a good national team. | Gilberto Silva 2002 (86), Edmílson 2002 (85), Valdano 1986 (87), Ruggeri 1986 (85) |
+| **82–84** | Squad regular / weaker-nation starter. | Kléberson 2002 (83), Endrick 2026 (84), Batista 1986 (83) |
+| **79–81** | Rotation / backup / minnow starter. | Kaká-2002 (81, a teen squad kid), Polga 2002 (80), Almirón 1986 (79) |
+| **≤78** | Deep bench, 3rd-choice keeper, fringe depth. | Ado 1970 (78), Zelada 1986 (77) |
 
-**15 named cross-era anchors** (the rubric's calibration spine):
+**15 named cross-era anchors** (the rubric's calibration spine, implemented in data):
 
 | Player @ tournament | Rating | Why |
 |---|---|---|
-| Pelé 1970 | 99 | The ceiling. Reserve 99 for him alone (maybe Maradona 86). |
-| Maradona 1986 | 98 | Carried a nation single-handed; the other 99-candidate. |
-| Ronaldo (R9) 2002 | 97 | 8 goals, Golden Boot, redemption — peak phenomenon. |
-| Messi 2014 | 97 | Golden Ball, dragged a modest side to the final. |
-| Zidane 1998 | 96 | Final MOTM, tournament-defining. |
-| Cruyff 1974 | 96 | Total Football's fulcrum. |
-| Romário 1994 | 95 | Golden Ball, dominant #9. |
-| Mbappé 2022 | 94 | Final hat-trick; era-topping pace/output. |
-| Baggio 1994 | 93 | Carried Italy to the final almost alone. |
-| Cannavaro 2006 | 92 | **Elite-defender anchor** — a CB can reach 92 (answers the anti-defender bias). |
-| Bellingham 2026 | 91 | Best player on a top contender, modern. |
-| Messi 2026 | 90 | Same man, veteran snapshot — 7 pts below his 2014 self. |
-| Cafu 2002 | 89 | Best RB in the world at his peak. |
-| Gilberto Silva 2002 | 84 | Reliable holding mid on champions = low 80s. |
-| Gabriel Magalhães 2026 | 83 | **The calibration complaint, re-anchored.** |
+| Pelé 1970 | **97** | The ceiling. Reserved for him alone. |
+| Maradona 1986 | **96** | Carried a nation single-handed — the tournament. |
+| Ronaldo (R9) 2002 | **96** | 8 goals, Golden Boot, redemption — peak phenomenon. |
+| Messi 2014 | **96** | Golden Ball, dragged a modest side to the final. *(not in v1 data)* |
+| Zidane 1998 | 95 | Final MOTM, tournament-defining. *(not in v1 data)* |
+| Rivaldo 2002 | 93 | Reigning-elite, carried Brazil through the group stage. |
+| Mbappé 2026 | 93 | Era-topping output — the best current player. |
+| Messi 2026 | **92** | Same man, veteran snapshot — −4 from his 2014 self. |
+| Vinícius 2026 | 92 | Best player on the 2026 favourites. |
+| Cafu 2002 | 91 | Best RB in the world at his peak (captain). |
+| Jairzinho 1970 | 91 | Scored in every match of the tournament. |
+| Gabriel Magalhães 2026 | **89** | **The calibration complaint, re-anchored — very good starter.** |
+| Gérson 1970 | 89 | The midfield general of the greatest team ever. |
+| Gilberto Silva 2002 | 86 | Reliable holding mid on champions = mid-80s. |
+| Kaká 2002 | 81 | Snapshot principle — a teen squad kid, ≠ his 2007 peak. |
 
 ### 3.4 Rating principles (the rules a data author follows)
 
 1. **Absolute, cross-era, quality-not-athleticism** (§3.1).
 2. **Per-tournament snapshot** — rate the player that summer, not his career.
-3. **Decompressed band ~70–99** — most squad players 78–88; 90+ is world-class;
-   95+ is rare and iconic; 99 is essentially reserved.
+3. **Tight-top, high-floor band ~77–97** — most WC squad players 80–90; 91+ is the
+   talisman of a top team; 96 is inner-circle GOAT; 97 is Pelé alone. (Lucca's
+   correction: the OLD 70–99 draft over-punished good defenders — floor raised, ceiling
+   lowered.)
 4. **Within-position excellence.** An 88 GK and an 88 ST are each "world-class for
    their position." The raw number is position-fair; the ENGINE's zonal model (not the
    number) ensures GKs don't score. *(Note for hackathon-builder/worker-7.)*
-5. **Resist anti-defender/keeper bias.** Elite CBs (Cannavaro, Baresi, Maldini) reach
-   92–94; elite GKs (Yashin, Buffon, Neuer) reach ~90–92. Do not cap them at 88.
-6. **Role realism.** The team's talisman carries the highest ceiling; depth pieces sit
-   78–82 even on great teams (a champion's 20th man is still squad-level).
+5. **Resist anti-defender/keeper bias** (the core of Lucca's complaint). Elite CBs
+   (Marquinhos, van Dijk, Rúben Dias, Magalhães) live 89–90; elite GKs (Courtois,
+   Alisson) reach ~90. Do not cap defenders below attackers on principle.
+6. **Role realism.** The team's talisman carries the highest number; depth pieces sit
+   79–83 even on great teams (a champion's 20th man is still squad-level).
 
 ### 3.5 Optional: dual rating (from 38-0)
 
