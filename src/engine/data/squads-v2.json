@@ -721,6 +721,54 @@
         { "id": "hun-1954-palotas", "name": "Péter Palotás", "pos": "ST", "altPos": ["CAM"], "rating": 78, "shirt": 19, "club": "Budapesti Vörös Lobogó" },
         { "id": "hun-1954-geller", "name": "Sándor Gellér", "pos": "GK", "rating": 76, "shirt": 21, "club": "Budapesti Vörös Lobogó" }
       ]
+    },
+    {
+      "nation": "BRA", "name": "Brazil", "year": 1958, "result": "Winners",
+      "notes": "Brazil's first title, in Sweden. A 17-year-old Pele scored a hat-trick in the semifinal and two in the final; Garrincha and Pele broke through together from the third group match, birthing the legendary 4-2-4. Didi won the Golden Ball.",
+      "players": [
+        { "id": "bra-1958-pele", "name": "Pelé", "pos": "ST", "altPos": ["CAM"], "rating": 93, "club": "Santos" },
+        { "id": "bra-1958-didi", "name": "Didi", "pos": "CAM", "altPos": ["CM"], "rating": 90, "club": "Botafogo" },
+        { "id": "bra-1958-garrincha", "name": "Garrincha", "pos": "RW", "rating": 89, "club": "Botafogo" },
+        { "id": "bra-1958-nilton-santos", "name": "Nílton Santos", "pos": "LB", "rating": 86, "club": "Botafogo" },
+        { "id": "bra-1958-djalma-santos", "name": "Djalma Santos", "pos": "RB", "rating": 85, "club": "Palmeiras" },
+        { "id": "bra-1958-vava", "name": "Vavá", "pos": "ST", "rating": 85, "club": "Vasco da Gama" },
+        { "id": "bra-1958-zito", "name": "Zito", "pos": "CDM", "rating": 83, "club": "Santos" },
+        { "id": "bra-1958-bellini", "name": "Bellini", "pos": "CB", "rating": 82, "club": "Vasco da Gama" },
+        { "id": "bra-1958-zagallo", "name": "Zagallo", "pos": "LW", "rating": 82, "club": "Botafogo" },
+        { "id": "bra-1958-orlando", "name": "Orlando", "pos": "CB", "rating": 81, "club": "Botafogo" },
+        { "id": "bra-1958-gilmar", "name": "Gilmar", "pos": "GK", "rating": 84, "club": "Corinthians" },
+        { "id": "bra-1958-mazzola", "name": "Mazzola", "pos": "ST", "rating": 79, "club": "Palmeiras" },
+        { "id": "bra-1958-pepe", "name": "Pepe", "pos": "LW", "rating": 80, "club": "Santos" },
+        { "id": "bra-1958-de-sordi", "name": "De Sordi", "pos": "RB", "rating": 78, "club": "São Paulo" },
+        { "id": "bra-1958-zozimo", "name": "Zózimo", "pos": "CB", "rating": 78, "club": "Botafogo" },
+        { "id": "bra-1958-dino-sani", "name": "Dino Sani", "pos": "CM", "rating": 78, "club": "São Paulo" },
+        { "id": "bra-1958-castilho", "name": "Castilho", "pos": "GK", "rating": 78, "club": "Fluminense" },
+        { "id": "bra-1958-joel", "name": "Joel", "pos": "ST", "rating": 77, "club": "Flamengo" }
+      ]
+    },
+    {
+      "nation": "ENG", "name": "England", "year": 1966, "result": "Winners",
+      "notes": "Hosts and champions, England's only World Cup win. Ramsey's 'Wingless Wonders' 4-4-2; Hurst's hat-trick beat West Germany 4-2 in the final at Wembley, still the only World Cup final hat-trick.",
+      "players": [
+        { "id": "eng-1966-moore", "name": "Bobby Moore", "pos": "CB", "rating": 90, "club": "West Ham United" },
+        { "id": "eng-1966-b-charlton", "name": "Bobby Charlton", "pos": "CM", "rating": 90, "club": "Manchester United" },
+        { "id": "eng-1966-banks", "name": "Gordon Banks", "pos": "GK", "rating": 90, "club": "Leicester City" },
+        { "id": "eng-1966-hurst", "name": "Geoff Hurst", "pos": "ST", "rating": 85, "club": "West Ham United" },
+        { "id": "eng-1966-greaves", "name": "Jimmy Greaves", "pos": "ST", "rating": 85, "club": "Tottenham Hotspur" },
+        { "id": "eng-1966-ball", "name": "Alan Ball", "pos": "RM", "altPos": ["CM"], "rating": 83, "club": "Blackpool" },
+        { "id": "eng-1966-peters", "name": "Martin Peters", "pos": "LM", "altPos": ["CM"], "rating": 83, "club": "West Ham United" },
+        { "id": "eng-1966-j-charlton", "name": "Jack Charlton", "pos": "CB", "rating": 82, "club": "Leeds United" },
+        { "id": "eng-1966-stiles", "name": "Nobby Stiles", "pos": "CDM", "rating": 82, "club": "Manchester United" },
+        { "id": "eng-1966-cohen", "name": "George Cohen", "pos": "RB", "rating": 81, "club": "Fulham" },
+        { "id": "eng-1966-wilson", "name": "Ray Wilson", "pos": "LB", "rating": 81, "club": "Everton" },
+        { "id": "eng-1966-hunt", "name": "Roger Hunt", "pos": "ST", "rating": 81, "club": "Liverpool" },
+        { "id": "eng-1966-connelly", "name": "John Connelly", "pos": "RW", "rating": 78, "club": "Manchester United" },
+        { "id": "eng-1966-paine", "name": "Terry Paine", "pos": "RW", "rating": 78, "club": "Southampton" },
+        { "id": "eng-1966-hunter", "name": "Norman Hunter", "pos": "CB", "rating": 79, "club": "Leeds United" },
+        { "id": "eng-1966-armfield", "name": "Jimmy Armfield", "pos": "RB", "rating": 78, "club": "Blackpool" },
+        { "id": "eng-1966-springett", "name": "Ron Springett", "pos": "GK", "rating": 77, "club": "Sheffield Wednesday" },
+        { "id": "eng-1966-bonetti", "name": "Peter Bonetti", "pos": "GK", "rating": 77, "club": "Chelsea" }
+      ]
     }
   ]
 }
