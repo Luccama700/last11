@@ -113,15 +113,15 @@ describe('Last11 UI: ALL-ON integrated walkthrough (real FEATURES, no mock)', ()
     if (button.textContent?.includes('CONTINUE')) {
       fireEvent.click(button);
       expect(screen.getByText(/Steal one player/)).toBeTruthy();
-      const loot = screen.getAllByText(/·/, { selector: 'p.text-xs' });
-      expect(loot.length).toBeGreaterThan(0);
-      // pick the first enabled loot card, then the first XI slot
-      const cards = document.querySelectorAll('button:not([disabled])');
-      const lootCard = Array.from(cards).find((c) => c.textContent?.match(/GK|DF|MF|FW/)) as HTMLElement;
-      fireEvent.click(lootCard);
+      // pick the first enabled loot card, then the first XI slot (detailed-position
+      // era: coarse GK/DF/MF/FW labels are gone — select via testids)
+      const lootCards = screen
+        .getAllByTestId('loot-card')
+        .filter((c) => !(c as HTMLButtonElement).disabled);
+      expect(lootCards.length).toBeGreaterThan(0);
+      fireEvent.click(lootCards[0]);
       expect(screen.getByText(/Where does/)).toBeTruthy();
-      const slotButtons = screen.getAllByText(/^(GK|DF|MF|FW)$/, { selector: 'span' });
-      fireEvent.click(slotButtons[0].closest('button')!);
+      fireEvent.click(screen.getAllByTestId('xi-slot')[0]);
       // back in the arena at the next round intro — the round advanced, the
       // steal was applied, playback resolved synchronously again.
       expect(screen.getByText(/PLAY ROUND 2/)).toBeTruthy();
