@@ -1,7 +1,7 @@
 import { createRng, type Rng } from './rng';
 // ── v2 engine imports (CONTRACT §4 + TICKSPEC v0.3) ──
 import { attackStars, boxScore, shotWeight, zonalStrength, type ZoneStrength } from './rating';
-import { formationById } from './types';
+import { formationById, POINTS } from './types';
 import type { MatchResultV2, Shootout, Tactics, Team, XiSlotV2 } from './types';
 import type { MoraleMap } from './morale';
 import * as P from './params';
@@ -251,16 +251,64 @@ export function runShootout(home: MatchSide, away: MatchSide, rng: Rng): Shootou
   };
 }
 
-/** THE shared core (main rng). Timeline + score paths both call this. */
-export function resolveMatchOutcome(home: MatchSide, away: MatchSide, seed: number): MatchOutcome {
+/**
+ * THE shared core (main rng). Timeline + score paths both call this.
+ *
+ * `shootoutEnabled` (NIGHT-SHIFT rule): when false, a level regulation match is a
+ * genuine DRAW — no shootout is run and no penalty rng is drawn. The tournament
+ * sets it from `alive.length <= 16` (see tournament `shootoutEnabledForRound`);
+ * App MUST pass the same flag to `simulateMatchTimeline` for score/timeline agreement.
+ */
+export function resolveMatchOutcome(
+  home: MatchSide,
+  away: MatchSide,
+  seed: number,
+  shootoutEnabled = true,
+): MatchOutcome {
   const rng = createRng(seed);
   const homeZ = zonalStrength(home.xi, home.morale);
   const awayZ = zonalStrength(away.xi, away.morale);
   const xg = computeXg(home, away, homeZ, awayZ);
   const score = sampleScore(xg, rng);
   const goals = buildGoals(home, away, score, rng);
-  const shootout = score.home === score.away ? runShootout(home, away, rng) : undefined;
+  const shootout =
+    score.home === score.away && shootoutEnabled ? runShootout(home, away, rng) : undefined;
   return { homeGoals: score.home, awayGoals: score.away, goals, shootout, xg, homeZ, awayZ };
+}
+
+export type DecidedBy = 'regulation' | 'pens' | 'draw';
+
+export interface MatchVerdict {
+  winner: Team | null; // null iff decidedBy === 'draw'
+  decidedBy: DecidedBy;
+  homePoints: number;
+  awayPoints: number;
+}
+
+/**
+ * Canonical classification of a resolved match — THE single source of truth for
+ * winner + points. Every consumer (table points, rail, recap, UI label) MUST use
+ * this instead of comparing goals, so a shootout win is never mistaken for a draw
+ * (the reported bug). A level match resolves to `pens` iff it carries a shootout,
+ * else it's a genuine `draw` (classic 1 pt each).
+ */
+export function matchVerdict(r: MatchResultV2): MatchVerdict {
+  if (r.homeGoals > r.awayGoals) {
+    return { winner: 'home', decidedBy: 'regulation', homePoints: POINTS.REG_WIN, awayPoints: POINTS.REG_LOSS };
+  }
+  if (r.awayGoals > r.homeGoals) {
+    return { winner: 'away', decidedBy: 'regulation', homePoints: POINTS.REG_LOSS, awayPoints: POINTS.REG_WIN };
+  }
+  if (r.shootout) {
+    const winner = r.shootout.winner;
+    return {
+      winner,
+      decidedBy: 'pens',
+      homePoints: winner === 'home' ? POINTS.SHOOTOUT_WIN : POINTS.SHOOTOUT_LOSS,
+      awayPoints: winner === 'away' ? POINTS.SHOOTOUT_WIN : POINTS.SHOOTOUT_LOSS,
+    };
+  }
+  return { winner: null, decidedBy: 'draw', homePoints: POINTS.DRAW, awayPoints: POINTS.DRAW };
 }
 
 /**
@@ -280,8 +328,13 @@ export function matchSeed(tournamentSeed: number, round: number, matchIndex: num
 }
 
 /** Score-only entry point (headless BR rounds). */
-export function resolveMatch(home: MatchSide, away: MatchSide, seed: number): MatchResultV2 {
-  const o = resolveMatchOutcome(home, away, seed);
+export function resolveMatch(
+  home: MatchSide,
+  away: MatchSide,
+  seed: number,
+  shootoutEnabled = true,
+): MatchResultV2 {
+  const o = resolveMatchOutcome(home, away, seed, shootoutEnabled);
   return {
     homeId: home.id,
     awayId: away.id,

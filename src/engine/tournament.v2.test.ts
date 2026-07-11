@@ -35,20 +35,26 @@ describe('runTournament (engineV2 ON)', () => {
     expect(JSON.stringify(runTournament(3, true).log)).toBe(JSON.stringify(runTournament(3, true).log));
   });
 
-  it('has NO draws — every level regulation match is decided on penalties', () => {
+  it('NIGHT-SHIFT: shootouts only at ≤16 alive; draws stand in bigger rounds', () => {
     const { log } = runTournament(42, true);
     for (const round of log.rounds) {
       expect(round.resultsV2).toBeDefined();
       expect(round.resultsV2!.length).toBe((LOBBY_BY_ROUND[round.round - 1] / 2) * MATCHES_PER_ROUND);
+      // table.length == managers alive at round start ⇒ the shootout predicate.
+      const shootoutRound = round.table.length <= 16;
       for (const m of round.resultsV2!) {
-        if (m.homeGoals === m.awayGoals) {
+        if (m.homeGoals === m.awayGoals && shootoutRound) {
           expect(m.shootout).toBeDefined();
           expect(['home', 'away']).toContain(m.shootout!.winner);
         } else {
+          // decisive match, OR a level match in a >16 round (a genuine draw)
           expect(m.shootout).toBeUndefined();
         }
       }
     }
+    // A 32-lobby BR always has both a >16 round (R1/R2) and ≤16 rounds (R3+).
+    expect(log.rounds.some((r) => r.table.length > 16)).toBe(true);
+    expect(log.rounds.some((r) => r.table.length <= 16)).toBe(true);
   });
 
   it('goal events reconcile with the regulation scoreline (morale source of truth)', () => {

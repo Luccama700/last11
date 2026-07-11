@@ -1,11 +1,18 @@
 import { draftBotXi } from './draft';
-import { matchSeed, resolveMatch, simulateMatch, type MatchSide } from './match';
+import {
+  matchSeed,
+  matchVerdict,
+  resolveMatch,
+  simulateMatch,
+  type DecidedBy,
+  type MatchSide,
+} from './match';
 import { moraleForManager, type MoraleMap } from './morale';
 import { teamStrength } from './rating';
 import { createRng, type Rng } from './rng';
 import { COARSE_TO_DETAILED, type CoarsePosition } from './data/schema';
 import { FEATURES } from '../game/features';
-import { POINTS, type MatchResultV2, type Tactics, type XiSlotV2 } from './types';
+import type { MatchResultV2, Tactics, Team, XiSlotV2 } from './types';
 import type { Player, XI } from './types';
 
 export interface Manager {
@@ -21,6 +28,10 @@ export interface MatchResult {
   awayId: string;
   homeGoals: number;
   awayGoals: number;
+  /** v2 (engineV2 ON): canonical classification from `matchVerdict` so the rail /
+   *  recap label a shootout win as a win, never a draw. Absent on the v1 path. */
+  winner?: Team | null;
+  decidedBy?: DecidedBy;
 }
 
 export interface TableRow {
@@ -49,6 +60,14 @@ export interface RoundResult {
 export const LOBBY_SIZE = 32;
 /** Survivor count after each round: 32 -> 24 -> 16 -> 8 -> 4 -> 2 -> champion. */
 export const SURVIVORS_PER_ROUND: readonly number[] = [24, 16, 8, 4, 2, 1];
+
+/** NIGHT-SHIFT rule (2026-07-12): penalty shootouts only when ≤16 managers are
+ *  alive at round start; larger rounds (32, 24) keep classic draws (W3/D1/L0).
+ *  `playRound` computes this per round; App passes the SAME flag to
+ *  `simulateMatchTimeline` so the watched match reproduces the table result. */
+export const SHOOTOUT_ALIVE_MAX = 16;
+export const shootoutEnabledForRound = (aliveCount: number): boolean =>
+  aliveCount <= SHOOTOUT_ALIVE_MAX;
 /** Each alive manager plays this many matches per round. */
 export const MATCHES_PER_ROUND = 3;
 
@@ -185,6 +204,8 @@ export function playRound(
   engine?: PlayRoundEngine,
 ): RoundResult {
   if (alive.length % 2 !== 0) throw new Error(`Odd lobby size: ${alive.length}`);
+  // NIGHT-SHIFT: shootouts only in rounds that start with ≤16 alive; else draws stand.
+  const shootoutEnabled = shootoutEnabledForRound(alive.length);
   const strengths = new Map<string, number>();
   const stats = new Map<string, { points: number; gf: number; ga: number }>();
   for (const m of alive) {
@@ -212,31 +233,31 @@ export function playRound(
           toMatchSide(home, engine.tacticsOf(home), morale[home.id]),
           toMatchSide(away, engine.tacticsOf(away), morale[away.id]),
           seed,
+          shootoutEnabled,
         );
         r.seed = seed;
+        r.shootoutEnabled = shootoutEnabled;
         r.homeMorale = morale[home.id];
         r.awayMorale = morale[away.id];
         resultsV2.push(r);
         setResults.push(r);
-        matches.push({ homeId: home.id, awayId: away.id, homeGoals: r.homeGoals, awayGoals: r.awayGoals });
+        // Canonical classification — winner/points/decidedBy from ONE source, so a
+        // shootout is never scored as a draw, and true draws (early rounds) get D1.
+        const v = matchVerdict(r);
+        matches.push({
+          homeId: home.id,
+          awayId: away.id,
+          homeGoals: r.homeGoals,
+          awayGoals: r.awayGoals,
+          winner: v.winner,
+          decidedBy: v.decidedBy,
+        });
         hs.gf += r.homeGoals;
         hs.ga += r.awayGoals;
         as.gf += r.awayGoals;
         as.ga += r.homeGoals;
-        // No draws: a level regulation match is decided on penalties (W2/L1).
-        if (r.shootout) {
-          if (r.shootout.winner === 'home') {
-            hs.points += POINTS.SHOOTOUT_WIN;
-            as.points += POINTS.SHOOTOUT_LOSS;
-          } else {
-            as.points += POINTS.SHOOTOUT_WIN;
-            hs.points += POINTS.SHOOTOUT_LOSS;
-          }
-        } else if (r.homeGoals > r.awayGoals) {
-          hs.points += POINTS.REG_WIN;
-        } else {
-          as.points += POINTS.REG_WIN;
-        }
+        hs.points += v.homePoints;
+        as.points += v.awayPoints;
       } else {
         const { goalsA, goalsB } = simulateMatch(
           strengths.get(home.id)!,

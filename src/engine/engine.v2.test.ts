@@ -3,7 +3,7 @@ import { createRng } from './rng';
 import { affinity, effectiveRating } from './affinity';
 import { zonalStrength } from './rating';
 import { moraleFromGoals } from './morale';
-import { computeXg, matchSeed, resolveMatch, type MatchSide } from './match';
+import { computeXg, matchSeed, matchVerdict, resolveMatch, type MatchSide } from './match';
 import { simulateMatchTimeline } from './timeline';
 import { formationById, type Tactics } from './types';
 import type { PlayerV2, Position } from './data/schema';
@@ -121,23 +121,66 @@ describe('determinism & score/timeline agreement', () => {
 
 // ── No draws exist — every level match resolves via shootout ─────────────────────
 
-describe('shootouts eliminate draws', () => {
+describe('shootouts & the ≤16 night-shift rule', () => {
   const home = side('h', makeXi('4-3-3', flat(80), 'h'));
   const away = side('a', makeXi('4-3-3', flat(80), 'a'));
-  it('a level regulation score always carries a shootout with a winner', () => {
+
+  it('shootoutEnabled (default): a level match resolves on pens; matchVerdict = W2/L1', () => {
     let level = 0;
     for (let seed = 0; seed < 400; seed++) {
       const r = resolveMatch(home, away, seed);
+      const v = matchVerdict(r);
       if (r.homeGoals === r.awayGoals) {
         level++;
         expect(r.shootout).toBeDefined();
-        expect(['home', 'away']).toContain(r.shootout!.winner);
         expect(r.shootout!.home).not.toBe(r.shootout!.away);
+        expect(v.decidedBy).toBe('pens');
+        expect(v.homePoints + v.awayPoints).toBe(3); // 2 + 1
       } else {
         expect(r.shootout).toBeUndefined();
+        expect(v.decidedBy).toBe('regulation');
+        expect(v.homePoints + v.awayPoints).toBe(3); // 3 + 0
       }
     }
-    expect(level).toBeGreaterThan(0); // some draws did occur and were all resolved
+    expect(level).toBeGreaterThan(0);
+  });
+
+  it('shootouts DISABLED (>16 alive): a level match stands as a DRAW (1 pt each)', () => {
+    let drawSeed = -1;
+    for (let seed = 0; seed < 400; seed++) {
+      const r = resolveMatch(home, away, seed, true);
+      if (r.homeGoals === r.awayGoals) {
+        drawSeed = seed;
+        break;
+      }
+    }
+    expect(drawSeed).toBeGreaterThanOrEqual(0);
+
+    const r = resolveMatch(home, away, drawSeed, false);
+    expect(r.homeGoals).toBe(r.awayGoals); // identical regulation score (pens are post-goals)
+    expect(r.shootout).toBeUndefined();
+    const v = matchVerdict(r);
+    expect(v).toEqual({ winner: null, decidedBy: 'draw', homePoints: 1, awayPoints: 1 });
+
+    // Watched timeline must contain NO shootout/penalty events when disabled.
+    const t = simulateMatchTimeline(home, away, drawSeed, false);
+    expect(t.shootout).toBeUndefined();
+    expect(t.events.some((e) => e.type.startsWith('shootout') || e.type.startsWith('penalty'))).toBe(
+      false,
+    );
+    expect(t.finalScore).toEqual({ home: r.homeGoals, away: r.awayGoals });
+  });
+
+  it('matchVerdict classifies a regulation win as W3/L0', () => {
+    const strong = side('s', makeXi('4-3-3', flat(90), 's'));
+    const weak = side('w', makeXi('4-3-3', flat(60), 'w'));
+    const r = resolveMatch(strong, weak, 1);
+    const v = matchVerdict(r);
+    if (r.homeGoals !== r.awayGoals) {
+      expect(v.decidedBy).toBe('regulation');
+      expect(Math.max(v.homePoints, v.awayPoints)).toBe(3);
+      expect(Math.min(v.homePoints, v.awayPoints)).toBe(0);
+    }
   });
 });
 

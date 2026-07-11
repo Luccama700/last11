@@ -34,9 +34,12 @@ export function simulateMatchTimeline(
   home: MatchSide,
   away: MatchSide,
   seed: number,
+  shootoutEnabled = true,
   matchId?: string,
 ): MatchTimeline {
-  const o = resolveMatchOutcome(home, away, seed);
+  // shootoutEnabled must match what the tournament used for this match (≤16 alive),
+  // so the watched timeline reproduces the table result — draw or shootout (TICKSPEC §5).
+  const o = resolveMatchOutcome(home, away, seed, shootoutEnabled);
   const cos = createRng(cosmeticSeed(seed));
 
   // Player id → display name, for caption authoring.

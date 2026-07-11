@@ -139,12 +139,16 @@ export interface MatchResultV2 {
   homeGoals: number; // regulation
   awayGoals: number;
   goals: { minute: number; team: Team; playerId?: string; assistPlayerId?: string }[];
-  shootout?: Shootout; // present iff homeGoals === awayGoals
+  /** Present iff the match was level in regulation AND shootouts were enabled for
+   *  the round (≤16 alive; NIGHT-SHIFT rule). A level match with no shootout is a
+   *  genuine DRAW (early rounds). Classify via `matchVerdict` — never by goals alone. */
+  shootout?: Shootout;
   /** engineV2 bookkeeping (stamped by playRound, absent on bare resolveMatch):
-   *  the canonical per-match seed and the morale each side carried INTO this
-   *  match — everything App needs to rebuild the identical watched timeline via
-   *  simulateMatchTimeline (score/timeline agreement invariant). */
+   *  the canonical per-match seed, whether shootouts were enabled this round, and
+   *  the morale each side carried INTO this match — everything App needs to rebuild
+   *  the identical watched timeline via simulateMatchTimeline (score/timeline agreement). */
   seed?: number;
+  shootoutEnabled?: boolean;
   homeMorale?: Record<string, number>;
   awayMorale?: Record<string, number>;
 }
@@ -180,10 +184,15 @@ export const SHOOTOUT_MS = 12000;       // fixed appended shootout window (→ 4
 export const VIRTUAL_MINUTES = 90;
 export const CELEBRATION_MS = 2600;
 
-/** No draws exist: reg win 3 / shootout win 2 / shootout loss 1 / reg loss 0. */
+/**
+ * Points (NIGHT-SHIFT rule, 2026-07-12). Shootouts only when ≤16 managers are alive
+ * at round start; those rounds have NO draws (reg win 3 / SO win 2 / SO loss 1 /
+ * reg loss 0). Rounds with >16 alive keep CLASSIC draws (win 3 / DRAW 1 / loss 0).
+ */
 export const POINTS = {
   REG_WIN: 3,
   SHOOTOUT_WIN: 2,
   SHOOTOUT_LOSS: 1,
   REG_LOSS: 0,
+  DRAW: 1, // classic draw point — only in rounds where shootouts are disabled
 } as const;
