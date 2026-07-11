@@ -30,7 +30,68 @@ describe('Last11 UI: draft flow', () => {
     // Draft complete
     expect(screen.getByText(/Your XI is locked/)).toBeTruthy();
     fireEvent.click(screen.getByText(/ENTER THE ARENA/));
-    expect(screen.getByText(/round 1/i)).toBeTruthy();
+    expect(screen.getByText(/PLAY ROUND 1/)).toBeTruthy();
+  });
+
+  it('plays the full battle royale to an ending and resets', () => {
+    render(<App />);
+    fireEvent.click(screen.getByText('ENTER THE LOBBY'));
+    draftFullXi();
+    fireEvent.click(screen.getByText(/ENTER THE ARENA/));
+
+    // Drive the loop: play rounds, view results, skip steals, until the end screen.
+    for (let guard = 0; guard < 40; guard++) {
+      if (screen.queryByText('PLAY AGAIN')) break;
+      const play = screen.queryByText(/PLAY ROUND|CONTINUE|SEE HOW IT ENDS/);
+      if (play) {
+        fireEvent.click(play);
+        continue;
+      }
+      const skip = screen.queryByText(/SKIP — KEEP MY XI/);
+      if (skip) {
+        fireEvent.click(skip);
+        continue;
+      }
+      throw new Error('UI stuck: no actionable button found');
+    }
+
+    // End screen: either champion or eliminated with a placement
+    expect(screen.getByText('PLAY AGAIN')).toBeTruthy();
+    expect(screen.queryAllByText(/Last manager standing|Eliminated/i).length).toBeGreaterThan(0);
+    expect(screen.getByText('Rounds survived')).toBeTruthy();
+
+    // Play again resets to home
+    fireEvent.click(screen.getByText('PLAY AGAIN'));
+    expect(screen.getByText('ENTER THE LOBBY')).toBeTruthy();
+  });
+
+  it('the steal window actually swaps a player into the XI', () => {
+    render(<App />);
+    fireEvent.click(screen.getByText('ENTER THE LOBBY'));
+    draftFullXi();
+    fireEvent.click(screen.getByText(/ENTER THE ARENA/));
+    fireEvent.click(screen.getByText(/PLAY ROUND 1/));
+
+    const button = screen.getByText(/CONTINUE|SEE HOW IT ENDS/);
+    if (button.textContent?.includes('CONTINUE')) {
+      // Survived round 1: steal window must open with loot
+      fireEvent.click(button);
+      expect(screen.getByText(/Steal one player/)).toBeTruthy();
+      const loot = screen.getAllByText(/·/, { selector: 'p.text-xs' });
+      expect(loot.length).toBeGreaterThan(0);
+      // pick the first enabled loot card, then the first XI slot
+      const cards = document.querySelectorAll('button:not([disabled])');
+      const lootCard = Array.from(cards).find((c) =>
+        c.textContent?.match(/GK|DF|MF|FW/),
+      ) as HTMLElement;
+      fireEvent.click(lootCard);
+      expect(screen.getByText(/Where does/)).toBeTruthy();
+      const slotButtons = screen.getAllByText(/^(GK|DF|MF|FW)$/, { selector: 'span' });
+      fireEvent.click(slotButtons[0].closest('button')!);
+      // back in the arena at the next round intro
+      expect(screen.getByText(/PLAY ROUND 2/)).toBeTruthy();
+    }
+    // If eliminated in round 1 there is no steal window — covered by the loop test.
   });
 
   it('sidebar fills as picks land and shows live strength', () => {

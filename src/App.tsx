@@ -12,8 +12,11 @@ import {
 } from './engine/tournament';
 import type { Player, XI } from './engine/types';
 import { aliveOf, humanOf, initialState, reducer, tournamentOver } from './game/state';
+import BattleScreen from './screens/BattleScreen';
 import DraftScreen from './screens/DraftScreen';
+import EndScreen from './screens/EndScreen';
 import HomeScreen from './screens/HomeScreen';
+import StealScreen from './screens/StealScreen';
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -132,51 +135,11 @@ export default function App() {
       );
     case 'battle':
       return (
-        <Placeholder
-          label={`Battle — round ${state.roundIndex + 1} (${aliveOf(state).length} alive)`}
-          onAction={handlePlayRound}
-          onReset={handleReset}
-        />
+        <BattleScreen state={state} onPlayRound={handlePlayRound} onContinue={handleContinue} />
       );
     case 'steal':
-      return (
-        <Placeholder
-          label="Steal window"
-          onAction={() => handleStealDone(null)}
-          onReset={handleReset}
-        />
-      );
+      return <StealScreen state={state} onDone={handleStealDone} />;
     case 'end':
-      return (
-        <Placeholder
-          label={`Finished — placement ${state.humanPlacement ?? '?'}`}
-          onAction={handleContinue}
-          onReset={handleReset}
-        />
-      );
+      return <EndScreen state={state} onReset={handleReset} />;
   }
-}
-
-/** Temporary stub until the battle screens land (Phase 4). */
-function Placeholder(props: { label: string; onAction: () => void; onReset: () => void }) {
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center gap-6">
-      <p className="text-2xl font-bold">{props.label}</p>
-      <p className="text-slate-500">Arena screens arriving in the next phase.</p>
-      <div className="flex gap-3">
-        <button
-          onClick={props.onAction}
-          className="rounded-lg bg-emerald-500 px-6 py-2 font-bold text-slate-950 hover:bg-emerald-400"
-        >
-          Advance
-        </button>
-        <button
-          onClick={props.onReset}
-          className="rounded-lg bg-slate-800 px-6 py-2 font-bold hover:bg-slate-700"
-        >
-          Reset
-        </button>
-      </div>
-    </div>
-  );
 }

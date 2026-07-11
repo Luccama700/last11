@@ -4,36 +4,45 @@ _Running log for the build agent. Update before context runs low._
 
 ## Current state
 
-- **Tier:** 1 (solo BR vs bots)
-- **Phase:** 0 done → starting Phase 1 (engine foundations)
+- **Tier:** 1 COMPLETE ✅ → moving to Tier 2 (juice) + README
+- **Phase:** 4 done (full BR loop playable end-to-end)
 
 ## Done
 
-- ✅ Brief loaded from Mindboard (plan, idea note, theme-reveal note). Naming
-  note absent from vault but decision known: **Last11 / 11a0.com**, Sport track.
+- ✅ Brief loaded from Mindboard. Last11 / 11a0.com, Sport track, deadline Sun 9am PST.
 - ✅ PLAN.md committed (a194866).
-- ✅ Phase 0 — scaffold: Vite 8 + React 19 + TS 7 + Tailwind 4 (vite plugin) +
-  Vitest 4, hand-rolled (create-vite prompts in non-empty dir). Verified:
-  `npm test` green (1 smoke test), `npm run build` green, dev server serves
-  Last11 page (HTTP 200).
+- ✅ Phase 0 (cd0bbf4): Vite 8 + React 19 + TS 7 + Tailwind 4 + Vitest 4 scaffold. Verified.
+- ✅ Phase 1 (c81b664): engine foundations — mulberry32 RNG, 12 nations × 12 players
+  JSON, 4-3-3 FORMATION, teamStrength (base + chem pairs ×1.5 + star ≥88 +3,
+  off-pos ×0.75). Review subagent: clean.
+- ✅ Phase 2 (cf558b0): draft logic (spin→nation→pick, value-max bots), Poisson match
+  sim (xG 1.35 ± 0.012·diff, clamp [0.15,4.5]), tournament (32→24→16→8→4→2→1,
+  3 pairings/round, pts/GD/GF/strength/id table, steal-from-fallen). Review: clean.
+- ✅ Phase 3 (498a670): reducer state machine (src/game/state.ts), Home + Draft
+  screens. RNG in ref, consumed only in handlers (StrictMode-safe).
+- ✅ Phase 4: Battle (intro/results + cut-line table), Steal (loot grid + slot gains),
+  End screens. Full-loop DOM tests. 53 tests green, build green.
+  - NOTE: Chrome extension not connected → verification is via jsdom+RTL
+    integration tests (walks the whole game through real components) + HTTP 200.
 
 ## Next
 
-1. **Phase 1 — engine foundations:** `src/engine/` types, seeded RNG
-   (mulberry32-style), World Cup squad JSON (bundled, ~8 nations to start),
-   team rating (chemistry + position fit + star power). Determinism + rating
-   tests.
-2. **Phase 2 — engine match & tournament:** match sim, pairing, bottom-25% cut,
-   steal, `runTournament` 32→1, e2e test.
-3. **Phase 3 — draft UI.** 4. **Phase 4 — BR loop UI (Tier 1 done).**
-   5. Juice (stretch).
+1. Review subagent on Phase 3+4 diff → fix real bugs.
+2. README.md (Last11 pitch, how to run, engine/tests story) — needed for submission.
+3. Tier 2 juice, in order: wheel spin animation → elimination reveal drama →
+   player cards polish → mobile layout → bot trash-talk. Cut from the bottom.
+4. Keep committing small. Cleanup scratch files at the end.
 
 ## Key decisions
 
-- Single tsconfig, `build: tsc --noEmit && vite build`, vitest config inside
-  `vite.config.ts` via `vitest/config`. Node env for tests (engine is pure TS;
-  no jsdom needed).
-- Plain React reducer for game state — no state lib.
-- Lobby = 32 (1 human + 31 bots). Tier 3 multiplayer is out of scope (local-only).
-- After each phase: subagent diff review for real correctness bugs, fix, advance.
-- Deadline anchor: video/Devpost locked Sat night; submission Sun 9am PST.
+- Draft mechanic: spin lands a nation (uniform), pick any un-owned player from that
+  nation into the current FORMATION slot; off-position allowed at 0.75×.
+  Duplicates ACROSS teams allowed (genre norm); never within a team.
+- Steal window after every cut (except when game over): human chooses via UI,
+  bots auto-take best strictly-improving swap; pool = union of just-eliminated XIs.
+- Human elimination → "SEE HOW IT ENDS" fast-forwards rest headlessly (same rng).
+- Placement = table rank in the round you fell; champion = 1.
+- Test-only-first-option drafting yields an all-GK 719-strength team that finishes
+  #32 — engine correctly punishes bad drafting (good demo talking point).
+- Dev server on :5173 (background task bnhxyhzci may still be running — stop before
+  starting a new one).
