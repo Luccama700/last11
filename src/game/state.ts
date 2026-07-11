@@ -203,7 +203,16 @@ export function reducer(state: GameState, action: Action): GameState {
     //      actions is dispatched on the v1 path, so the 54 tests are unaffected. ----
 
     case 'SET_FORMATION':
-      return { ...state, formation: action.formation };
+      // Choosing a formation (in setup) also arms the v2 draft: a fresh empty
+      // slate sized to it and the starting re-spin tokens. Formation is locked
+      // once drafting starts (Tier A), so this only fires from PreDraftSetup.
+      return {
+        ...state,
+        formation: action.formation,
+        humanSlate: new Array(action.formation.slots.length).fill(null),
+        respinTokens: state.respinTokens ?? 3,
+        spunRoll: null,
+      };
 
     case 'SET_MODE':
       return { ...state, mode: action.mode };
