@@ -27,11 +27,20 @@ _Running log for the build agent. Update before context runs low._
 
 ## Next
 
-1. Review subagent on Phase 3+4 diff → fix real bugs.
-2. README.md (Last11 pitch, how to run, engine/tests story) — needed for submission.
-3. Tier 2 juice, in order: wheel spin animation → elimination reveal drama →
-   player cards polish → mobile layout → bot trash-talk. Cut from the bottom.
-4. Keep committing small. Cleanup scratch files at the end.
+1. Phase 3+4 review subagent results → fix real bugs (in flight).
+2. Remaining Tier 2 candidates (only if time): mobile layout pass, player card
+   polish. Don't gold-plate.
+3. Final sweep: kill dev-server background task, final PROGRESS/README touch-up.
+
+## Balance findings (sanity-checked headlessly, 2026-07-10)
+
+- Bot lobby strength: 940–1027, median ~990. Naive human (best on-position
+  rating, no chem): median 966 → survives early rounds, dies mid-game.
+  Chemistry-aware drafting closes the gap → competitive to win. Good curve, no
+  tuning needed.
+- Scorelines realistic: 2.69 goals/match avg, max 7, ~6% scoreless.
+- 19/20 winners from strength top-8 (skill dominates; upsets exist).
+- Demo talking points: all-GK troll draft = 719 strength, finishes #32.
 
 ## Key decisions
 
