@@ -33,18 +33,41 @@ const FAMILY_OF: Record<Position, Family> = {
  * FAMILY[natural][slot] = fraction of rating retained. Rows read "a natural <row>
  * asked to play <col>". Zones: GK{GK} · DEF{CB,FB} · MID{CDM,CM,CAM,WM} · ATT{W,ST}.
  * Diagonal 1.0; same-zone ≥ .85; adjacent-zone (DEF↔MID, MID↔ATT) ≥ .60; far ~.25–.45.
+ *
+ * RATING-POINT CALIBRATION (Lucca, NIGHT BATCH 2). Lucca specs off-position cost in
+ * RATING POINTS at a ~90-rated baseline; convert to a multiplier via
+ *     mult = (90 − penaltyPoints) / 90
+ * so a penalty scales with the player (a 90 loses `penalty` pts; a 60 loses 2/3 of it).
+ * Anchored cells (recorded here as `penalty pts → mult`, rounded to 3 dp):
+ *   • LW↔LM, RW↔RM  = family W↔WM   : −1 pt → 89/90 ≈ .989  (Lucca "~0.99"), BOTH directions
+ *   • LM→LB, RM→RB  = family WM→FB  : −3 pt → 87/90 ≈ .967  (mid→back, same flank)
+ *   • CAM→CM        = family CAM→CM : −4 pt → 86/90 ≈ .956
+ * Because L/R collapse into families (LW,RW→W; LM,RM→WM), each anchor applies
+ * symmetrically to both flanks by construction — that is the intended L/R symmetry.
+ *
+ * WIDE-LANE EXCEPTION to the zone-monotone heuristic above: a wide player moving one
+ * step along his own flank (W↔WM, WM→FB) is now CHEAPER than some same-zone central
+ * moves — e.g. WM→FB (.967, adjacent zone) > WM→CM (.86, same zone). Football-correct
+ * (a wide-mid tracks back to his own fullback slot more naturally than he shifts
+ * central), and it is exactly the "wing-adjacent moves cheap" posture Lucca calibrated.
+ *
+ * FB→WM raised .82 → .95 for consistency (NOT a Lucca anchor): the reverse of the
+ * −3pt WM→FB move — a fullback pushing to same-flank wide-mid (LB→LM) — is an equally
+ * natural wing-adjacent move, so it shouldn't cost ~4× the points (.82=−16pt) of its
+ * mirror. Kept just under WM→FB to preserve mild forward-is-harder asymmetry. Flag for
+ * Lucca to give an explicit number if she wants it pinned.
  */
 const FAMILY: Record<Family, Record<Family, number>> = {
-  //          GK    CB    FB    CDM   CM    CAM   WM    W     ST
-  GK:  { GK: 1.0, CB: .30, FB: .28, CDM: .28, CM: .26, CAM: .25, WM: .25, W: .25, ST: .25 },
-  CB:  { GK: .30, CB: 1.0, FB: .85, CDM: .80, CM: .68, CAM: .60, WM: .62, W: .40, ST: .42 },
-  FB:  { GK: .28, CB: .85, FB: 1.0, CDM: .68, CM: .66, CAM: .62, WM: .82, W: .72, ST: .45 },
-  CDM: { GK: .27, CB: .82, FB: .70, CDM: 1.0, CM: .92, CAM: .85, WM: .85, W: .60, ST: .60 },
-  CM:  { GK: .26, CB: .66, FB: .68, CDM: .90, CM: 1.0, CAM: .90, WM: .86, W: .72, ST: .68 },
-  CAM: { GK: .25, CB: .60, FB: .62, CDM: .85, CM: .92, CAM: 1.0, WM: .85, W: .85, ST: .82 },
-  WM:  { GK: .25, CB: .62, FB: .82, CDM: .85, CM: .86, CAM: .85, WM: 1.0, W: .88, ST: .66 },
-  W:   { GK: .25, CB: .38, FB: .60, CDM: .60, CM: .66, CAM: .80, WM: .85, W: 1.0, ST: .85 },
-  ST:  { GK: .25, CB: .40, FB: .38, CDM: .60, CM: .62, CAM: .82, WM: .64, W: .85, ST: 1.0 },
+  //          GK    CB    FB    CDM   CM    CAM    WM     W      ST
+  GK:  { GK: 1.0, CB: .30, FB: .28, CDM: .28, CM: .26, CAM: .25, WM: .25,  W: .25,  ST: .25 },
+  CB:  { GK: .30, CB: 1.0, FB: .85, CDM: .80, CM: .68, CAM: .60, WM: .62,  W: .40,  ST: .42 },
+  FB:  { GK: .28, CB: .85, FB: 1.0, CDM: .68, CM: .66, CAM: .62, WM: .95,  W: .72,  ST: .45 },
+  CDM: { GK: .27, CB: .82, FB: .70, CDM: 1.0, CM: .92, CAM: .85, WM: .85,  W: .60,  ST: .60 },
+  CM:  { GK: .26, CB: .66, FB: .68, CDM: .90, CM: 1.0, CAM: .90, WM: .86,  W: .72,  ST: .68 },
+  CAM: { GK: .25, CB: .60, FB: .62, CDM: .85, CM: .956, CAM: 1.0, WM: .85, W: .85,  ST: .82 },
+  WM:  { GK: .25, CB: .62, FB: .967, CDM: .85, CM: .86, CAM: .85, WM: 1.0, W: .989, ST: .66 },
+  W:   { GK: .25, CB: .38, FB: .60, CDM: .60, CM: .66, CAM: .80, WM: .989, W: 1.0,  ST: .85 },
+  ST:  { GK: .25, CB: .40, FB: .38, CDM: .60, CM: .62, CAM: .82, WM: .64,  W: .85,  ST: 1.0 },
 };
 
 const POSITIONS: readonly Position[] = [
