@@ -1,11 +1,16 @@
 import { teamStrength } from '../engine/rating';
 import { SURVIVORS_PER_ROUND } from '../engine/tournament';
 import { aliveOf, humanOf, type GameState } from '../game/state';
+import MatchPlaybackScreen from './MatchPlaybackScreen';
 
 export default function BattleScreen(props: {
   state: GameState;
+  animate: boolean;
   onPlayRound: () => void;
   onContinue: () => void;
+  onNextFeatured: () => void;
+  onFinishRound: () => void;
+  onSkipAll: () => void;
 }) {
   const { state } = props;
   const human = humanOf(state)!;
@@ -24,6 +29,14 @@ export default function BattleScreen(props: {
 
         {state.battleView === 'intro' ? (
           <RoundIntro state={state} onPlayRound={props.onPlayRound} />
+        ) : state.battleView === 'playback' ? (
+          <MatchPlaybackScreen
+            state={state}
+            animate={props.animate}
+            onNextFeatured={props.onNextFeatured}
+            onFinishRound={props.onFinishRound}
+            onSkipAll={props.onSkipAll}
+          />
         ) : (
           <RoundResults state={state} onContinue={props.onContinue} humanAlive={human.alive} />
         )}
