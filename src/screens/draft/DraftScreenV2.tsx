@@ -44,6 +44,8 @@ export default function DraftScreenV2(props: {
   onSpin: () => void;
   onRespin: () => void;
   onPlace: (player: PlayerV2, slotIndex: number) => void;
+  /** Mid-draft re-slot: move an already-placed player to an open slot. */
+  onMove: (from: number, to: number) => void;
   onStyleChange: (style: PlayingStyle) => void;
   onEnterBattle: () => void;
 }) {
@@ -95,12 +97,49 @@ export default function DraftScreenV2(props: {
     () => new Set(humanSlate.map((s, i) => (s === null ? i : -1)).filter((i) => i >= 0)),
     [humanSlate],
   );
+  const filledSlotSet = useMemo(
+    () => new Set(humanSlate.map((s, i) => (s !== null ? i : -1)).filter((i) => i >= 0)),
+    [humanSlate],
+  );
+
+  // Mid-draft move-mode: tap a placed player → open slots glow → tap one to move
+  // him ("in case I find a better player for a position" — Lucca). Mutually
+  // exclusive with pick-place mode.
+  const [moveFrom, setMoveFrom] = useState<number | null>(null);
+  useEffect(() => {
+    setMoveFrom(null);
+  }, [props.spunRoll, pending]);
 
   function placeAt(slotIndex: number) {
     if (!pending || humanSlate[slotIndex] !== null) return;
     props.onPlace(pending.player, slotIndex);
     setPending(null);
   }
+
+  function boardTap(slotIndex: number) {
+    if (pending) {
+      placeAt(slotIndex);
+      return;
+    }
+    if (moveFrom === null) {
+      if (humanSlate[slotIndex] !== null) setMoveFrom(slotIndex);
+      return;
+    }
+    if (slotIndex === moveFrom) {
+      setMoveFrom(null);
+      return;
+    }
+    if (humanSlate[slotIndex] === null) {
+      props.onMove(moveFrom, slotIndex);
+      setMoveFrom(null);
+    }
+  }
+
+  const boardClickable = useMemo(() => {
+    if (pending) return openSlotSet;
+    if (moveFrom !== null) return new Set([...openSlotSet, moveFrom]);
+    return filledSlotSet; // any placed player is tappable to start a move
+  }, [pending, moveFrom, openSlotSet, filledSlotSet]);
 
   return (
     <div className="bg-stadium min-h-screen text-ink-100">
@@ -152,7 +191,7 @@ export default function DraftScreenV2(props: {
               <span className="headline-gold">11</span>
               <span className="ml-3 text-xs tracking-[0.3em] text-ink-500">THE DRAFT</span>
             </h1>
-            {pending && (
+            {pending ? (
               <button
                 type="button"
                 onClick={() => setPending(null)}
@@ -160,7 +199,15 @@ export default function DraftScreenV2(props: {
               >
                 placing {pending.player.name} — tap a slot · cancel
               </button>
-            )}
+            ) : moveFrom !== null ? (
+              <button
+                type="button"
+                onClick={() => setMoveFrom(null)}
+                className="cursor-pointer text-xs font-semibold text-gold-300 hover:text-gold-400"
+              >
+                moving {humanSlate[moveFrom]?.player.name} — tap an open slot · cancel
+              </button>
+            ) : null}
           </header>
 
           <div className="lg:flex lg:min-h-0 lg:flex-1 lg:justify-center">
@@ -168,9 +215,10 @@ export default function DraftScreenV2(props: {
               formation={formation}
               slate={humanSlate}
               mode={props.mode}
-              glowSlots={pending?.glow ?? null}
-              clickableSlots={pending ? openSlotSet : null}
-              onSlotClick={pending ? placeAt : undefined}
+              glowSlots={pending ? pending.glow : moveFrom !== null ? openSlotSet : null}
+              clickableSlots={boardClickable}
+              selectedSlot={moveFrom}
+              onSlotClick={boardTap}
             />
           </div>
 

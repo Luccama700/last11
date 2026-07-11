@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { affinity } from '../engine/affinity';
-import { teamStrength } from '../engine/rating';
+import { displayedSquadRating } from '../engine/squad-rating';
 import { SURVIVORS_PER_ROUND, type Manager, type MatchResult } from '../engine/tournament';
 import type { PlayingStyle, XiSlotV2 } from '../engine/types';
+import { buildNameLookup, topAssists, topScorers } from '../game/player-stats';
 import { aliveOf, humanOf, type GameState } from '../game/state';
 import BetweenMatchBoard from './board/BetweenMatchBoard';
 import MatchPlaybackScreen from './MatchPlaybackScreen';
@@ -148,9 +149,12 @@ function RoundIntro(props: { state: GameState; onPlayRound: () => void; onAdjust
   const talker = bots[(state.roundIndex * 7) % Math.max(1, bots.length)];
   const line = TRASH_TALK[(state.roundIndex * 5 + alive.length) % TRASH_TALK.length];
 
-  // your live rank among the alive, by strength
+  // your live rank among the alive — ONE metric everywhere (squad-rating.ts):
+  // the human's detailed slate, bots via their Manager projection.
+  const ratingOf = (m: Manager) =>
+    m.isHuman && state.humanSlate ? displayedSquadRating(state.humanSlate) : displayedSquadRating(m);
   const strengths = alive
-    .map((m) => ({ id: m.id, total: teamStrength(m.xi).total }))
+    .map((m) => ({ id: m.id, total: ratingOf(m) }))
     .sort((a, b) => b.total - a.total);
   const yourRank = strengths.findIndex((s) => s.id === human.id) + 1;
   const yourStrength = strengths.find((s) => s.id === human.id)!.total;
@@ -227,6 +231,20 @@ function RoundResults(props: { state: GameState; onContinue: () => void; humanAl
     (m) => m.homeId === humanId || m.awayId === humanId,
   );
 
+  // One display metric for the Squad column (row.strength is the engine's internal
+  // number and disagreed with the draft rail for the human — Lucca's bug report).
+  const byId = new Map(state.managers.map((m) => [m.id, m]));
+  const ratingOf = (id: string) => {
+    const m = byId.get(id);
+    if (!m) return 0;
+    return m.isHuman && state.humanSlate ? displayedSquadRating(state.humanSlate) : displayedSquadRating(m);
+  };
+
+  // Tournament race so far — small, pretty, top of the table (full list on the end screen).
+  const nameOf = buildNameLookup(state.managers);
+  const boot = topScorers(state.playerStats ?? {}, nameOf, 1)[0];
+  const playmaker = topAssists(state.playerStats ?? {}, nameOf, 1)[0];
+
   return (
     <div className="space-y-5">
       {yourMatches.length > 0 && (
@@ -246,6 +264,25 @@ function RoundResults(props: { state: GameState; onContinue: () => void; humanAl
               );
             })}
           </div>
+        </div>
+      )}
+
+      {(boot || playmaker) && (
+        <div className="flex flex-wrap gap-2">
+          {boot && (
+            <span className="card-gloss flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs">
+              <span className="headline text-[9px] tracking-[0.2em] text-gold-400">GOLDEN BOOT</span>
+              <span className="font-bold text-ink-100">{boot.name}</span>
+              <span className="headline text-gold-300">{boot.goals}</span>
+            </span>
+          )}
+          {playmaker && (
+            <span className="card-gloss flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs">
+              <span className="headline text-[9px] tracking-[0.2em] text-ink-500">PLAYMAKER</span>
+              <span className="font-bold text-ink-100">{playmaker.name}</span>
+              <span className="headline text-gold-300">{playmaker.assists}</span>
+            </span>
+          )}
         </div>
       )}
 
@@ -296,7 +333,7 @@ function RoundResults(props: { state: GameState; onContinue: () => void; humanAl
                       {isYou && ' (you)'}
                     </td>
                     <td className="headline py-1.5 pr-2 text-right text-xs text-gold-300">
-                      {row.strength.toFixed(0)}
+                      {ratingOf(row.managerId)}
                     </td>
                     <td className="py-1.5 pr-2 text-right tabular-nums">{row.points}</td>
                     <td className="py-1.5 pr-2 text-right tabular-nums">
@@ -339,7 +376,12 @@ function Standings(props: { state: GameState; onClose: () => void }) {
   const rows = state.managers
     .map((m: Manager) => ({
       m,
-      strength: m.xi.length > 0 ? teamStrength(m.xi).total : 0,
+      strength:
+        m.isHuman && state.humanSlate
+          ? displayedSquadRating(state.humanSlate)
+          : m.xi.length > 0
+            ? displayedSquadRating(m)
+            : 0,
       pts: cumulative.get(m.id) ?? 0,
     }))
     .sort((a, b) => Number(b.m.alive) - Number(a.m.alive) || b.strength - a.strength);
@@ -398,7 +440,7 @@ function Standings(props: { state: GameState; onClose: () => void }) {
                   {!m.alive && <span className="ml-1.5 text-[9px] no-underline">OUT</span>}
                 </td>
                 <td className="headline py-1.5 pr-2 text-right text-xs text-gold-300">
-                  {strength > 0 ? strength.toFixed(0) : '—'}
+                  {strength > 0 ? strength : '—'}
                 </td>
                 <td className="py-1.5 text-right tabular-nums">{pts}</td>
               </tr>

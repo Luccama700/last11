@@ -374,6 +374,7 @@ export default function App(props: { animate?: boolean }) {
             onSpin={handleSpinV2}
             onRespin={handleRespinV2}
             onPlace={handlePlaceV2}
+            onMove={(from, to) => dispatch({ type: 'MOVE_PLACED', from, to })}
             onStyleChange={setStyle}
             onEnterBattle={handleEnterBattleV2}
           />

@@ -304,7 +304,7 @@ function Pitch(props: {
       {pb.celebrating && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <Confetti />
-          <GoalShout count={(pb as { celebratingCount?: number }).celebratingCount ?? 1} />
+          <GoalShout count={pb.celebratingCount || 1} />
         </div>
       )}
 

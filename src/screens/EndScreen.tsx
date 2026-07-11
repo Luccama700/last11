@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { playerV2ById } from '../engine/draft';
-import { teamStrength } from '../engine/rating';
+import { displayedSquadRating } from '../engine/squad-rating';
 import type { MatchTimeline } from '../engine/types';
 import { flagOf } from '../game/flags';
+import { buildNameLookup, topAssists, topScorers, type StatLine } from '../game/player-stats';
 import { aliveOf, humanOf, type GameState } from '../game/state';
 import MatchPlaybackScreen from './MatchPlaybackScreen';
 import { Crest } from './BattleScreen';
@@ -23,7 +24,11 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
       r.table.some((row) => row.managerId === human.id) &&
       !r.eliminatedIds.includes(human.id),
   ).length;
-  const strength = teamStrength(human.xi);
+  // Same display metric as the draft rail / leaderboard / standings.
+  const strength =
+    state.humanSlate && state.humanSlate.some((s) => s !== null)
+      ? displayedSquadRating(state.humanSlate)
+      : displayedSquadRating(human);
   const names = new Map(state.managers.map((m) => [m.id, m.name]));
 
   // Watch the final as a normal playback: synthesize a one-match matchday.
@@ -83,9 +88,12 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
 
         <div className="mt-1 grid w-full grid-cols-3 gap-3 text-center">
           <Stat label="Rounds survived" value={`${roundsSurvived}/6`} />
-          <Stat label="Final strength" value={strength.total.toFixed(1)} />
+          <Stat label="Final strength" value={String(strength)} />
           <Stat label="Placement" value={`#${state.humanPlacement ?? '—'}`} />
         </div>
+
+        {/* Tournament individual awards — Golden Boot & Playmaker podiums. */}
+        <StatPodiums state={state} />
 
         {/* What happened after you fell — round-by-round recap to the crown. */}
         <TournamentRecap state={state} names={names} humanId={human.id} />
@@ -128,6 +136,45 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
         </button>
         <p className="text-xs text-ink-500">Last11 · 11a0.com</p>
       </div>
+    </div>
+  );
+}
+
+/** Golden Boot / Playmaker podiums — top three each, medal-tinted rows. */
+function StatPodiums(props: { state: GameState }) {
+  const stats = props.state.playerStats ?? {};
+  const nameOf = buildNameLookup(props.state.managers);
+  const boots = topScorers(stats, nameOf, 3);
+  const makers = topAssists(stats, nameOf, 3);
+  if (boots.length === 0 && makers.length === 0) return null;
+  const MEDALS = ['text-gold-300', 'text-ink-300', 'text-[#c9885a]'];
+  const podium = (title: string, lines: StatLine[], value: (l: StatLine) => number, unit: string) => (
+    <div className="card-gloss flex-1 rounded-2xl p-4 text-left">
+      <h3 className="headline mb-2.5 text-[10px] tracking-[0.3em] text-gold-400">{title}</h3>
+      {lines.length === 0 ? (
+        <p className="text-xs text-ink-500">Nobody troubled the scorers.</p>
+      ) : (
+        <ol className="space-y-1.5">
+          {lines.map((l, i) => (
+            <li key={l.playerId} className="flex items-baseline gap-2 text-sm">
+              <span className={`headline w-4 shrink-0 text-xs ${MEDALS[i] ?? 'text-ink-500'}`}>
+                {i + 1}
+              </span>
+              <span className="truncate font-bold text-ink-100">{l.name}</span>
+              <span className={`headline ml-auto shrink-0 text-base ${MEDALS[i] ?? 'text-ink-300'}`}>
+                {value(l)}
+              </span>
+              <span className="shrink-0 text-[10px] text-ink-500">{unit}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+  return (
+    <div className="flex w-full flex-col gap-3 sm:flex-row">
+      {podium('GOLDEN BOOT', boots, (l) => l.goals, 'goals')}
+      {podium('PLAYMAKER', makers, (l) => l.assists, 'assists')}
     </div>
   );
 }
