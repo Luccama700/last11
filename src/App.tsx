@@ -213,6 +213,7 @@ export default function App(props: { animate?: boolean }) {
           toMatchSide(home, tacticsOf(home), r.homeMorale),
           toMatchSide(away, tacticsOf(away), r.awayMorale),
           r.seed!,
+          r.shootoutEnabled ?? true,
           `r${round}-f${i}`,
         );
       });
