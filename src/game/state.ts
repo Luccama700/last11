@@ -1,6 +1,7 @@
 import { FORMATION } from '../engine/rating';
 import { SURVIVORS_PER_ROUND, stealPool } from '../engine/tournament';
 import type { Manager, RoundResult } from '../engine/tournament';
+import { formationById } from '../engine/types';
 import type { Player, XI } from '../engine/types';
 import type {
   DraftMode,
@@ -11,7 +12,25 @@ import type {
   Team,
   XiSlotV2,
 } from '../engine/types';
+import { COARSE_TO_DETAILED, detailedToCoarse } from '../engine/data/schema';
 import type { PlayerV2 } from '../engine/data/schema';
+
+/** Project a detailed v2 slate to the coarse XI the (current) engine reads via
+ *  toMatchSide — the same projection App uses at battle entry, kept here so a
+ *  between-round re-slot updates what the engine sees. */
+function slateToCoarseXi(slate: readonly (XiSlotV2 | null)[]): XI {
+  const dense = slate.filter((s): s is XiSlotV2 => s !== null);
+  return dense.map((s) => ({
+    position: detailedToCoarse(s.position),
+    player: {
+      id: s.player.id,
+      name: s.player.name,
+      nation: s.player.nation,
+      position: detailedToCoarse(s.player.position),
+      rating: s.player.rating,
+    },
+  }));
+}
 
 // v2 adds the 'setup' phase (formation/style before drafting) and the 'playback'
 // battle view (on-screen match sim). ADDITIVE — the v1 flow never uses them, so all
@@ -180,7 +199,32 @@ export function reducer(state: GameState, action: Action): GameState {
       const managers = state.managers.map((m) =>
         action.xis[m.id] ? { ...m, xi: action.xis[m.id] } : m,
       );
-      return { ...state, managers, screen: 'battle', battleView: 'intro', pool: [] };
+      // Keep the detailed humanSlate (what the round-intro re-arrange board renders)
+      // in sync with a human steal: replace only the slot whose player changed,
+      // projecting the stolen coarse player to that slot's detailed position; drafted
+      // positions on unchanged slots are preserved. v1 path: no humanSlate ⇒ untouched.
+      let humanSlate = state.humanSlate;
+      const human = state.managers.find((m) => m.isHuman);
+      const newHumanXi = human ? action.xis[human.id] : undefined;
+      if (human && newHumanXi && state.humanSlate && state.formation) {
+        const formation = state.formation;
+        humanSlate = state.humanSlate.map((slot, i) => {
+          const coarse = newHumanXi[i]?.player;
+          if (!slot || !coarse || slot.player.id === coarse.id) return slot;
+          return {
+            position: formation.slots[i],
+            player: {
+              id: coarse.id,
+              name: coarse.name,
+              nation: coarse.nation,
+              year: 2026,
+              position: COARSE_TO_DETAILED[coarse.position],
+              rating: coarse.rating,
+            },
+          };
+        });
+      }
+      return { ...state, managers, humanSlate, screen: 'battle', battleView: 'intro', pool: [] };
     }
 
     case 'FINISHED':
@@ -217,9 +261,17 @@ export function reducer(state: GameState, action: Action): GameState {
     case 'SET_MODE':
       return { ...state, mode: action.mode };
 
-    case 'SET_TACTICS':
-      // Needs ManagerV2 (tactics on the manager) — wired when draftV2/engineV2 land.
-      return state;
+    case 'SET_TACTICS': {
+      // Between-ROUND formation change for the human (DECISIONS: formation only
+      // between rounds). Unlike SET_FORMATION this does NOT reset the slate — the
+      // caller re-maps the existing XI (autoArrange) and follows with REARRANGE_XI.
+      // Style stays in App useState (match-sim's tacticsOf reads it); nothing to do
+      // here for it. Only the human's formation lives in reducer state.
+      const human = state.managers.find((m) => m.isHuman);
+      if (!human || human.id !== action.managerId) return state;
+      const formation = formationById(action.tactics.formationId);
+      return formation ? { ...state, formation } : state;
+    }
 
     case 'RESPIN':
       return { ...state, respinTokens: Math.max(0, (state.respinTokens ?? 0) - 1), spunRoll: null };
@@ -235,9 +287,19 @@ export function reducer(state: GameState, action: Action): GameState {
       return { ...state, humanSlate: slate, spunRoll: null };
     }
 
-    case 'REARRANGE_XI':
-      // Between-match re-slot — needs ManagerV2; wired when draftV2 lands.
-      return state;
+    case 'REARRANGE_XI': {
+      // Between-round re-slot (match-sim mounts BetweenMatchBoard on the round intro).
+      // `xi` is the re-slotted DETAILED slate. Persist it as the human's lineup AND
+      // project it to the coarse Manager.xi the engine reads via toMatchSide, so the
+      // swap actually changes the next round's resolution. Guarded on v2 shape, so
+      // the v1 flags-OFF path (no humanSlate) never hits this.
+      const human = state.managers.find((m) => m.isHuman);
+      const isHuman = human?.id === action.managerId;
+      const managers = state.managers.map((m) =>
+        m.id === action.managerId ? { ...m, xi: slateToCoarseXi(action.xi) } : m,
+      );
+      return { ...state, managers, humanSlate: isHuman ? action.xi : state.humanSlate };
+    }
 
     case 'ENTER_PLAYBACK':
       return { ...state, screen: 'battle', battleView: 'playback', matchday: action.matchday };
