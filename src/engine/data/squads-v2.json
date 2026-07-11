@@ -865,6 +865,54 @@
         { "id": "ger-1990-kopke", "name": "Andreas Köpke", "pos": "GK", "rating": 77, "club": "1. FC Nürnberg" },
         { "id": "ger-1990-bein", "name": "Uwe Bein", "pos": "CAM", "rating": 78, "club": "Eintracht Frankfurt" }
       ]
+    },
+    {
+      "nation": "ITA", "name": "Italy", "year": 1934, "result": "Winners",
+      "notes": "Hosts and first-ever champions under Vittorio Pozzo, beating Czechoslovakia 2-1 (a.e.t.). Orsi's swerving equalizer and Schiavio's winner sealed it. Luis Monti became the only man to play in World Cup finals for two different countries (Argentina 1930, Italy 1934).",
+      "players": [
+        { "id": "ita-1934-meazza", "name": "Giuseppe Meazza", "pos": "CAM", "rating": 91, "club": "Ambrosiana-Inter" },
+        { "id": "ita-1934-combi", "name": "Gianpiero Combi", "pos": "GK", "rating": 83, "club": "Juventus" },
+        { "id": "ita-1934-monti", "name": "Luis Monti", "pos": "CB", "rating": 84, "club": "Juventus" },
+        { "id": "ita-1934-orsi", "name": "Raimundo Orsi", "pos": "LW", "rating": 84, "club": "Juventus" },
+        { "id": "ita-1934-schiavio", "name": "Angelo Schiavio", "pos": "ST", "rating": 84, "club": "Bologna" },
+        { "id": "ita-1934-ferrari", "name": "Giovanni Ferrari", "pos": "CAM", "altPos": ["ST"], "rating": 82, "club": "Juventus" },
+        { "id": "ita-1934-guaita", "name": "Enrique Guaita", "pos": "RW", "rating": 80, "club": "Roma" },
+        { "id": "ita-1934-ferraris", "name": "Attilio Ferraris", "pos": "CDM", "altPos": ["CM"], "rating": 80, "club": "Lazio" },
+        { "id": "ita-1934-bertolini", "name": "Luigi Bertolini", "pos": "CM", "rating": 79, "club": "Juventus" },
+        { "id": "ita-1934-monzeglio", "name": "Eraldo Monzeglio", "pos": "RB", "rating": 79, "club": "Roma" },
+        { "id": "ita-1934-allemandi", "name": "Luigi Allemandi", "pos": "LB", "rating": 78, "club": "Ambrosiana-Inter" },
+        { "id": "ita-1934-guarisi", "name": "Anfilogino Guarisi", "pos": "CM", "rating": 77, "club": "Lazio" },
+        { "id": "ita-1934-demaria", "name": "Attilio Demaría", "pos": "CAM", "rating": 78, "club": "Ambrosiana-Inter" },
+        { "id": "ita-1934-caligaris", "name": "Umberto Caligaris", "pos": "LB", "rating": 78, "club": "Juventus" },
+        { "id": "ita-1934-rosetta", "name": "Virginio Rosetta", "pos": "RB", "rating": 77, "club": "Juventus" },
+        { "id": "ita-1934-pizziolo", "name": "Mario Pizziolo", "pos": "CM", "rating": 76, "club": "Fiorentina" },
+        { "id": "ita-1934-borel", "name": "Felice Borel", "pos": "ST", "rating": 77, "club": "Juventus" },
+        { "id": "ita-1934-cavanna", "name": "Giuseppe Cavanna", "pos": "GK", "rating": 76, "club": "Juventus" }
+      ]
+    },
+    {
+      "nation": "ITA", "name": "Italy", "year": 1938, "result": "Winners",
+      "notes": "Pozzo's back-to-back champions, beating Hungary 4-2 in the final. Piola and Colaussi each scored twice; Meazza captained again. The only nation to retain the World Cup until Brazil matched it in 1962.",
+      "players": [
+        { "id": "ita-1938-meazza", "name": "Giuseppe Meazza", "pos": "CAM", "rating": 89, "club": "Ambrosiana-Inter" },
+        { "id": "ita-1938-piola", "name": "Silvio Piola", "pos": "ST", "rating": 88, "club": "Lazio" },
+        { "id": "ita-1938-colaussi", "name": "Gino Colaussi", "pos": "LW", "rating": 83, "club": "Triestina" },
+        { "id": "ita-1938-andreolo", "name": "Michele Andreolo", "pos": "CB", "rating": 83, "club": "Bologna" },
+        { "id": "ita-1938-ferrari", "name": "Giovanni Ferrari", "pos": "CAM", "altPos": ["ST"], "rating": 82, "club": "Ambrosiana-Inter" },
+        { "id": "ita-1938-olivieri", "name": "Aldo Olivieri", "pos": "GK", "rating": 82, "club": "Lucchese" },
+        { "id": "ita-1938-biavati", "name": "Amedeo Biavati", "pos": "RW", "rating": 81, "club": "Bologna" },
+        { "id": "ita-1938-locatelli", "name": "Ugo Locatelli", "pos": "CM", "rating": 80, "club": "Ambrosiana-Inter" },
+        { "id": "ita-1938-serantoni", "name": "Pietro Serantoni", "pos": "CDM", "rating": 79, "club": "Roma" },
+        { "id": "ita-1938-foni", "name": "Alfredo Foni", "pos": "RB", "rating": 79, "club": "Juventus" },
+        { "id": "ita-1938-rava", "name": "Pietro Rava", "pos": "LB", "rating": 79, "club": "Juventus" },
+        { "id": "ita-1938-ceresoli", "name": "Carlo Ceresoli", "pos": "GK", "rating": 78, "club": "Bologna" },
+        { "id": "ita-1938-chizzo", "name": "Bruno Chizzo", "pos": "CM", "rating": 77, "club": "Triestina" },
+        { "id": "ita-1938-donati", "name": "Aldo Donati", "pos": "CM", "rating": 77, "club": "Roma" },
+        { "id": "ita-1938-p-ferraris", "name": "Pietro Ferraris", "pos": "LW", "altPos": ["ST"], "rating": 78, "club": "Ambrosiana-Inter" },
+        { "id": "ita-1938-bertoni", "name": "Sergio Bertoni", "pos": "ST", "rating": 76, "club": "Pisa" },
+        { "id": "ita-1938-monzeglio", "name": "Eraldo Monzeglio", "pos": "RB", "rating": 76, "club": "Roma" },
+        { "id": "ita-1938-masetti", "name": "Guido Masetti", "pos": "GK", "rating": 76, "club": "Roma" }
+      ]
     }
   ]
 }
