@@ -37,12 +37,12 @@ one worker each. **This phase is RESEARCH + PLAN ONLY — do not touch `src/`.**
 
 | Brief | Worker | Area |
 |---|---|---|
-| `briefs/draft-redesign.md` | bug-hunt | Draft UX, positions, formations, tactics board, year roll |
-| `briefs/player-database.md` | worker-6 | Data schema v2, historical squads, ratings rubric |
-| `briefs/match-engine.md` | hackathon-builder | Tactics-aware deterministic engine + event timeline |
-| `briefs/match-sim.md` | codex-ui | On-screen match playback UI |
-| `briefs/architecture.md` | worker-7 | Shared contract, multiplayer-readiness, integration order |
-| `briefs/qa-balance.md` | test-hardening | Balance harness, test strategy, plan review |
+| `briefs/draft-redesign.md` | draft-page | Draft UX, positions, formations, tactics board, year roll |
+| `briefs/player-database.md` | players | Data schema v2, historical squads, ratings rubric |
+| `briefs/match-engine.md` | game-engine | Tactics-aware deterministic engine + event timeline |
+| `briefs/match-sim.md` | match-sim | On-screen match playback UI |
+| `briefs/architecture.md` | architect | Shared contract, multiplayer-readiness, integration order |
+| `briefs/qa-balance.md` | QA | Balance harness, test strategy, plan review |
 
 ## Rules of engagement
 
@@ -53,7 +53,7 @@ one worker each. **This phase is RESEARCH + PLAN ONLY — do not touch `src/`.**
    **Findings → Proposed design → Tier A vs Tier B split → Open decisions for
    Lucca → Dependencies on other workstreams.**
 4. Where your design needs a shared type (positions, player schema, timeline
-   events), state your ASSUMPTION explicitly — worker-7 reconciles all of them
+   events), state your ASSUMPTION explicitly — architect reconciles all of them
    in `CONTRACT.md`. Do not silently invent conflicting shapes.
 5. Commit ONLY your own plan file: `git pull --rebase` then
    `git commit -m "PLAN(<area>): <summary>"`. Never touch `src/`.

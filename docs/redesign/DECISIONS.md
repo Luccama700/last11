@@ -7,10 +7,10 @@ but build against it. Everything here supersedes conflicting plan text.
 ## GO signal
 
 Phase I is ON. Target: **a good, demoable build by Saturday night.** Follow
-worker-7's sequencing (types → data → engine → draft → sim), flags on `main`,
+architect's sequencing (types → data → engine → draft → sim), flags on `main`,
 current game always playable with flags OFF.
 
-## Ratings (worker-6)
+## Ratings (players)
 
 New anchor scale — tighter ceiling, defender-friendly, higher floor than the
 PLAN-database ladder. Fixed points from Lucca:
@@ -22,10 +22,10 @@ PLAN-database ladder. Fixed points from Lucca:
   complaint meant Magalhães was rated TOO LOW, not that defenders should be
   decompressed downward. Very good starters on top teams live in the high 80s.
 - Rebuild the §3.3 ladder around these five anchors (interpolate the rest;
-  e.g. Zidane 98 / Cruyff 74 ≈ 95, Mbappé 22 ≈ 93 — worker-6 proposes, keeps
+  e.g. Zidane 98 / Cruyff 74 ≈ 95, Mbappé 22 ≈ 93 — players proposes, keeps
   proportions sane). More calibration passes with Lucca later; don't block on it.
 
-## Match engine (hackathon-builder)
+## Match engine (game-engine)
 
 - **Strength→xG: +10 zonal strength ≈ +0.75 xG** to the stronger side.
 - **Total goals target: 3.4/match** (balanced matchup ⇒ base xG ≈ 1.7/side).
@@ -53,7 +53,7 @@ PLAN-database ladder. Fixed points from Lucca:
   and styles. QA's balance harness covers the matchup space accordingly.
 - Star bonus: kept as planned (attack-zone shot quality).
 
-## Match sim (codex-ui) + engine, jointly
+## Match sim (match-sim) + engine, jointly
 
 - **Actual 2D pitch, not just a bar.** Ball marker positioned by the engine's
   zone (band × lane) each virtual minute; smooth interpolation between ticks.
@@ -63,11 +63,11 @@ PLAN-database ladder. Fixed points from Lucca:
   stays out of scope (Tier B+).
 - **Engine and sim agree the tick spec together BEFORE coding** (band/lane
   fields on each tick, shootout event sequence, scorer/assister on goals) and
-  hand it to worker-7 for CONTRACT. This is the "let them talk to each other"
+  hand it to architect for CONTRACT. This is the "let them talk to each other"
   directive — direct coordination, not brief-passing.
 - Momentum bar can stay as a secondary readout under the pitch if cheap.
 
-## Between-match management (bug-hunt + codex-ui + engine)
+## Between-match management (draft-page + match-sim + engine)
 
 - **The manager can re-arrange players after every match**: re-slot/swap
   positions on the pitch board between matches (reuses the draft board UI).
@@ -75,7 +75,7 @@ PLAN-database ladder. Fixed points from Lucca:
   change only between rounds. Bots auto-re-arrange (best-affinity assignment).
   No stamina, no substitutions-for-fatigue — this is tactical, not fitness.
 
-## Off-position / draft (bug-hunt)
+## Off-position / draft (draft-page)
 
 - Affinity model confirmed (never dead-ends), with the more-forgiving matrix.
 - Everything else per PLAN-draft Tier A: free pick-then-place, 12 positions,
