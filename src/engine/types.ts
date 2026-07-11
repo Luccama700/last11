@@ -187,14 +187,15 @@ export const VIRTUAL_MINUTES = 90;
 export const CELEBRATION_MS = 2600;
 
 /**
- * Points (NIGHT-SHIFT rule, 2026-07-12). Shootouts only when ≤16 managers are alive
- * at round start; those rounds have NO draws (reg win 3 / SO win 2 / SO loss 1 /
- * reg loss 0). Rounds with >16 alive keep CLASSIC draws (win 3 / DRAW 1 / loss 0).
+ * Points (Lucca's ruling, 2026-07-11: "it should be either 3 or 0"). Shootouts only
+ * when ≤16 managers are alive at round start; those rounds have NO draws and a pens
+ * result is worth the FULL win/loss (3/0) — same stakes as regulation. Rounds with
+ * >16 alive keep CLASSIC draws (win 3 / DRAW 1 / loss 0).
  */
 export const POINTS = {
   REG_WIN: 3,
-  SHOOTOUT_WIN: 2,
-  SHOOTOUT_LOSS: 1,
+  SHOOTOUT_WIN: 3,
+  SHOOTOUT_LOSS: 0,
   REG_LOSS: 0,
   DRAW: 1, // classic draw point — only in rounds where shootouts are disabled
 } as const;

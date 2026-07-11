@@ -49,8 +49,7 @@ describe('playRound points sum, real round, both regimes', () => {
           expect(r.shootout).toBeUndefined();
         }
       }
-      // Classic points: decisive sums to 3 (3+0), a genuine draw sums to 2
-      // (1+1) — never the shootout pair sum of 3 (2+1).
+      // Classic points: decisive sums to 3 (3+0), a genuine draw sums to 2 (1+1).
       const pointsBefore = new Map(alive.map((m) => [m.id, 0]));
       for (const r of result.resultsV2!) {
         const decisive = r.homeGoals !== r.awayGoals;
@@ -67,7 +66,7 @@ describe('playRound points sum, real round, both regimes', () => {
     expect(sawDraw).toBe(true);
   });
 
-  it('a round with alive <= SHOOTOUT_ALIVE_MAX awards points ONLY from {3,2,1,0} per match — zero real draws', () => {
+  it('a round with alive <= SHOOTOUT_ALIVE_MAX awards points ONLY from {3,0} per match — zero real draws', () => {
     for (let seed = 0; seed < 10; seed++) {
       const rng = createRng(seed);
       const full = createBotLobby(rng);
@@ -80,19 +79,29 @@ describe('playRound points sum, real round, both regimes', () => {
         tacticsOf: () => DEFAULT_TACTICS,
       };
       const result = playRound(alive, 8, 1, rng, engine);
+      const pointsBefore = new Map(alive.map((m) => [m.id, 0]));
       for (const r of result.resultsV2!) {
         if (r.homeGoals === r.awayGoals) {
           expect(r.shootout).toBeDefined(); // never a genuine draw here
         }
+        // Pens carry FULL stakes (Lucca 2026-07-11): 3 to the winner, 0 to the loser,
+        // exactly like a regulation result — never 1+1.
         const decidedByPens = r.homeGoals === r.awayGoals;
         const homePts = decidedByPens
-          ? r.shootout!.winner === 'home' ? 2 : 1
+          ? r.shootout!.winner === 'home' ? 3 : 0
           : r.homeGoals > r.awayGoals ? 3 : 0;
         const awayPts = decidedByPens
-          ? r.shootout!.winner === 'away' ? 2 : 1
+          ? r.shootout!.winner === 'away' ? 3 : 0
           : r.awayGoals > r.homeGoals ? 3 : 0;
-        expect(homePts + awayPts).toBe(3); // 3+0 or 2+1 — never 1+1
-        expect([homePts, awayPts].every((p) => [0, 1, 2, 3].includes(p))).toBe(true);
+        expect(homePts + awayPts).toBe(3);
+        expect([homePts, awayPts].every((p) => [0, 3].includes(p))).toBe(true);
+        pointsBefore.set(r.homeId, pointsBefore.get(r.homeId)! + homePts);
+        pointsBefore.set(r.awayId, pointsBefore.get(r.awayId)! + awayPts);
+      }
+      // The REAL table must award exactly these points — this is the line that
+      // catches a wrong POINTS entry, not just a wrong recomputation.
+      for (const row of result.table) {
+        expect(row.points).toBe(pointsBefore.get(row.managerId));
       }
     }
   });

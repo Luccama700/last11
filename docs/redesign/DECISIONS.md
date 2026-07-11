@@ -33,8 +33,10 @@ PLAN-database ladder. Fixed points from Lucca:
 - **Draw rate target ~15% (pre-shootout), and EVERY draw goes to a penalty
   shootout — no drawn matches exist. It's win or lose.** Shootout is part of
   the engine (deterministic, seeded) and part of the timeline (sim shows it).
-  - DEFAULT points: regulation win = 3, shootout win = 2, shootout loss = 1,
-    regulation loss = 0. Table tiebreakers unchanged.
+  - Points (REVISED by Lucca 2026-07-11: "it should be either 3 or 0"): a pens
+    result carries FULL stakes — regulation win = 3, shootout win = 3, shootout
+    loss = 0, regulation loss = 0. (The earlier 2/1 shootout split is dead.)
+    Classic draws in >16-alive rounds stay 1 each. Table tiebreakers unchanged.
 - **Chemistry: REMOVED.** Delete the same-nation pair bonus and the cohesion
   reframe. Replaces with:
 - **Morale (new):** a per-player, per-match transient buff. DEFAULT: score a

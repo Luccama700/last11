@@ -209,6 +209,15 @@ describe('projectMatch — shootout (6s-per-kick cadence)', () => {
     expect(pens.clockLabel).toBe('PENS');
   });
 
+  it('NO PENS SPOILER: the shootout view is null for the whole of regulation', () => {
+    // Regression (Lucca 2026-07-11): the overlay used to mount at kickoff because the
+    // view existed whenever timeline.shootout did, revealing the draw before it happened.
+    for (const el of [0, 1, MATCH_DURATION_MS * 0.5, MATCH_DURATION_MS - 1, MATCH_DURATION_MS]) {
+      expect(projectMatch(so, el).shootout).toBeNull();
+    }
+    expect(projectMatch(so, MATCH_DURATION_MS + 1).shootout).not.toBeNull();
+  });
+
   it('winds up the taker before revealing each kick', () => {
     // early in kick 0's 6s beat: h1 is stepping up, nothing revealed yet
     const windup = projectMatch(so, soStart + SHOOTOUT_KICK_MS * 0.2).shootout!;
@@ -248,7 +257,8 @@ describe('projectMatch — shootout (6s-per-kick cadence)', () => {
   });
 
   it('never reveals more kicks than exist; legacy aliases stay in sync', () => {
-    for (let el = soStart; el <= matchEndMs(so) + 500; el += 173) {
+    // start just past full-time — AT soStart the view is null (no-spoiler rule)
+    for (let el = soStart + 1; el <= matchEndMs(so) + 500; el += 173) {
       const s = projectMatch(so, el).shootout!;
       expect(s.kicks.length).toBeLessThanOrEqual(kicks.length);
       expect(s.taken).toBe(s.kicks);

@@ -26,23 +26,24 @@ export default function PreDraftSetup(props: {
 
   return (
     <div className="bg-stadium min-h-screen text-ink-100">
-      <div className="mx-auto max-w-4xl px-6 py-8">
+      <div className="mx-auto max-w-4xl px-6 py-6">
         <header className="text-center">
           <p className="headline text-xs tracking-[0.35em] text-gold-400">MATCHDAY PROGRAMME</p>
-          <h1 className="headline mt-1 text-4xl">
+          <h1 className="headline mt-1 text-3xl">
             <span className="sr-only">SET UP YOUR SIDE</span>
             <span aria-hidden="true">
               <span className="text-ink-100">Set up</span> <span className="headline-gold">your side</span>
             </span>
           </h1>
-          <p className="mt-2 text-sm text-ink-500">
+          <p className="mt-1.5 text-sm text-ink-500">
             Pick a shape, pick a style — then survive 31 managers.
           </p>
         </header>
 
-        <section className="mt-8">
-          <h2 className="headline mb-3 text-xs tracking-[0.25em] text-ink-500">Formation</h2>
-          <div className="grid grid-cols-4 gap-3 max-sm:grid-cols-2" data-tour="formation-picker">
+        {/* 5×2 so all ten shapes AND the confirm button share one screen (Lucca) */}
+        <section className="mt-5">
+          <h2 className="headline mb-2 text-xs tracking-[0.25em] text-ink-500">Formation</h2>
+          <div className="grid grid-cols-5 gap-2.5 max-sm:grid-cols-2" data-tour="formation-picker">
             {FORMATIONS.map((f) => {
               const active = f.id === formation.id;
               return (
@@ -51,16 +52,19 @@ export default function PreDraftSetup(props: {
                   type="button"
                   onClick={() => setFormation(f)}
                   aria-pressed={active}
-                  className={`card-gloss group cursor-pointer rounded-2xl p-2.5 text-center transition-all duration-200 ${
+                  className={`card-gloss group cursor-pointer rounded-2xl p-2 text-center transition-all duration-200 ${
                     active
                       ? 'animate-gold-pulse !border-gold-500'
                       : 'hover:!border-night-700 hover:-translate-y-0.5'
                   }`}
                 >
-                  <div className="pointer-events-none mx-auto h-24 w-[4.3rem]">
+                  <div className="pointer-events-none mx-auto h-20 w-[3.8rem]">
                     <FormationPreview formation={f} active={active} />
                   </div>
-                  <p className={`headline mt-2 text-sm ${active ? 'text-gold-300' : 'text-ink-100'}`}>
+                  <p
+                    className={`headline mt-1.5 truncate text-xs ${active ? 'text-gold-300' : 'text-ink-100'}`}
+                    title={f.name}
+                  >
                     {f.name}
                   </p>
                 </button>
@@ -69,7 +73,7 @@ export default function PreDraftSetup(props: {
           </div>
         </section>
 
-        <section className="mt-8 grid gap-6 sm:grid-cols-2">
+        <section className="mt-5 grid gap-6 sm:grid-cols-2">
           <div>
             <h2 className="headline mb-3 text-xs tracking-[0.25em] text-ink-500">Mode</h2>
             <div className="grid grid-cols-2 gap-2.5">
@@ -119,7 +123,7 @@ export default function PreDraftSetup(props: {
         <button
           type="button"
           onClick={() => props.onStart(formation, mode, style)}
-          className="btn-gold headline mt-10 w-full cursor-pointer rounded-2xl px-6 py-4 text-xl"
+          className="btn-gold headline mt-6 w-full cursor-pointer rounded-2xl px-6 py-4 text-xl"
         >
           START DRAFT — {formation.name} · {style} →
         </button>

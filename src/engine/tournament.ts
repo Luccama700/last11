@@ -148,7 +148,7 @@ function compareRows(a: TableRow, b: TableRow): number {
 // engineV2 wiring (CONTRACT §4 + TICKSPEC v0.3; behind FEATURES.engineV2).
 // The v1 path (flag OFF) is byte-identical to before. The v2 path swaps
 // simulateMatch → resolveMatch (tactics-aware, shootouts), applies the POINTS
-// table incl. shootout W2/L1, and threads morale match-to-match (DECISIONS).
+// table (pens = full 3/0, Lucca 2026-07-11), and threads morale match-to-match.
 // ============================================================================
 
 /** Default bot tactics for the legacy→v2 bridge. The current bot XI is a coarse

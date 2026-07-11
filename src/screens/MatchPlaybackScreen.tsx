@@ -273,7 +273,7 @@ function Pitch(props: {
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-xl border border-gold-600/25"
+      className="@container relative w-full overflow-hidden rounded-xl border border-gold-600/25"
       style={{
         aspectRatio: '16 / 10',
         background: 'repeating-linear-gradient(90deg,#0a5c2e 0 8.33%,#0e7a3c 8.33% 16.66%)',
@@ -305,16 +305,23 @@ function Pitch(props: {
       />
 
       {/* goal celebration: gold flash + confetti; stacked goals escalate to
-          "2x GOAL"/"3x GOAL" with hotter colors (multigoal, Lucca's request) */}
+          "2x GOAL"/"3x GOAL" with hotter colors (multigoal, Lucca's request).
+          Keyed by goal minute + stack count so the pop and confetti REPLAY when a
+          second goal lands inside the first one's window instead of freezing. */}
       {pb.celebrating && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div
+          key={`${pb.celebrating.minute}-${pb.celebratingCount}`}
+          className="pointer-events-none absolute inset-0 flex items-center justify-center"
+        >
           <Confetti />
           <GoalShout count={pb.celebratingCount || 1} />
         </div>
       )}
 
-      {/* match-phase banner sweeping across the pitch (juice pass) */}
-      <PhaseBanner minute={pb.virtualMinute} shootout={!!pb.shootout} />
+      {/* match-phase banner sweeping across the pitch (juice pass). A pens match
+          never shows FULL-TIME — it goes 90' straight into PENS (and pb.shootout is
+          null until then, so keying off it would flash the banner at the boundary) */}
+      <PhaseBanner minute={pb.virtualMinute} shootout={!!timeline.shootout} />
 
       {/* shootout overlay mounts HERE — on the pitch, never below the fold */}
       {props.children}
@@ -346,7 +353,9 @@ function PhaseBanner(props: { minute: number; shootout: boolean }) {
   );
 }
 
-/** GOAL / 2x GOAL / 3x GOAL — escalating color heat for stacked goals. */
+/** GOAL / 2x GOAL / 3x GOAL — escalating color heat for stacked goals. Sized in
+ *  container units (cqw of the PITCH, not the viewport) so the shout always fits
+ *  inside the pitch whatever the layout around it does. */
 function GoalShout(props: { count: number }) {
   const n = Math.max(1, props.count);
   const heat =
@@ -355,8 +364,11 @@ function GoalShout(props: { count: number }) {
       : n === 2
         ? 'text-orange-400 drop-shadow-[0_0_36px_rgba(251,146,60,.85)]'
         : 'text-gold-300 drop-shadow-[0_0_34px_rgba(232,196,104,.8)]';
+  // "GOAL" gets the big treatment; "2x GOAL" is nearly twice as wide, so it steps
+  // down — the kick-pop overshoot (×1.18) still stays inside the pitch either way.
+  const size = n > 1 ? 'text-[11cqw]' : 'text-[16cqw]';
   return (
-    <span className={`headline animate-kick-pop text-[11vw] ${heat}`}>
+    <span className={`headline animate-kick-pop leading-none whitespace-nowrap ${size} ${heat}`}>
       {n > 1 ? `${n}x GOAL` : 'GOAL'}
     </span>
   );

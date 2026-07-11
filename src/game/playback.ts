@@ -203,8 +203,10 @@ export function projectMatch(timeline: MatchTimeline, elapsedMs: number): Playba
   const inShootout = !!timeline.shootout && el > MATCH_DURATION_MS;
 
   // ---- shootout sub-view: kicks reveal ONE BY ONE, a fixed 6s beat each ----
+  // Built ONLY once regulation is over — during the 90 the view stays null so the
+  // screen can't leak "this one goes to pens" before the draw has even happened.
   let shootout: ShootoutView | null = null;
-  if (timeline.shootout) {
+  if (timeline.shootout && el > MATCH_DURATION_MS) {
     const so = timeline.shootout;
     const all = so.kicks;
     const n = all.length;

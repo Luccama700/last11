@@ -125,7 +125,7 @@ describe('shootouts & the ≤16 night-shift rule', () => {
   const home = side('h', makeXi('4-3-3', flat(80), 'h'));
   const away = side('a', makeXi('4-3-3', flat(80), 'a'));
 
-  it('shootoutEnabled (default): a level match resolves on pens; matchVerdict = W2/L1', () => {
+  it('shootoutEnabled (default): a level match resolves on pens; matchVerdict = W3/L0', () => {
     let level = 0;
     for (let seed = 0; seed < 400; seed++) {
       const r = resolveMatch(home, away, seed);
@@ -135,7 +135,9 @@ describe('shootouts & the ≤16 night-shift rule', () => {
         expect(r.shootout).toBeDefined();
         expect(r.shootout!.home).not.toBe(r.shootout!.away);
         expect(v.decidedBy).toBe('pens');
-        expect(v.homePoints + v.awayPoints).toBe(3); // 2 + 1
+        // Lucca 2026-07-11: pens carry FULL stakes — 3 to the winner, 0 to the loser.
+        expect(Math.max(v.homePoints, v.awayPoints)).toBe(3);
+        expect(Math.min(v.homePoints, v.awayPoints)).toBe(0);
       } else {
         expect(r.shootout).toBeUndefined();
         expect(v.decidedBy).toBe('regulation');
