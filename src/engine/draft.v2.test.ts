@@ -9,6 +9,9 @@ import {
   openSlots,
   pickBotFormation,
   pickBotStyle,
+  isSamePerson,
+  movePlaced,
+  personKey,
   pickValueV2,
   placeholderAffinity,
   playerV2ById,
@@ -230,6 +233,62 @@ describe('playerV2ById — lift a coarse-projected id back to detailed', () => {
     const known = bra2002[0];
     expect(playerV2ById(known.id)?.position).toBe(known.position);
     expect(playerV2ById('nope-9999-x')).toBeUndefined();
+  });
+});
+
+describe('personKey / isSamePerson — same person across year snapshots (Image-#12)', () => {
+  it('strips the year segment; nation+slug identifies the person', () => {
+    expect(personKey('fra-2026-mbappe')).toBe('fra-mbappe');
+    expect(personKey('fra-2018-mbappe')).toBe('fra-mbappe');
+    expect(personKey('arg-2026-e-martinez')).toBe('arg-e-martinez'); // hyphenated slug
+    expect(isSamePerson('fra-2026-mbappe', 'fra-2018-mbappe')).toBe(true);
+    expect(isSamePerson('fra-2026-mbappe', 'bra-2002-ronaldo')).toBe(false);
+  });
+});
+
+describe('person-uniqueness — never the same person twice in one XI', () => {
+  const fra2026 = squadByRef('FRA', 2026).players;
+  const fra2018 = squadByRef('FRA', 2018).players;
+  const mbappe26 = fra2026.find((p) => p.id === 'fra-2026-mbappe')!;
+  const mbappe18 = fra2018.find((p) => p.id === 'fra-2018-mbappe')!;
+
+  it('the exact Mbappé fixture exists (owned 2026 + stealable 2018)', () => {
+    expect(mbappe26).toBeTruthy();
+    expect(mbappe18).toBeTruthy();
+    expect(isSamePerson(mbappe26.id, mbappe18.id)).toBe(true);
+  });
+  it('draftOptionsV2 hides a different-year snapshot of an owned player', () => {
+    const slate = emptySlate(11);
+    slate[9] = { position: F433.slots[9], player: mbappe26 };
+    const opts = draftOptionsV2(slate, { nation: 'FRA', year: 2018 });
+    expect(opts.some((p) => p.id === 'fra-2018-mbappe')).toBe(false);
+    expect(opts.length).toBeGreaterThan(0); // other 2018 France players still offered
+  });
+  it('rankStealCandidates excludes a different-year snapshot of a starter', () => {
+    const xi = [...bra2002.slice(0, 10), mbappe26].map((player, i) => ({ position: F433.slots[i], player }));
+    const ranked = rankStealCandidates([mbappe18, ...squadByRef('ARG', 1986).players], xi, F433, placeholderAffinity);
+    expect(ranked.some((c) => c.player.id === 'fra-2018-mbappe')).toBe(false);
+  });
+});
+
+describe('movePlaced — mid-draft move to an open slot', () => {
+  it('moves a placed player to an open slot, taking that slot position', () => {
+    const slate = emptySlate(11);
+    slate[9] = { position: F433.slots[9], player: bra2002[0] };
+    const moved = movePlaced(slate, F433, 9, 2);
+    expect(moved[9]).toBeNull();
+    expect(moved[2]!.player.id).toBe(bra2002[0].id);
+    expect(moved[2]!.position).toBe(F433.slots[2]);
+  });
+  it('is a no-op when the target is filled, the source is empty, or from===to', () => {
+    const slate = emptySlate(11);
+    slate[9] = { position: F433.slots[9], player: bra2002[0] };
+    slate[2] = { position: F433.slots[2], player: bra2002[1] };
+    const ids = (s: readonly (typeof slate)[number][]) => s.map((x) => x?.player.id ?? null);
+    expect(ids(movePlaced(slate, F433, 9, 2))).toEqual(ids(slate)); // to filled
+    expect(movePlaced(emptySlate(11), F433, 0, 1).every((s) => s === null)).toBe(true); // from empty
+    expect(ids(movePlaced(slate, F433, 9, 9))).toEqual(ids(slate)); // same slot
+    expect(ids(movePlaced(slate, F433, 9, 99))).toEqual(ids(slate)); // out of range
   });
 });
 

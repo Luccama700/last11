@@ -111,13 +111,40 @@ export function spinSquadV2(rng: Rng): RolledTeam {
   return rng.pick(squadRefsV2());
 }
 
-/** Players from a rolled squad not already on this slate (no dup within a team). */
+/**
+ * Person identity across tournament snapshots. Player ids are `${nation}-${year}-${slug}`
+ * (loader §2), so the SAME real person has a different id each year (Mbappé 2018 vs
+ * 2026). The person key drops the year segment → `${nation}-${slug}`, so both map to
+ * `fra-mbappe`. Used to forbid the same person twice in one XI even via different-year
+ * snapshots (the Image-#12 glitch). Nation codes carry no hyphen, so index 1 is always
+ * the year; slugs may contain hyphens (`arg-2026-e-martinez` → `arg-e-martinez`).
+ */
+export function personKey(id: string): string {
+  const parts = id.split('-');
+  if (parts.length >= 3) parts.splice(1, 1); // drop the year segment
+  return parts.join('-');
+}
+
+/** True when two player ids are the same real person (any tournament year). */
+export function isSamePerson(idA: string, idB: string): boolean {
+  return personKey(idA) === personKey(idB);
+}
+
+/** Person keys already on a slate — the "no same person twice" filter set. */
+function personsOn(slate: readonly (XiSlotV2 | null)[]): Set<string> {
+  return new Set(
+    slate.filter((s): s is XiSlotV2 => s !== null).map((s) => personKey(s.player.id)),
+  );
+}
+
+/** Players from a rolled squad not already on this slate. Excludes the same PERSON,
+ *  not just the same id — a different-year snapshot of an owned player is filtered too. */
 export function draftOptionsV2(
   slate: readonly (XiSlotV2 | null)[],
   roll: RolledTeam,
 ): PlayerV2[] {
-  const taken = new Set(slate.filter((s): s is XiSlotV2 => s !== null).map((s) => s.player.id));
-  return squadByRef(roll.nation, roll.year).players.filter((p) => !taken.has(p.id));
+  const taken = personsOn(slate);
+  return squadByRef(roll.nation, roll.year).players.filter((p) => !taken.has(personKey(p.id)));
 }
 
 /** Indices of the still-open slots on a slate. */
@@ -229,6 +256,29 @@ export function swapSlots(xi: readonly XiSlotV2[], a: number, b: number): XiSlot
     if (i === b) return { position: s.position, player: xi[a].player };
     return s;
   });
+}
+
+/**
+ * Move an already-placed player to an OPEN slot during the draft (Lucca: "in case I
+ * find a better player for a position"). `from` must be filled, `to` must be open;
+ * the player takes `to`'s formation position (off-position allowed via affinity —
+ * no gating here). Nothing else recomputes. Invalid moves (from empty, to filled,
+ * same slot, out of range) return the slate UNCHANGED. Pure.
+ */
+export function movePlaced(
+  slate: readonly (XiSlotV2 | null)[],
+  formation: Formation,
+  from: number,
+  to: number,
+): (XiSlotV2 | null)[] {
+  const inRange = (i: number) => i >= 0 && i < slate.length;
+  if (from === to || !inRange(from) || !inRange(to)) return [...slate];
+  const moving = slate[from];
+  if (moving === null || slate[to] !== null) return [...slate]; // from must be filled, to open
+  const next = [...slate];
+  next[to] = { position: formation.slots[to], player: moving.player };
+  next[from] = null;
+  return next;
 }
 
 /** Weighted-sane seeded formation for a bot (favours the common shapes). */
@@ -354,10 +404,10 @@ export function rankStealCandidates(
   formation: Formation,
   aff: AffinityFn,
 ): StealCandidate[] {
-  const onTeam = new Set(slate.map((s) => s.player.id));
+  const onTeam = new Set(slate.map((s) => personKey(s.player.id)));
   const out: StealCandidate[] = [];
   for (const player of pool) {
-    if (onTeam.has(player.id)) continue;
+    if (onTeam.has(personKey(player.id))) continue;
     let best: StealCandidate | null = null;
     for (let i = 0; i < slate.length; i++) {
       const slot = formation.slots[i];
