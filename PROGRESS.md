@@ -1,57 +1,55 @@
 # Last11 — Build Progress
 
-_Running log for the build agent. Update before context runs low._
+_Running log for the build agent._
 
-## Current state
+## Current state: TIER 1 + CORE TIER 2 SHIPPED ✅
 
-- **Tier:** 1 COMPLETE ✅ → moving to Tier 2 (juice) + README
-- **Phase:** 4 done (full BR loop playable end-to-end)
+All phases of PLAN.md through Tier 2 core juice are done, reviewed, and green.
+54 tests passing, production build verified serving.
 
 ## Done
 
-- ✅ Brief loaded from Mindboard. Last11 / 11a0.com, Sport track, deadline Sun 9am PST.
-- ✅ PLAN.md committed (a194866).
-- ✅ Phase 0 (cd0bbf4): Vite 8 + React 19 + TS 7 + Tailwind 4 + Vitest 4 scaffold. Verified.
-- ✅ Phase 1 (c81b664): engine foundations — mulberry32 RNG, 12 nations × 12 players
-  JSON, 4-3-3 FORMATION, teamStrength (base + chem pairs ×1.5 + star ≥88 +3,
-  off-pos ×0.75). Review subagent: clean.
-- ✅ Phase 2 (cf558b0): draft logic (spin→nation→pick, value-max bots), Poisson match
-  sim (xG 1.35 ± 0.012·diff, clamp [0.15,4.5]), tournament (32→24→16→8→4→2→1,
-  3 pairings/round, pts/GD/GF/strength/id table, steal-from-fallen). Review: clean.
-- ✅ Phase 3 (498a670): reducer state machine (src/game/state.ts), Home + Draft
-  screens. RNG in ref, consumed only in handlers (StrictMode-safe).
-- ✅ Phase 4: Battle (intro/results + cut-line table), Steal (loot grid + slot gains),
-  End screens. Full-loop DOM tests. 53 tests green, build green.
-  - NOTE: Chrome extension not connected → verification is via jsdom+RTL
-    integration tests (walks the whole game through real components) + HTTP 200.
+- ✅ PLAN.md (a194866) — scope, phases, DoD.
+- ✅ Phase 0 (cd0bbf4): Vite 8 + React 19 + TS 7 + Tailwind 4 + Vitest 4 scaffold.
+- ✅ Phase 1 (c81b664): engine foundations — mulberry32 RNG, 12 nations × 12
+  players, 4-3-3, teamStrength (fit ×0.75 off-pos + chem pairs ×1.5 + star ≥88 +3).
+  Subagent review: clean.
+- ✅ Phase 2 (cf558b0): spin-draft logic, Poisson match sim, BR tournament
+  32→24→16→8→4→2→1 with steals. Subagent review: clean (all 6 risk areas traced).
+- ✅ Phase 3 (498a670): reducer state machine + Home/Draft screens.
+- ✅ Phase 4 (8125a07): Battle/Steal/End screens — Tier 1 complete. Subagent
+  review: 1 real finding (roundsSurvived off-by-one) → fixed in 55621ef.
+- ✅ README (8aa6795), Tier 2 juice (e6398d2): wheel chase animation, table
+  cascade, trash talk. Home explainer + favicon (2af4903).
+- ✅ Verification: 54 vitest tests (engine determinism, e2e tournament, full
+  UI walkthrough via jsdom+RTL incl. animated path), `npm run build` green,
+  dev server AND production preview both served HTTP 200 with content.
+  NOTE: Chrome extension unavailable all session → DOM-level integration tests
+  used as the browser evidence.
+- ✅ Cleanup: scratch sanity test deleted, background servers stopped.
 
-## Next
+## Remaining (deliberately not done — cut from the bottom / not mine)
 
-1. Phase 3+4 review subagent results → fix real bugs (in flight).
-2. Remaining Tier 2 candidates (only if time): mobile layout pass, player card
-   polish. Don't gold-plate.
-3. Final sweep: kill dev-server background task, final PROGRESS/README touch-up.
+- Tier 2 extras: sound, deeper mobile pass (layout is responsive by
+  construction but unverified on a real phone), player-card art.
+- Tier 3 multiplayer: out of scope (local-only constraint).
+- Lucca's side: play a run, record 2–5 min demo video, Devpost write-up,
+  push repo public. Video/write-up should be locked SATURDAY NIGHT
+  (deadline Sun Jul 12, 9:00am PST).
 
-## Balance findings (sanity-checked headlessly, 2026-07-10)
+## Balance findings (headless sanity, 2026-07-10)
 
-- Bot lobby strength: 940–1027, median ~990. Naive human (best on-position
-  rating, no chem): median 966 → survives early rounds, dies mid-game.
-  Chemistry-aware drafting closes the gap → competitive to win. Good curve, no
-  tuning needed.
-- Scorelines realistic: 2.69 goals/match avg, max 7, ~6% scoreless.
-- 19/20 winners from strength top-8 (skill dominates; upsets exist).
-- Demo talking points: all-GK troll draft = 719 strength, finishes #32.
+- Bots 940–1027 (med 990); naive human ~966 → dies mid-game; chem-aware human
+  competitive. Good curve, untouched.
+- 2.69 goals/match, max 7, ~6% scoreless. 19/20 winners from strength top-8.
+- Troll draft (all GKs) = 719, finishes #32 — fun demo beat.
 
 ## Key decisions
 
-- Draft mechanic: spin lands a nation (uniform), pick any un-owned player from that
-  nation into the current FORMATION slot; off-position allowed at 0.75×.
-  Duplicates ACROSS teams allowed (genre norm); never within a team.
-- Steal window after every cut (except when game over): human chooses via UI,
-  bots auto-take best strictly-improving swap; pool = union of just-eliminated XIs.
-- Human elimination → "SEE HOW IT ENDS" fast-forwards rest headlessly (same rng).
-- Placement = table rank in the round you fell; champion = 1.
-- Test-only-first-option drafting yields an all-GK 719-strength team that finishes
-  #32 — engine correctly punishes bad drafting (good demo talking point).
-- Dev server on :5173 (background task bnhxyhzci may still be running — stop before
-  starting a new one).
+- Spin lands a nation → pick any un-owned player into current slot; off-pos
+  allowed at 0.75×; duplicates across teams OK (genre norm), never within.
+- Steal window after each cut: human via UI, bots auto best-positive-swap,
+  pool = just-eliminated XIs.
+- Human dead → "SEE HOW IT ENDS" fast-forwards headlessly on the same rng.
+- RNG in a ref, consumed only in event handlers (StrictMode-safe); reducer pure.
+- `animate={false}` App prop keeps DOM tests synchronous.
