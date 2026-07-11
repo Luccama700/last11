@@ -308,9 +308,10 @@ export interface TimelineEvent {
 /** 7a0-style "deserved" box score (engine §3.1 / §4). */
 export interface ZoneBox { gk: number; def: number; mid: number; att: number; overall: number; }
 
-/** Present iff regulation ended level (DECISIONS: no draws → every level match to pens).
- *  RATIFIED from TICKSPEC.md v0.3: v0.4's {winner,home,away} + a `kicks[]` array.
- *  Sudden death guarantees a non-null winner. */
+/** Present iff regulation ended level AND shootouts were enabled for the round
+ *  (≤16 alive; NIGHT-SHIFT rule). A level match with shootouts OFF (>16 alive) is a
+ *  genuine draw and carries no Shootout. RATIFIED from TICKSPEC.md v0.3: v0.4's
+ *  {winner,home,away} + a `kicks[]` array. Sudden death guarantees a non-null winner. */
 export interface Shootout {
   winner: Team;                              // never null
   home: number;                              // penalties scored
@@ -333,16 +334,32 @@ export interface MatchTimeline {
 }
 ```
 
-**Points (DECISIONS — no draws exist):**
+**Points + the ≤16 shootout rule (NIGHT-SHIFT amendment to "no draws").** Shootouts
+fire ONLY in rounds with **≤16 managers alive** (`SHOOTOUT_ALIVE_MAX = 16`,
+`shootoutEnabledForRound(aliveCount)` — both exported from `tournament.ts`). In the
+bigger early rounds a level match is a **genuine draw (D1)**; from the round of 16 on,
+a level match goes to penalties (PW2 / PL1). Points are therefore conditional:
 
 ```ts
 export const POINTS = {
   REG_WIN: 3,       // won in regulation
-  SHOOTOUT_WIN: 2,  // level in regulation, won on penalties
+  SHOOTOUT_WIN: 2,  // level in regulation, won on penalties (≤16 alive)
   SHOOTOUT_LOSS: 1, // level in regulation, lost on penalties
   REG_LOSS: 0,      // lost in regulation
+  DRAW: 1,          // level, shootouts OFF (>16 alive) — a classic draw point
 } as const;
 ```
+
+**Classify via `matchVerdict`, NEVER by goals.** The canonical classifier lives in
+`match.ts` and is the ONE source every consumer (tournament points, table, sim) reads —
+so a shootout is never mis-scored as a draw and a >16 draw never mis-scored as a loss:
+
+```ts
+export type DecidedBy = 'regulation' | 'pens' | 'draw';
+export function matchVerdict(r: MatchResultV2):
+  { winner: Team | null; decidedBy: DecidedBy; homePoints: number; awayPoints: number };
+```
+
 Table tiebreakers (gd → gf → strength → id) are unchanged; regulation goals feed gf/gd.
 
 **Range reconciliation (conflict 3):** engine emits `ballPos ∈ [-1,+1]`; canonical
@@ -369,7 +386,13 @@ export interface MatchResultV2 {
   homeId: string; awayId: string;
   homeGoals: number; awayGoals: number;             // REGULATION goals
   goals: { minute: number; team: Team; playerId?: string; assistPlayerId?: string }[];
-  shootout?: Shootout;                              // present iff homeGoals === awayGoals
+  shootout?: Shootout;        // present iff level in regulation AND shootouts enabled (≤16 alive)
+  // engineV2 bookkeeping stamped by playRound (absent on a bare resolveMatch) — enough to
+  // rebuild the identical watched timeline via simulateMatchTimeline (score/timeline agree):
+  seed?: number;
+  shootoutEnabled?: boolean;
+  homeMorale?: Record<string, number>;  // morale each side carried INTO this match
+  awayMorale?: Record<string, number>;
 }
 ```
 `goals[]` carries scorer/assister so the fast score path accrues **morale** for the rail
@@ -473,6 +496,26 @@ every `rolledSquads` entry belonging to eliminated managers, minus already-owned
 expands `rolledSquads → squadByRef → players`. Data layer supplies
 `squadByRef(nation, year): SquadEntry`. A late round can dump ~thousands of entries —
 scope to THIS round's eliminations, dedup by id, UI ranks by `pickValue` (open Q7).
+
+**Steal EVALUATION runs on the DETAILED slate (NIGHT-SHIFT JOB 1).** The v1
+`evaluateSteal` scored the COARSE projected XI, so a secondary-position superstar
+(Messi CAM/RW) at an off-slot showed absurd swings. Evaluate on `XiSlotV2` through the
+affinity matrix + the secondary exemption instead:
+- `draft.ts::rankStealCandidates(pool, slate, formation, aff)` — the human's ranked list.
+- `steal-v2.ts::evaluateStealV2(slate, pool) → StealCandidate | null` — the single best
+  swap (bot auto-swap), a thin wrapper over `rankStealCandidates` so the two AGREE.
+- `steal-v2.ts::stealSlotDeltas(slate, player) → number[]` — per-slot "where does X play"
+  upgrade preview. Same `effectiveRating` (secondary-aware) as the ranked list.
+Bots in the legacy tournament path still use v1 `evaluateSteal` (coarse data has no
+detailed positions to exploit); switching them to `evaluateStealV2` awaits v2 bot data +
+a QA balance re-baseline.
+
+**End-of-run recap (NIGHT-SHIFT JOB 2).** `GameState` gains `champion?: Manager` and
+`finalTimeline?: MatchTimeline`. On `FINISHED` (fast-forward after a human is eliminated)
+the reducer records the champion and REBUILDS the final match's full `MatchTimeline` —
+pure, from the final `MatchResultV2`'s stamped `seed` + `homeMorale`/`awayMorale` +
+`shootoutEnabled`, via `toMatchSide` + `simulateMatchTimeline` — so an eliminated player
+can still watch the final. Per-round `resultsV2` (already on `RoundResult`) carry the recap.
 
 **Reducer actions (v2 skeleton — see the Phase-I note below).** The v2 free-pick
 draft uses **`ROLL {roll}`** and **`PLACE {player, slotIndex}`** (distinct from the

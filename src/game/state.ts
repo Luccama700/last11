@@ -1,6 +1,7 @@
 import { FORMATION } from '../engine/rating';
-import { SURVIVORS_PER_ROUND, stealPool } from '../engine/tournament';
+import { DEFAULT_TACTICS, SURVIVORS_PER_ROUND, stealPool, toMatchSide } from '../engine/tournament';
 import type { Manager, RoundResult } from '../engine/tournament';
+import { simulateMatchTimeline } from '../engine/timeline';
 import { formationById } from '../engine/types';
 import type { Player, XI } from '../engine/types';
 import type {
@@ -84,6 +85,13 @@ export interface GameState {
   humanSlate?: (XiSlotV2 | null)[];
   /** On-screen playback state for the current round (v2 sim). */
   matchday?: Matchday | null;
+  /** The winning manager, set at tournament end (both the human-wins and the
+   *  fast-forward-after-elimination paths). Powers the EndScreen. */
+  champion?: Manager;
+  /** Full timeline of the tournament's FINAL match, rebuilt during fast-forward so
+   *  an eliminated human can still watch the final (JOB 2). Deterministic — rebuilt
+   *  from the final result's stamped seed + morale. Absent on the v1 path. */
+  finalTimeline?: MatchTimeline;
 }
 
 export const initialState: GameState = {
@@ -227,17 +235,42 @@ export function reducer(state: GameState, action: Action): GameState {
       return { ...state, managers, humanSlate, screen: 'battle', battleView: 'intro', pool: [] };
     }
 
-    case 'FINISHED':
+    case 'FINISHED': {
+      // JOB 2: an eliminated human fast-forwards headlessly; keep the run watchable.
+      // The per-round resultsV2 are already carried on action.rounds. Rebuild the
+      // FINAL match's full timeline here (pure — the final result stamped its seed +
+      // the morale both sides carried in), so EndScreen can play it back. Respects
+      // the shootout rule via the stamped shootoutEnabled (final round is ≤16 alive).
+      const champion = action.managers.find((m) => m.alive);
+      const lastRound = action.rounds[action.rounds.length - 1];
+      const finalMatch = lastRound?.resultsV2?.[lastRound.resultsV2.length - 1];
+      let finalTimeline = state.finalTimeline;
+      if (finalMatch && finalMatch.seed != null) {
+        const home = action.managers.find((m) => m.id === finalMatch.homeId);
+        const away = action.managers.find((m) => m.id === finalMatch.awayId);
+        if (home && away) {
+          finalTimeline = simulateMatchTimeline(
+            toMatchSide(home, DEFAULT_TACTICS, finalMatch.homeMorale),
+            toMatchSide(away, DEFAULT_TACTICS, finalMatch.awayMorale),
+            finalMatch.seed,
+            finalMatch.shootoutEnabled ?? true,
+          );
+        }
+      }
       return {
         ...state,
         managers: action.managers,
         rounds: [...state.rounds, ...action.rounds],
         roundIndex: state.roundIndex + action.rounds.length,
         screen: 'end',
+        champion,
+        finalTimeline,
       };
+    }
 
     case 'SHOW_END':
-      return { ...state, screen: 'end' };
+      // Human-wins path: the champion is whoever is still standing.
+      return { ...state, screen: 'end', champion: state.managers.find((m) => m.alive) };
 
     case 'RESET':
       return initialState;
