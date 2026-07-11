@@ -269,29 +269,25 @@ awayTactics, seed)`. Headless BR rounds use the score-only path (§ MatchResult)
 ```ts
 export type Team = 'home' | 'away'; // per-MATCH roles, not the human. UI maps "you" on.
 
-/** Per-virtual-minute sample. Carries the continuous signals AND the discrete 2D-pitch
- *  zone (DECISIONS: real 2D pitch). `band`×`lane` is the engine's zone output; the UI
- *  interpolates the ball marker + 22 drifting dots between consecutive ticks' zones.
- *  PROPOSED spec — engine + sim confirm final names/ranges per the "let them talk"
- *  directive; worker-7 ratifies whatever they agree. In Tier A the engine MAY derive
- *  `momentum` from `ballPosition`. */
-export type Band = 'def' | 'mid' | 'att';   // longitudinal third, home-attacking perspective
-export type Lane = 'left' | 'center' | 'right';
-
+/** Per-virtual-minute sample. RATIFIED from TICKSPEC.md v0.2 (engine+sim co-signed).
+ *  2D pitch = two CONTINUOUS coords: `ballPosition` (length) + `ballLane` (width).
+ *  NO discrete band/lane on the tick — the sim buckets `ballPosition` into a band
+ *  itself and reads `ballLane` for the lateral marker; the engine bins internally
+ *  (5 bands × 3 lanes) then emits center+jitter. 22 dots drift as a pure function of
+ *  (ballPosition, ballLane, possession) + both formations (below). */
 export interface TimelineTick {
   minute: number;          // 0..durationMinutes
-  ballPosition: number;    // 0..1  — 0 = home goal line, 1 = away goal line (sim's ballX)
-  momentum: number;        // -1..+1 — smoothed pressure, + toward home (sim's pressure)
+  ballPosition: number;    // 0..1  longitudinal — 0 = home goal line, 1 = away goal line
+  ballLane: number;        // 0..1  lateral — 0 = home-left touchline (attacking frame) … 1 = right
+  momentum: number;        // -1..+1 — smoothed pressure, + toward home
   possession: Team;
-  band: Band;              // discrete zone (length) for the 2D marker + dot drift
-  lane: Lane;              // discrete zone (width)
 }
 
 export type TimelineEventType =
   | 'kickoff' | 'halftime' | 'fulltime'
   | 'chance' | 'shot' | 'save' | 'goal' | 'counter'
-  | 'card'                             // card = Tier B
-  | 'shootout_start' | 'penalty_scored' | 'penalty_missed' | 'shootout_end';
+  | 'card'                                        // card = Tier B
+  | 'shootout_start' | 'penalty' | 'shootout_end'; // one 'penalty' type; scored/missed in text
 
 export interface TimelineEvent {
   minute: number;
@@ -299,25 +295,33 @@ export interface TimelineEvent {
   team: Team | null;       // null for neutral events (kickoff/halftime/fulltime/shootout_start)
   text: string;            // engine-authored ticker caption, rendered verbatim
   scoreAfter?: { home: number; away: number }; // REQUIRED on type==='goal'
-  playerId?: string;       // scorer on 'goal' (REQUIRED — feeds morale); kicker on penalties
-  assistPlayerId?: string; // assister on 'goal' (DEFAULT-attributed — feeds morale)
+  playerId?: string;       // scorer on 'goal' (REQUIRED — feeds morale); taker on 'penalty'; keeper on 'save'
+  assistId?: string | null; // assister on 'goal' (null = unassisted — feeds morale)
+  soTally?: { home: number; away: number }; // running penalty tally on 'penalty' (also on shootout.kicks)
 }
 
 /** 7a0-style "deserved" box score (engine §3.1 / §4). */
 export interface ZoneBox { gk: number; def: number; mid: number; att: number; overall: number; }
 
-/** Present iff regulation ended level (DECISIONS: no draws → every level match to pens). */
-export interface Shootout { home: number; away: number; winner: Team; }
+/** Present iff regulation ended level (DECISIONS: no draws → every level match to pens).
+ *  RATIFIED from TICKSPEC.md v0.2: sudden death guarantees a non-null winner. */
+export interface ShootoutResult {
+  winner: Team;                              // never null
+  score: { home: number; away: number };     // penalties scored
+  kicks: { team: Team; scored: boolean; playerId: string }[]; // in order; playerId for nameplates
+}
 
 export interface MatchTimeline {
   matchId: string;
   homeId: string; awayId: string;
   seed: number;
   durationMinutes: number;               // virtual minutes; ASSUMPTION 90
-  ticks: TimelineTick[];                 // length = durationMinutes + 1, minutes 0..N
-  events: TimelineEvent[];               // minute-sorted; includes shootout_* when level
+  ticks: TimelineTick[];                 // length = durationMinutes + 1, minutes 0..N (stop at 90; pens are events)
+  events: TimelineEvent[];               // minute-sorted; shootout_* appended at minute==90
   finalScore: { home: number; away: number };  // REGULATION goals (may be level)
-  shootout?: Shootout;                   // decides a level match
+  shootout?: ShootoutResult;             // present iff finalScore is level
+  homeFormationId: string;               // self-contained for pure(timeline,elapsed) dot placement
+  awayFormationId: string;
   boxScore: { home: ZoneBox; away: ZoneBox; xg: { home: number; away: number } };
 }
 ```
@@ -357,13 +361,17 @@ NOT fabricated UI-side (fabrication would desync from the real timeline and brea
 export interface MatchResultV2 {
   homeId: string; awayId: string;
   homeGoals: number; awayGoals: number;             // REGULATION goals
-  goals: { minute: number; team: Team; playerId?: string; assistPlayerId?: string }[];
-  shootout?: Shootout;                              // present iff homeGoals === awayGoals
+  goals: { minute: number; team: Team; scorerId: string; assistId: string | null }[];
+  shootout?: ShootoutResult;                        // present iff homeGoals === awayGoals
 }
 ```
-`goals[]` carries scorer/assister so the fast score path can accrue **morale** for the
-rail matches too (not just watched ones). The score/timeline agreement invariant is on
-the regulation scoreline; the shootout is decided by the same seeded rng in both paths.
+`goals[]` carries scorer/assister so the fast score path accrues **morale** for the rail
+matches too (not just watched ones) — one already-drawn rng pick per goal, negligible.
+The score/timeline agreement invariant is on the regulation scoreline + winner; the
+shootout is decided by the same seeded rng in both paths (TICKSPEC §5). Note: the
+existing `tournament.ts` `MatchResult` gains these fields at engine-v2 time; during
+migration the shape lives as `MatchResultV2` in `types.ts` to avoid clashing with the
+in-flight legacy type.
 
 Per-match seed derives deterministically from `(tournamentSeed, round, matchIndex)`
 so a server names a match by coordinates (sim §6, engine §4.1).
@@ -380,7 +388,8 @@ export interface PlaybackState {
   virtualMinute: number;                  // pure linear map from elapsedMs
   clockLabel: string;                     // "45' HT", "90' FT"
   score: { home: number; away: number };  // goals with minute <= virtualMinute
-  ballPosition: number;                   // interpolated between ticks
+  ballPosition: number;                   // interpolated between ticks (length)
+  ballLane: number;                       // interpolated (width, 2D pitch)
   momentum: number;                       // interpolated
   possession: Team;
   ticker: TimelineEvent[];                // events at/before now, last ~3
@@ -388,10 +397,13 @@ export interface PlaybackState {
 }
 export type RenderPlayback = (timeline: MatchTimeline, elapsedMs: number) => PlaybackState;
 
-// Shared MP-critical constants (sim §5e) — belong in CONTRACT, not a component:
-export const MATCH_DURATION_MS = 45000;   // wall-clock per match @1× (sim Q1)
+// Shared MP-critical constants (sim §5e / TICKSPEC §4.3) — belong in CONTRACT:
+export const MATCH_DURATION_MS = 45000;   // wall-clock per match @1× (regulation)
+export const SHOOTOUT_MS       = 12000;   // fixed appended window if pens (→ 45s or 57s, never variable)
 export const VIRTUAL_MINUTES   = 90;
 export const CELEBRATION_MS    = 2600;
+// POSITION_ANCHOR (12-position formation coords for the 22 dots) is sim-owned per
+// TICKSPEC §2 — listed there for bot-formation consistency, not duplicated here.
 ```
 
 `animate === false` (headless/tests) ⇒ clock returns `end` immediately, `RenderPlayback`
@@ -526,7 +538,20 @@ _Reconciliation log:_
   W3/PW2/PL1/L0); 2D-pitch `band`/`lane` ticks; scorer/assister on goals; more-forgiving
   affinity posture; varied bot tactics; between-match `REARRANGE_XI`; no stamina. Names
   the v2 draft actions `ROLL`/`PLACE` (legacy `SPIN`/`PICK` retained for green tests).
-- **Now implementing:** sequencing step 1 — v2 types (`src/engine/types.ts`), feature
-  flags (`src/game/flags.ts`), and the additive reducer skeleton (`src/game/state.ts`).
+- **v0.4 + TICKSPEC:** ratified `docs/redesign/TICKSPEC.md` v0.2 (engine+sim co-signed)
+  into §4 — `ballLane` continuous (no discrete band/lane); single `penalty` event +
+  `soTally`; `ShootoutResult{winner,score,kicks}`; `assistId`; goal `scorerId`/`assistId`
+  on `MatchResult`; `homeFormationId`/`awayFormationId` on the timeline; `SHOOTOUT_MS`.
+  (TICKSPEC's codex-ui confirms C1–C3 are orientation-only; shapes are stable.)
+- **Homes of the v2 types (single source, no forks):** data + `Position`/`Zone` +
+  migration adapter live in **`src/engine/data/schema.ts`** (worker-6); feature flags
+  in **`src/game/features.ts`** (worker-6-seeded, worker-7 owns the matrix — I did NOT
+  create a duplicate `flags.ts`; the legacy `flags.ts` stays the emoji map). The
+  match/tactics/timeline/manager types go in **`src/engine/types.ts`**, importing
+  `Position`/`PlayerV2`/`SquadRef` from schema (aliased to avoid the legacy-`Position`
+  name clash).
+- **Now implementing:** sequencing step 1 — v2 match types (`src/engine/types.ts`) +
+  the additive reducer skeleton (`src/game/state.ts`); flags already exist in
+  `features.ts`; the data migration adapter already exists in `schema.ts`/`loader.ts`.
 - **Next:** remaining calibration is Lucca's later red-pen pass (rating ladder, Tier-A
   lever tuning); not blocking. Steps 2–5 (data → engine → draft → sim) build on this.
