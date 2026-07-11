@@ -3,11 +3,17 @@ import {
   CELEBRATION_MS,
   FORMATIONS,
   MATCH_DURATION_MS,
-  SHOOTOUT_MS,
   type MatchTimeline,
   type TimelineTick,
 } from '../engine/types';
-import { dotView, formationAnchors, matchEndMs, projectMatch, POSITION_ANCHOR } from './playback';
+import {
+  SHOOTOUT_KICK_MS,
+  dotView,
+  formationAnchors,
+  matchEndMs,
+  projectMatch,
+  POSITION_ANCHOR,
+} from './playback';
 
 function flatTicks(n = 90): TimelineTick[] {
   return Array.from({ length: n + 1 }, (_, m) => ({
@@ -98,7 +104,7 @@ describe('projectMatch — regulation', () => {
   });
 });
 
-describe('projectMatch — shootout', () => {
+describe('projectMatch — shootout (6s-per-kick cadence)', () => {
   const kicks = [
     { team: 'home' as const, scored: true, playerId: 'h1' },
     { team: 'away' as const, scored: true, playerId: 'a1' },
@@ -114,43 +120,77 @@ describe('projectMatch — shootout', () => {
       { minute: 90, type: 'shootout_start', team: null, text: 'Penalties!' },
       { minute: 90, type: 'shootout_end', team: 'home', text: 'Home win on pens' },
     ],
-    shootout: { winner: 'home', home: 3, away: 2, kicks },
+    shootout: { winner: 'home', home: 3, away: 2, kicks }, // home scored h1,h2,h3; away a1,a3
   };
+  const soStart = MATCH_DURATION_MS;
 
-  it('adds a 12s window on top of regulation', () => {
+  it('extends the watched duration by 6s per kick', () => {
     expect(matchEndMs(base)).toBe(MATCH_DURATION_MS);
-    expect(matchEndMs(so)).toBe(MATCH_DURATION_MS + SHOOTOUT_MS);
+    expect(matchEndMs(so)).toBe(MATCH_DURATION_MS + kicks.length * SHOOTOUT_KICK_MS);
   });
 
   it('stays regulation at exactly full-time, flips to pens just after', () => {
     expect(projectMatch(so, MATCH_DURATION_MS).phase).toBe('regulation');
-    expect(projectMatch(so, MATCH_DURATION_MS + 10).phase).toBe('shootout');
+    const pens = projectMatch(so, MATCH_DURATION_MS + 10);
+    expect(pens.phase).toBe('shootout');
+    expect(pens.clockLabel).toBe('PENS');
   });
 
-  it('reveals kicks progressively and tallies scored pens', () => {
-    const perKick = SHOOTOUT_MS / kicks.length;
-    // deep into kick 0's window (result shown): 1 kick taken, home 1
-    const early = projectMatch(so, MATCH_DURATION_MS + perKick * 0.8);
-    expect(early.shootout!.taken.length).toBe(1);
-    expect(early.shootout!.home).toBe(1);
-    expect(early.shootout!.away).toBe(0);
+  it('winds up the taker before revealing each kick', () => {
+    // early in kick 0's 6s beat: h1 is stepping up, nothing revealed yet
+    const windup = projectMatch(so, soStart + SHOOTOUT_KICK_MS * 0.2).shootout!;
+    expect(windup.kicks.length).toBe(0);
+    expect(windup.pendingKicker).toEqual({ team: 'home', playerId: 'h1' });
+    expect(windup.tally).toEqual({ home: 0, away: 0 });
   });
 
-  it('finishes with the full tally and a decided winner', () => {
-    const end = projectMatch(so, MATCH_DURATION_MS + SHOOTOUT_MS);
-    expect(end.finished).toBe(true);
-    expect(end.shootout!.home).toBe(3);
-    expect(end.shootout!.away).toBe(2);
-    expect(end.shootout!.winner).toBe('home');
-    expect(end.shootout!.stepping).toBeNull();
-    expect(end.clockLabel).toBe('PENS');
+  it('reveals kicks one by one on the cadence, tallying scored pens', () => {
+    // deep into kick 0's beat (result shown): 1 revealed, home 1, no pending
+    const k0 = projectMatch(so, soStart + SHOOTOUT_KICK_MS * 0.8).shootout!;
+    expect(k0.kicks.length).toBe(1);
+    expect(k0.tally).toEqual({ home: 1, away: 0 });
+    expect(k0.pendingKicker).toBeNull();
+    // into kick 2's wind-up: h1+a1 revealed (both scored), h2 now stepping up
+    const k2 = projectMatch(so, soStart + SHOOTOUT_KICK_MS * 2.2).shootout!;
+    expect(k2.kicks.length).toBe(2);
+    expect(k2.tally).toEqual({ home: 1, away: 1 });
+    expect(k2.pendingKicker).toEqual({ team: 'home', playerId: 'h2' });
   });
 
-  it('never reveals more kicks than exist', () => {
-    for (let el = MATCH_DURATION_MS; el <= MATCH_DURATION_MS + SHOOTOUT_MS + 100; el += 137) {
-      const s = projectMatch(so, el);
-      expect(s.shootout!.taken.length).toBeLessThanOrEqual(kicks.length);
+  it('finishes with the full tally, decided winner, and no pending kicker', () => {
+    const end = projectMatch(so, matchEndMs(so)).shootout!;
+    expect(end.kicks.length).toBe(kicks.length);
+    expect(end.tally).toEqual({ home: 3, away: 2 });
+    expect(end.winner).toBe('home');
+    expect(end.pendingKicker).toBeNull();
+    expect(projectMatch(so, matchEndMs(so)).finished).toBe(true);
+  });
+
+  it('elapsed=∞ returns the final frame instantly (headless)', () => {
+    const inf = projectMatch(so, Number.MAX_SAFE_INTEGER);
+    expect(inf.finished).toBe(true);
+    expect(inf.shootout!.kicks.length).toBe(kicks.length);
+    expect(inf.shootout!.winner).toBe('home');
+    expect(inf.shootout!.pendingKicker).toBeNull();
+  });
+
+  it('never reveals more kicks than exist; legacy aliases stay in sync', () => {
+    for (let el = soStart; el <= matchEndMs(so) + 500; el += 173) {
+      const s = projectMatch(so, el).shootout!;
+      expect(s.kicks.length).toBeLessThanOrEqual(kicks.length);
+      expect(s.taken).toBe(s.kicks);
+      expect(s.home).toBe(s.tally.home);
+      expect(s.away).toBe(s.tally.away);
+      expect(s.stepping).toBe(s.pendingKicker?.team ?? null);
     }
+  });
+
+  it('early-round timeline with NO shootout stays regulation to the end', () => {
+    expect(base.shootout).toBeUndefined();
+    const end = projectMatch(base, Number.MAX_SAFE_INTEGER);
+    expect(end.phase).toBe('regulation');
+    expect(end.shootout).toBeNull();
+    expect(matchEndMs(base)).toBe(MATCH_DURATION_MS);
   });
 });
 

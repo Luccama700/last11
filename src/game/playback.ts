@@ -12,7 +12,6 @@
 import {
   CELEBRATION_MS,
   MATCH_DURATION_MS,
-  SHOOTOUT_MS,
   VIRTUAL_MINUTES,
   formationById,
   type MatchTimeline,
@@ -99,14 +98,22 @@ export function dotView(
 
 export interface ShootoutView {
   /** Kicks whose RESULT has been revealed so far, in order. */
-  taken: { team: Team; scored: boolean; playerId: string }[];
-  home: number; // pens scored so far
-  away: number;
-  /** Team currently stepping up (null once the shootout is decided). */
-  stepping: Team | null;
-  /** Result of the kick that was most recently revealed (for the caption). */
-  lastResult: 'scored' | 'missed' | null;
+  kicks: { team: Team; scored: boolean; playerId: string }[];
+  /** Penalties scored so far. */
+  tally: { home: number; away: number };
+  /** The taker winding up right NOW — set only during a kick's pre-result beat;
+   *  null while a result flashes and once the shootout is decided. */
+  pendingKicker: { team: Team; playerId: string } | null;
   winner: Team | null; // set once decided
+
+  // --- transitional aliases (pre-6s-cadence names) so the current
+  //     MatchPlaybackScreen keeps rendering until Main's screen rewrite consumes
+  //     the fields above. Safe to delete once the screen migrates. ---
+  /** @deprecated use `kicks` */ taken: { team: Team; scored: boolean; playerId: string }[];
+  /** @deprecated use `tally.home` */ home: number;
+  /** @deprecated use `tally.away` */ away: number;
+  /** @deprecated use `pendingKicker?.team ?? null` */ stepping: Team | null;
+  /** result of the most recently revealed kick (caption) */ lastResult: 'scored' | 'missed' | null;
 }
 
 export interface PlaybackState {
@@ -124,9 +131,15 @@ export interface PlaybackState {
   shootout: ShootoutView | null;
 }
 
-/** Total watched wall-clock for a timeline: 45s, or 57s if it went to pens. */
+/** Wall-clock beat per penalty in playback — kicks reveal ONE BY ONE. */
+export const SHOOTOUT_KICK_MS = 6000;
+/** Fraction of a kick's beat spent winding up before the result is revealed. */
+const SHOOTOUT_REVEAL_AT = 0.58;
+
+/** Total watched wall-clock: regulation (45s) plus a 6s beat per shootout kick if it
+ *  went to pens (variable length). No shootout ⇒ just the 45s regulation. */
 export function matchEndMs(timeline: MatchTimeline): number {
-  return MATCH_DURATION_MS + (timeline.shootout ? SHOOTOUT_MS : 0);
+  return MATCH_DURATION_MS + (timeline.shootout ? timeline.shootout.kicks.length * SHOOTOUT_KICK_MS : 0);
 }
 
 const eventMs = (minute: number) => (minute / VIRTUAL_MINUTES) * MATCH_DURATION_MS;
@@ -178,27 +191,38 @@ export function projectMatch(timeline: MatchTimeline, elapsedMs: number): Playba
   const min = Math.floor(v);
   const inShootout = !!timeline.shootout && el > MATCH_DURATION_MS;
 
-  // ---- shootout sub-view (sim-paced over the fixed SHOOTOUT_MS window) ----
+  // ---- shootout sub-view: kicks reveal ONE BY ONE, a fixed 6s beat each ----
   let shootout: ShootoutView | null = null;
   if (timeline.shootout) {
     const so = timeline.shootout;
-    const kicks = so.kicks;
-    const n = Math.max(1, kicks.length);
-    const perKick = SHOOTOUT_MS / n;
-    const soEl = clamp(el - MATCH_DURATION_MS, 0, SHOOTOUT_MS);
-    const cur = Math.floor(soEl / perKick); // index of the kick in progress
-    const within = perKick > 0 ? (soEl - cur * perKick) / perKick : 1; // 0..1 through it
-    const resultShown = within >= 0.55; // step-up first, then reveal
+    const all = so.kicks;
+    const n = all.length;
+    const soEl = Math.max(0, el - MATCH_DURATION_MS); // ms into the shootout (unbounded)
+    const cur = Math.floor(soEl / SHOOTOUT_KICK_MS); // kick beat now playing (may be ≥ n at the end)
+    const within = (soEl - cur * SHOOTOUT_KICK_MS) / SHOOTOUT_KICK_MS; // 0..1 through this beat
+    const resultShown = within >= SHOOTOUT_REVEAL_AT; // wind-up, then reveal
     const revealed = Math.min(n, cur + (resultShown ? 1 : 0));
-    const taken = kicks.slice(0, revealed);
+    const kicks = all.slice(0, revealed);
     let home = 0;
     let away = 0;
-    for (const k of taken) if (k.scored) k.team === 'home' ? home++ : away++;
+    for (const k of kicks) if (k.scored) k.team === 'home' ? home++ : away++;
     const decided = revealed >= n || finished;
-    // stepping = the taker walking up (pre-result); null while the result flashes or once decided
-    const stepping = !decided && !resultShown && cur < n ? kicks[cur].team : null;
-    const lastResult = taken.length ? (taken[taken.length - 1].scored ? 'scored' : 'missed') : null;
-    shootout = { taken, home, away, stepping, lastResult, winner: decided ? so.winner : null };
+    // the taker winding up: only during the pre-result beat of a not-yet-revealed kick
+    const pending = !decided && !resultShown && cur < n ? all[cur] : null;
+    const pendingKicker = pending ? { team: pending.team, playerId: pending.playerId } : null;
+    const lastResult = kicks.length ? (kicks[kicks.length - 1].scored ? 'scored' : 'missed') : null;
+    shootout = {
+      kicks,
+      tally: { home, away },
+      pendingKicker,
+      winner: decided ? so.winner : null,
+      // transitional aliases
+      taken: kicks,
+      home,
+      away,
+      stepping: pendingKicker?.team ?? null,
+      lastResult,
+    };
   }
 
   let clockLabel: string;
