@@ -817,6 +817,54 @@
         { "id": "arg-1978-ortiz", "name": "Oscar Ortiz", "pos": "ST", "rating": 77, "club": "River Plate" },
         { "id": "arg-1978-la-volpe", "name": "Ricardo La Volpe", "pos": "GK", "rating": 76, "club": "San Lorenzo" }
       ]
+    },
+    {
+      "nation": "ITA", "name": "Italy", "year": 1982, "result": "Winners",
+      "notes": "Bearzot's champions, beaten 3-1 over West Germany in the final. Paolo Rossi, back from a match-fixing ban, scored a hat-trick vs Brazil and won both the Golden Boot and Golden Ball. Zoff (40) captained.",
+      "players": [
+        { "id": "ita-1982-rossi", "name": "Paolo Rossi", "pos": "ST", "rating": 91, "club": "Juventus" },
+        { "id": "ita-1982-zoff", "name": "Dino Zoff", "pos": "GK", "rating": 88, "club": "Juventus" },
+        { "id": "ita-1982-scirea", "name": "Gaetano Scirea", "pos": "CB", "rating": 87, "club": "Juventus" },
+        { "id": "ita-1982-tardelli", "name": "Marco Tardelli", "pos": "CM", "rating": 84, "club": "Juventus" },
+        { "id": "ita-1982-antognoni", "name": "Giancarlo Antognoni", "pos": "CAM", "rating": 84, "club": "Fiorentina" },
+        { "id": "ita-1982-gentile", "name": "Claudio Gentile", "pos": "CB", "rating": 83, "club": "Juventus" },
+        { "id": "ita-1982-cabrini", "name": "Antonio Cabrini", "pos": "LB", "rating": 82, "club": "Juventus" },
+        { "id": "ita-1982-conti", "name": "Bruno Conti", "pos": "RW", "rating": 82, "club": "Roma" },
+        { "id": "ita-1982-altobelli", "name": "Alessandro Altobelli", "pos": "ST", "rating": 81, "club": "Internazionale" },
+        { "id": "ita-1982-graziani", "name": "Francesco Graziani", "pos": "ST", "rating": 80, "club": "Fiorentina" },
+        { "id": "ita-1982-bergomi", "name": "Giuseppe Bergomi", "pos": "RB", "rating": 80, "club": "Internazionale" },
+        { "id": "ita-1982-oriali", "name": "Gabriele Oriali", "pos": "CDM", "rating": 79, "club": "Internazionale" },
+        { "id": "ita-1982-baresi", "name": "Franco Baresi", "pos": "CB", "rating": 79, "club": "Milan" },
+        { "id": "ita-1982-collovati", "name": "Fulvio Collovati", "pos": "CB", "rating": 78, "club": "Milan" },
+        { "id": "ita-1982-causio", "name": "Franco Causio", "pos": "RW", "rating": 78, "club": "Udinese" },
+        { "id": "ita-1982-vierchowod", "name": "Pietro Vierchowod", "pos": "CB", "rating": 77, "club": "Fiorentina" },
+        { "id": "ita-1982-marini", "name": "Giampiero Marini", "pos": "CM", "rating": 77, "club": "Internazionale" },
+        { "id": "ita-1982-bordon", "name": "Ivano Bordon", "pos": "GK", "rating": 76, "club": "Internazionale" }
+      ]
+    },
+    {
+      "nation": "GER", "name": "West Germany", "year": 1990, "result": "Winners",
+      "notes": "Beckenbauer coached his old team to the title, beating Argentina 1-0 in a final marred by red cards. Matthaus captained and won the Ballon d'Or that year; Brehme scored the winning penalty.",
+      "players": [
+        { "id": "ger-1990-matthaus", "name": "Lothar Matthäus", "pos": "CM", "rating": 92, "club": "Internazionale" },
+        { "id": "ger-1990-klinsmann", "name": "Jürgen Klinsmann", "pos": "ST", "rating": 87, "club": "Internazionale" },
+        { "id": "ger-1990-voller", "name": "Rudi Völler", "pos": "ST", "rating": 86, "club": "Roma" },
+        { "id": "ger-1990-brehme", "name": "Andreas Brehme", "pos": "LB", "rating": 85, "club": "Internazionale" },
+        { "id": "ger-1990-hassler", "name": "Thomas Häßler", "pos": "CM", "altPos": ["CAM"], "rating": 84, "club": "1. FC Köln" },
+        { "id": "ger-1990-kohler", "name": "Jürgen Kohler", "pos": "CB", "rating": 83, "club": "FC Bayern Munich" },
+        { "id": "ger-1990-buchwald", "name": "Guido Buchwald", "pos": "CB", "altPos": ["LB"], "rating": 83, "club": "VfB Stuttgart" },
+        { "id": "ger-1990-augenthaler", "name": "Klaus Augenthaler", "pos": "CB", "rating": 82, "club": "FC Bayern Munich" },
+        { "id": "ger-1990-berthold", "name": "Thomas Berthold", "pos": "RB", "rating": 81, "club": "Roma" },
+        { "id": "ger-1990-illgner", "name": "Bodo Illgner", "pos": "GK", "rating": 81, "club": "1. FC Köln" },
+        { "id": "ger-1990-littbarski", "name": "Pierre Littbarski", "pos": "LW", "altPos": ["RW"], "rating": 80, "club": "1. FC Köln" },
+        { "id": "ger-1990-moller", "name": "Andreas Möller", "pos": "CAM", "altPos": ["CM"], "rating": 80, "club": "Eintracht Frankfurt" },
+        { "id": "ger-1990-thon", "name": "Olaf Thon", "pos": "CM", "rating": 79, "club": "FC Schalke 04" },
+        { "id": "ger-1990-riedle", "name": "Karl-Heinz Riedle", "pos": "ST", "rating": 79, "club": "Werder Bremen" },
+        { "id": "ger-1990-hermann", "name": "Günter Hermann", "pos": "CM", "rating": 77, "club": "VfB Stuttgart" },
+        { "id": "ger-1990-reuter", "name": "Stefan Reuter", "pos": "RB", "rating": 78, "club": "Bayern Munich" },
+        { "id": "ger-1990-kopke", "name": "Andreas Köpke", "pos": "GK", "rating": 77, "club": "1. FC Nürnberg" },
+        { "id": "ger-1990-bein", "name": "Uwe Bein", "pos": "CAM", "rating": 78, "club": "Eintracht Frankfurt" }
+      ]
     }
   ]
 }
