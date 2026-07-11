@@ -385,6 +385,54 @@
         { "id": "bra-1994-viola", "name": "Viola", "pos": "ST", "altPos": ["RW"], "rating": 80, "shirt": 21, "club": "Corinthians" },
         { "id": "bra-1994-ronaldo", "name": "Ronaldo", "pos": "ST", "rating": 80, "shirt": 20, "club": "Cruzeiro" }
       ]
+    },
+    {
+      "nation": "GER", "name": "Germany", "year": 2014, "result": "Winners",
+      "notes": "Löw's champions — a team of stars with no single superstar. Götze's extra-time volley beat Argentina; Klose became the World Cup's all-time top scorer.",
+      "players": [
+        { "id": "ger-2014-neuer", "name": "Manuel Neuer", "pos": "GK", "rating": 91, "shirt": 1, "club": "Bayern Munich" },
+        { "id": "ger-2014-weidenfeller", "name": "Roman Weidenfeller", "pos": "GK", "rating": 80, "shirt": 22, "club": "Borussia Dortmund" },
+        { "id": "ger-2014-lahm", "name": "Philipp Lahm", "pos": "RB", "altPos": ["CDM"], "rating": 89, "shirt": 16, "club": "Bayern Munich" },
+        { "id": "ger-2014-boateng", "name": "Jérôme Boateng", "pos": "CB", "altPos": ["RB"], "rating": 86, "shirt": 20, "club": "Bayern Munich" },
+        { "id": "ger-2014-hummels", "name": "Mats Hummels", "pos": "CB", "rating": 88, "shirt": 5, "club": "Borussia Dortmund" },
+        { "id": "ger-2014-mertesacker", "name": "Per Mertesacker", "pos": "CB", "rating": 83, "shirt": 17, "club": "Arsenal" },
+        { "id": "ger-2014-howedes", "name": "Benedikt Höwedes", "pos": "LB", "altPos": ["CB"], "rating": 82, "shirt": 4, "club": "Schalke 04" },
+        { "id": "ger-2014-khedira", "name": "Sami Khedira", "pos": "CM", "altPos": ["CDM"], "rating": 84, "shirt": 6, "club": "Real Madrid" },
+        { "id": "ger-2014-schweinsteiger", "name": "Bastian Schweinsteiger", "pos": "CM", "altPos": ["CDM"], "rating": 88, "shirt": 7, "club": "Bayern Munich" },
+        { "id": "ger-2014-kroos", "name": "Toni Kroos", "pos": "CM", "rating": 90, "shirt": 18, "club": "Bayern Munich" },
+        { "id": "ger-2014-ozil", "name": "Mesut Özil", "pos": "CAM", "altPos": ["LW"], "rating": 88, "shirt": 8, "club": "Arsenal" },
+        { "id": "ger-2014-muller", "name": "Thomas Müller", "pos": "RW", "altPos": ["ST", "CAM"], "rating": 90, "shirt": 13, "club": "Bayern Munich" },
+        { "id": "ger-2014-klose", "name": "Miroslav Klose", "pos": "ST", "rating": 85, "shirt": 11, "club": "Lazio" },
+        { "id": "ger-2014-gotze", "name": "Mario Götze", "pos": "CAM", "altPos": ["ST"], "rating": 84, "shirt": 19, "club": "Bayern Munich" },
+        { "id": "ger-2014-schurrle", "name": "André Schürrle", "pos": "LW", "altPos": ["RW"], "rating": 83, "shirt": 9, "club": "Chelsea" },
+        { "id": "ger-2014-draxler", "name": "Julian Draxler", "pos": "LW", "altPos": ["CAM"], "rating": 81, "shirt": 14, "club": "Schalke 04" },
+        { "id": "ger-2014-kramer", "name": "Christoph Kramer", "pos": "CM", "altPos": ["CDM"], "rating": 80, "shirt": 23, "club": "Borussia Mönchengladbach" },
+        { "id": "ger-2014-podolski", "name": "Lukas Podolski", "pos": "LW", "altPos": ["ST"], "rating": 81, "shirt": 10, "club": "Arsenal" }
+      ]
+    },
+    {
+      "nation": "ESP", "name": "Spain", "year": 2010, "result": "Winners",
+      "notes": "Del Bosque's tiki-taka. Iniesta's 116th-minute goal won the final; Xavi orchestrated from midfield.",
+      "players": [
+        { "id": "esp-2010-casillas", "name": "Iker Casillas", "pos": "GK", "rating": 91, "shirt": 1, "club": "Real Madrid" },
+        { "id": "esp-2010-valdes", "name": "Víctor Valdés", "pos": "GK", "rating": 84, "shirt": 12, "club": "Barcelona" },
+        { "id": "esp-2010-ramos", "name": "Sergio Ramos", "pos": "RB", "rating": 88, "shirt": 15, "club": "Real Madrid" },
+        { "id": "esp-2010-pique", "name": "Gerard Piqué", "pos": "CB", "rating": 88, "shirt": 3, "club": "Barcelona" },
+        { "id": "esp-2010-puyol", "name": "Carles Puyol", "pos": "CB", "rating": 88, "shirt": 5, "club": "Barcelona" },
+        { "id": "esp-2010-capdevila", "name": "Joan Capdevila", "pos": "LB", "rating": 82, "shirt": 11, "club": "Villarreal" },
+        { "id": "esp-2010-albiol", "name": "Raúl Albiol", "pos": "CB", "rating": 82, "shirt": 2, "club": "Real Madrid" },
+        { "id": "esp-2010-arbeloa", "name": "Álvaro Arbeloa", "pos": "RB", "altPos": ["LB"], "rating": 81, "shirt": 17, "club": "Real Madrid" },
+        { "id": "esp-2010-busquets", "name": "Sergio Busquets", "pos": "CDM", "rating": 86, "shirt": 16, "club": "Barcelona" },
+        { "id": "esp-2010-xabi-alonso", "name": "Xabi Alonso", "pos": "CM", "altPos": ["CDM"], "rating": 87, "shirt": 14, "club": "Real Madrid" },
+        { "id": "esp-2010-xavi", "name": "Xavi", "pos": "CM", "altPos": ["CAM"], "rating": 93, "shirt": 8, "club": "Barcelona" },
+        { "id": "esp-2010-iniesta", "name": "Andrés Iniesta", "pos": "CAM", "altPos": ["LW"], "rating": 93, "shirt": 6, "club": "Barcelona" },
+        { "id": "esp-2010-fabregas", "name": "Cesc Fàbregas", "pos": "CM", "altPos": ["CAM"], "rating": 86, "shirt": 10, "club": "Arsenal" },
+        { "id": "esp-2010-silva", "name": "David Silva", "pos": "CAM", "altPos": ["RW"], "rating": 86, "shirt": 21, "club": "Valencia" },
+        { "id": "esp-2010-villa", "name": "David Villa", "pos": "ST", "altPos": ["LW"], "rating": 90, "shirt": 7, "club": "Valencia" },
+        { "id": "esp-2010-pedro", "name": "Pedro", "pos": "RW", "rating": 83, "shirt": 18, "club": "Barcelona" },
+        { "id": "esp-2010-torres", "name": "Fernando Torres", "pos": "ST", "rating": 84, "shirt": 9, "club": "Liverpool" },
+        { "id": "esp-2010-navas", "name": "Jesús Navas", "pos": "RW", "altPos": ["RM"], "rating": 82, "shirt": 22, "club": "Sevilla" }
+      ]
     }
   ]
 }
