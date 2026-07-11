@@ -177,19 +177,38 @@ export function projectMatch(timeline: MatchTimeline, elapsedMs: number): Playba
     if (e.type === 'goal' && e.scoreAfter && eventMs(e.minute) <= regMs) score = e.scoreAfter;
   }
 
-  // celebration window(s) → ball resets to centre. Goals in adjacent minutes stack:
-  // collect EVERY goal whose window is live now so the UI can show a multigoal beat.
-  const activeGoals: TimelineEvent[] = [];
-  for (const e of timeline.events) {
-    if (e.type !== 'goal') continue;
-    const t = eventMs(e.minute);
-    if (regMs >= t && regMs < t + CELEBRATION_MS) activeGoals.push(e);
+  // celebration window(s) → ball resets to centre. Goals whose windows chain-overlap
+  // (each within CELEBRATION_MS of the previous) form ONE celebration CLUSTER. Within a
+  // live cluster the count is NON-DECREASING = cluster goals whose start has passed, and
+  // the celebration runs from the first goal's start to the LAST goal's window end — so
+  // the beat reads GOAL → 2× GOAL → 3× GOAL and never de-escalates when an early window
+  // expires while a later one is still live (the old per-window count dropped 2→1 there).
+  const goals = timeline.events
+    .filter((e): e is TimelineEvent => e.type === 'goal')
+    .map((e) => ({ e, t: eventMs(e.minute) }))
+    .sort((p, q) => p.t - q.t); // stamp order; ties keep timeline (minute-sorted) order
+
+  // find the cluster whose [firstStart, lastWindowEnd) contains regMs (clusters are
+  // time-disjoint, so at most one matches).
+  let cluster: { e: TimelineEvent; t: number }[] = [];
+  for (let k = 0; k < goals.length; ) {
+    let m = k + 1;
+    while (m < goals.length && goals[m].t < goals[m - 1].t + CELEBRATION_MS) m++;
+    const start = goals[k].t;
+    const end = goals[m - 1].t + CELEBRATION_MS; // last goal in the run has the latest window end
+    if (regMs >= start && regMs < end) {
+      cluster = goals.slice(k, m);
+      break;
+    }
+    k = m;
   }
-  const celebrating = activeGoals.length ? activeGoals[activeGoals.length - 1] : null; // freshest
-  const celebratingCount = activeGoals.length; // ≥2 ⇒ multigoal
+
+  const started = cluster.filter((g) => g.t <= regMs); // goals already kicked off within the cluster
+  const celebrating = started.length ? started[started.length - 1].e : null; // freshest started goal
+  const celebratingCount = started.length; // ≥2 ⇒ multigoal; monotone across the cluster
   const celebratingTeams = [
-    ...new Set(activeGoals.map((e) => e.team).filter((t): t is Team => t !== null)),
-  ]; // distinct scoring teams, first-seen order
+    ...new Set(started.map((g) => g.e.team).filter((t): t is Team => t !== null)),
+  ]; // distinct teams of started cluster goals, first-seen order
 
   const ball = celebrating
     ? { x: 0.5, y: 0.5 }

@@ -177,6 +177,103 @@ describe('projectMatch — multigoal celebrations', () => {
   });
 });
 
+describe('projectMatch — multigoal count is monotone non-decreasing (bug A1)', () => {
+  // Regression for PRIORITY BUG A1 (playtest): a 2-goal stack showed GOAL → 2× GOAL →
+  // GOAL again. Root cause: celebratingCount counted goals whose window [t, t+C) was
+  // live NOW, so when two windows partially overlap the first expires while the second
+  // is still live and the count de-escalated 2 → 1. Locked UX spec: goals whose windows
+  // chain-overlap form ONE cluster; within it the count is NON-DECREASING = cluster goals
+  // already started, live from the first start to the LAST window end. Must read
+  // GOAL → 2× → 3× and never backwards.
+  //
+  // A virtual minute = MATCH_DURATION_MS / 90 = 500ms; a window is CELEBRATION_MS = 2600ms,
+  // so goals 1–4 minutes apart chain-overlap. A real seed producing an adjacent-minute
+  // stack: simulateMatchTimeline(home@88, away@72, seed 28) scores home at 8, 39, 40, 87 —
+  // the 39→40 pair (500ms apart) is exactly this overlapping 2-goal cluster.
+
+  // one home goal per listed minute; ascending → timeline stays minute-sorted (CONTRACT §4).
+  function stackTimeline(minutes: number[]): MatchTimeline {
+    let h = 0;
+    const goals = minutes.map((minute) => {
+      h += 1;
+      return {
+        minute,
+        type: 'goal' as const,
+        team: 'home' as const,
+        text: `g@${minute}`,
+        scoreAfter: { home: h, away: 0 },
+      };
+    });
+    return {
+      ...base,
+      events: [
+        { minute: 0, type: 'kickoff', team: null, text: 'ko' },
+        ...goals,
+        { minute: 90, type: 'fulltime', team: null, text: 'ft' },
+      ],
+      finalScore: { home: h, away: 0 },
+    };
+  }
+
+  const sweepCounts = (tl: MatchTimeline, from: number, to: number, step = 25): number[] => {
+    const seq: number[] = [];
+    for (let el = from; el < to; el += step) seq.push(projectMatch(tl, el).celebratingCount);
+    return seq;
+  };
+  const assertNonDecreasing = (seq: number[]) => {
+    for (let k = 1; k < seq.length; k++) expect(seq[k]).toBeGreaterThanOrEqual(seq[k - 1]);
+  };
+
+  it('1 goal: holds at 1 across its whole window, then clears', () => {
+    const tl = stackTimeline([30]);
+    const seq = sweepCounts(tl, goalMs(30), goalMs(30) + CELEBRATION_MS);
+    assertNonDecreasing(seq);
+    expect(seq.every((c) => c === 1)).toBe(true);
+    expect(projectMatch(tl, goalMs(30) + CELEBRATION_MS + 1).celebratingCount).toBe(0);
+  });
+
+  it('2 stacked goals: GOAL → 2× GOAL, never back to 1 while the cluster is live', () => {
+    const tl = stackTimeline([30, 31]); // 500ms apart → windows chain-overlap
+    const clusterEnd = goalMs(31) + CELEBRATION_MS; // last goal's window end
+    const seq = sweepCounts(tl, goalMs(30), clusterEnd);
+    assertNonDecreasing(seq);
+    expect(seq[0]).toBe(1); // opens as a single
+    expect(Math.max(...seq)).toBe(2); // escalates to the multigoal peak
+    // THE bug: goal-1's window (t30+2600) expires while goal-2 is still live — must stay 2.
+    expect(projectMatch(tl, goalMs(30) + CELEBRATION_MS + 1).celebratingCount).toBe(2);
+    expect(projectMatch(tl, clusterEnd + 1).celebratingCount).toBe(0); // clears together
+  });
+
+  it('3 stacked goals: GOAL → 2× → 3× GOAL, monotone until the cluster ends', () => {
+    const tl = stackTimeline([30, 31, 32]);
+    const clusterEnd = goalMs(32) + CELEBRATION_MS;
+    const seq = sweepCounts(tl, goalMs(30), clusterEnd);
+    assertNonDecreasing(seq);
+    expect(seq[0]).toBe(1);
+    expect(Math.max(...seq)).toBe(3);
+    // reads exactly 1, then 2, then 3 as each goal's start passes; freshest drives display
+    expect(projectMatch(tl, goalMs(30) + 100).celebratingCount).toBe(1);
+    expect(projectMatch(tl, goalMs(31) + 100).celebratingCount).toBe(2);
+    const at32 = projectMatch(tl, goalMs(32) + 100);
+    expect(at32.celebratingCount).toBe(3);
+    expect(at32.celebrating?.text).toBe('g@32'); // freshest started goal is primary
+    expect(at32.celebratingTeams).toEqual(['home']);
+    // no drop when goal-1 AND goal-2 windows have expired but goal-3 is still live
+    expect(projectMatch(tl, goalMs(31) + CELEBRATION_MS + 1).celebratingCount).toBe(3);
+    expect(projectMatch(tl, clusterEnd + 1).celebratingCount).toBe(0);
+  });
+
+  it('two separate clusters each rise-then-clear independently (no cross-cluster stacking)', () => {
+    // 30,31 stack; a lone goal at 70 is >4600ms later so its window never chains to the first.
+    const tl = stackTimeline([30, 31, 70]);
+    expect(projectMatch(tl, goalMs(31) + 100).celebratingCount).toBe(2); // first cluster peaks at 2
+    expect(projectMatch(tl, goalMs(70) + 100).celebratingCount).toBe(1); // second cluster is a single
+    const gap = projectMatch(tl, goalMs(31) + CELEBRATION_MS + 500); // between the two clusters
+    expect(gap.celebratingCount).toBe(0);
+    expect(gap.celebrating).toBeNull();
+  });
+});
+
 describe('projectMatch — shootout (6s-per-kick cadence)', () => {
   const kicks = [
     { team: 'home' as const, scored: true, playerId: 'h1' },
