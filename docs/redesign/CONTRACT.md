@@ -1,9 +1,31 @@
 # CONTRACT.md — shared types for the Last11 redesign
 
-Owner: worker-7 (integrator). Status: **v0.3 (2026-07-11)** — all six peer plans
-landed and are reconciled here (PLAN-draft, -database, -engine, -sim, -qa).
-Each block marks whether the SHAPE is frozen (mine) or whether VALUES/extra
+Owner: worker-7 (integrator). Status: **v0.4 (2026-07-11) — PHASE I / BINDING.**
+Folds `DECISIONS.md` (Lucca's rulings) over the six reconciled plans. This is the
+shape the Phase-I skeleton in `src/engine/types.ts` + `src/game/state.ts` is built
+against. Each block marks whether the SHAPE is frozen (mine) or whether VALUES/extra
 fields are owned by another workstream.
+
+### v0.4 changes (from DECISIONS.md — supersede plan text)
+
+- **Chemistry DELETED.** Remove the same-nation pair bonus and the cohesion reframe
+  entirely. `Tactics` never carried it; §2's chem flag is now resolved = removed.
+- **Morale (new)** replaces chemistry: a per-player, per-match transient rating buff,
+  **runtime state on the manager**, NOT in the player DB. Added to `ManagerV2` (§6).
+  Goal events must attribute a **scorer + assister** to feed it (§4).
+- **No draws — every level match goes to a deterministic penalty shootout.** New
+  timeline shootout events + `MatchResultV2.shootout` (§4). Points **W3 / PW2 / PL1 /
+  L0** (regulation win / shootout win / shootout loss / regulation loss) — `POINTS` (§4).
+- **2D pitch:** each `TimelineTick` gains discrete **`band` × `lane`** (engine's zone
+  output) alongside the continuous `ballPosition`/`momentum` (§4). Proposed spec —
+  engine + sim confirm final field names per the "let them talk" directive.
+- **More-forgiving affinity** (§1): same-zone ≥ .85, adjacent-zone ≥ .60, worst case
+  floor .25–.30, all cells strictly > 0. Engine retunes the §3.2 matrix in this spirit.
+- **Bots run varied (seeded) formations + styles**; **no stamina, ever**; star bonus
+  kept (attack-zone shot quality).
+- **Between-match rearrange:** re-slot players + style change between matches (reuses
+  the draft board); formation change only between rounds. Reducer skeleton includes
+  the action (§6).
 
 > This is the single source of truth for the *shapes* the four build-streams
 > compile against. If your plan needs a shared type, it matches a block here.
@@ -91,6 +113,12 @@ export interface AffinityConfig {
 - **Symmetry NOT required** (and NOT asserted): `matrix['CM']['CDM']` may differ
   from `matrix['CDM']['CM']`. QA tests bounds + diagonal only.
 
+**DECISIONS posture (more forgiving than engine §3.2):** same-zone moves ≥ **.85**,
+adjacent-zone ≥ **.60**, worst case (e.g. GK↔outfield) floor **.25–.30**; all cells
+strictly > 0. The engine retunes the full matrix in this spirit (the values stay
+engine-owned; this is the target posture, not the table). The transposition rule
+above still applies when transcribing whatever table the engine ships.
+
 **⚠️ TRANSPOSITION — read before transcribing engine §3.2 values.** The engine's
 table is authored as `affinity[slot][natural]` (its header reads "Slot ↓ / plays →",
 rows = slot, cols = the player's natural position). Canonical here is the FLIP:
@@ -176,12 +204,11 @@ renames `pos→position`, `altPos→secondary` also happen in the loader.
 (nation, year) by construction. The SAME real player in two tournaments = two ids,
 two ratings, separately draftable (genre norm, preserved).
 
-**⚠️ Chemistry design flag (conflict 6 — for Lucca, NOT decided here).** Engine §3.1
-reframes chemistry as a same-`(nation,year)` cohesion multiplier. But under the new
-draft each spin lands a FRESH `(nation, year)` and you keep ONE player per spin — so
-same-`(nation,year)` pairs are now near-impossible and chemistry silently dies. This
-needs a decision (open Q9); the type impact is only *which* field chem keys on, all
-of which (`nation`, `year`) are already on `PlayerV2`, so no shape change either way.
+**✅ Chemistry RESOLVED (was conflict 6): DELETED.** Lucca ruled chemistry out
+entirely — no same-nation pair bonus, no cohesion multiplier. It is replaced by
+**morale** (a runtime buff on the manager, §6), NOT a player-DB or nation property.
+`nation`/`year` stay on `PlayerV2` for the id scheme, steal-pool display, and roll
+grouping, but nothing computes chemistry from them anymore.
 
 ---
 
@@ -242,32 +269,45 @@ awayTactics, seed)`. Headless BR rounds use the score-only path (§ MatchResult)
 ```ts
 export type Team = 'home' | 'away'; // per-MATCH roles, not the human. UI maps "you" on.
 
-/** Per-virtual-minute sample. Carries BOTH signals (conflict 3) so the schema is
- *  stable across tiers; in Tier A the engine MAY derive `momentum` from `ballPosition`
- *  (they needn't be independent until Tier B's real possession chain). */
+/** Per-virtual-minute sample. Carries the continuous signals AND the discrete 2D-pitch
+ *  zone (DECISIONS: real 2D pitch). `band`×`lane` is the engine's zone output; the UI
+ *  interpolates the ball marker + 22 drifting dots between consecutive ticks' zones.
+ *  PROPOSED spec — engine + sim confirm final names/ranges per the "let them talk"
+ *  directive; worker-7 ratifies whatever they agree. In Tier A the engine MAY derive
+ *  `momentum` from `ballPosition`. */
+export type Band = 'def' | 'mid' | 'att';   // longitudinal third, home-attacking perspective
+export type Lane = 'left' | 'center' | 'right';
+
 export interface TimelineTick {
   minute: number;          // 0..durationMinutes
   ballPosition: number;    // 0..1  — 0 = home goal line, 1 = away goal line (sim's ballX)
   momentum: number;        // -1..+1 — smoothed pressure, + toward home (sim's pressure)
   possession: Team;
+  band: Band;              // discrete zone (length) for the 2D marker + dot drift
+  lane: Lane;              // discrete zone (width)
 }
 
 export type TimelineEventType =
   | 'kickoff' | 'halftime' | 'fulltime'
   | 'chance' | 'shot' | 'save' | 'goal' | 'counter'
-  | 'card';                // card = Tier B
+  | 'card'                             // card = Tier B
+  | 'shootout_start' | 'penalty_scored' | 'penalty_missed' | 'shootout_end';
 
 export interface TimelineEvent {
   minute: number;
   type: TimelineEventType;
-  team: Team | null;       // null for neutral events (kickoff/halftime/fulltime)
+  team: Team | null;       // null for neutral events (kickoff/halftime/fulltime/shootout_start)
   text: string;            // engine-authored ticker caption, rendered verbatim
   scoreAfter?: { home: number; away: number }; // REQUIRED on type==='goal'
-  playerId?: string;
+  playerId?: string;       // scorer on 'goal' (REQUIRED — feeds morale); kicker on penalties
+  assistPlayerId?: string; // assister on 'goal' (DEFAULT-attributed — feeds morale)
 }
 
 /** 7a0-style "deserved" box score (engine §3.1 / §4). */
 export interface ZoneBox { gk: number; def: number; mid: number; att: number; overall: number; }
+
+/** Present iff regulation ended level (DECISIONS: no draws → every level match to pens). */
+export interface Shootout { home: number; away: number; winner: Team; }
 
 export interface MatchTimeline {
   matchId: string;
@@ -275,11 +315,24 @@ export interface MatchTimeline {
   seed: number;
   durationMinutes: number;               // virtual minutes; ASSUMPTION 90
   ticks: TimelineTick[];                 // length = durationMinutes + 1, minutes 0..N
-  events: TimelineEvent[];               // minute-sorted
-  finalScore: { home: number; away: number };
+  events: TimelineEvent[];               // minute-sorted; includes shootout_* when level
+  finalScore: { home: number; away: number };  // REGULATION goals (may be level)
+  shootout?: Shootout;                   // decides a level match
   boxScore: { home: ZoneBox; away: ZoneBox; xg: { home: number; away: number } };
 }
 ```
+
+**Points (DECISIONS — no draws exist):**
+
+```ts
+export const POINTS = {
+  REG_WIN: 3,       // won in regulation
+  SHOOTOUT_WIN: 2,  // level in regulation, won on penalties
+  SHOOTOUT_LOSS: 1, // level in regulation, lost on penalties
+  REG_LOSS: 0,      // lost in regulation
+} as const;
+```
+Table tiebreakers (gd → gf → strength → id) are unchanged; regulation goals feed gf/gd.
 
 **Range reconciliation (conflict 3):** engine emits `ballPos ∈ [-1,+1]`; canonical
 `ballPosition ∈ [0,1]`. Engine converts at emit: `ballPosition = (ballPos + 1) / 2`.
@@ -301,12 +354,16 @@ without a full timeline — stamped inside the shared score core (one rng draw p
 NOT fabricated UI-side (fabrication would desync from the real timeline and break MP):
 
 ```ts
-export interface MatchResult {
+export interface MatchResultV2 {
   homeId: string; awayId: string;
-  homeGoals: number; awayGoals: number;
-  goals: { minute: number; team: Team }[];   // NEW — deterministic, in the shared core
+  homeGoals: number; awayGoals: number;             // REGULATION goals
+  goals: { minute: number; team: Team; playerId?: string; assistPlayerId?: string }[];
+  shootout?: Shootout;                              // present iff homeGoals === awayGoals
 }
 ```
+`goals[]` carries scorer/assister so the fast score path can accrue **morale** for the
+rail matches too (not just watched ones). The score/timeline agreement invariant is on
+the regulation scoreline; the shootout is decided by the same seeded rng in both paths.
 
 Per-match seed derives deterministically from `(tournamentSeed, round, matchIndex)`
 so a server names a match by coordinates (sim §6, engine §4.1).
@@ -356,9 +413,15 @@ export interface ManagerV2 {
   tactics: Tactics;
   xi: XiSlotV2[];               // fielded 11 (dense — see invariant)
   rolledSquads: RolledTeam[];   // every (nation,year) rolled — feeds steal pool v2
+  /** DECISIONS: transient per-player rating buff for the NEXT match only, then reset.
+   *  playerId → buff (0..+3): +2 per goal, +1 per assist last match, capped +3, never
+   *  negative. Runtime state, NOT persisted to the player DB. Consumed & cleared each
+   *  match; the match writer re-populates it from that match's goal/assist events. */
+  morale: Record<string, number>;
   alive: boolean;
 }
 export interface XiSlotV2 { position: Position; player: PlayerV2; }
+export const MORALE_GOAL = 2, MORALE_ASSIST = 1, MORALE_CAP = 3; // DECISIONS defaults
 
 // Draft: spin yields a ROLL; free placement fills slots in any order.
 export interface DraftStateDelta {
@@ -392,9 +455,22 @@ expands `rolledSquads → squadByRef → players`. Data layer supplies
 `squadByRef(nation, year): SquadEntry`. A late round can dump ~thousands of entries —
 scope to THIS round's eliminations, dedup by id, UI ranks by `pickValue` (open Q7).
 
-**Reducer actions:** `SET_FORMATION`, `SET_MODE`, `SET_TACTICS`, `RESPIN`,
-`SPIN {roll}`, `PICK {player, slotIndex}`, `ENTER_PLAYBACK`, `NEXT_FEATURED`,
-`WATCH_MARQUEE {timeline}`, `PLAYBACK_DONE`/`ROUND_PLAYED`.
+**Reducer actions (v2 skeleton — see the Phase-I note below).** The v2 free-pick
+draft uses **`ROLL {roll}`** and **`PLACE {player, slotIndex}`** (distinct from the
+legacy `SPIN {nation}` / `PICK {player}`, which stay live until `draftV2` is default-on
+so all 54 tests keep passing). Full set:
+`SET_FORMATION {formation}`, `SET_MODE {mode}`, `SET_TACTICS {managerId, tactics}`,
+`RESPIN`, `ROLL {roll}`, `PLACE {player, slotIndex}`,
+`REARRANGE_XI {managerId, xi}` (between-match re-slot — DECISIONS),
+`ENTER_PLAYBACK {matchday}`, `NEXT_FEATURED`, `WATCH_MARQUEE {timeline}`,
+`PLAYBACK_DONE` → existing `ROUND_PLAYED` (reveal after playback).
+
+**Phase-I skeleton note.** `src/game/state.ts` ships these actions + the new
+`Screen`/`BattleView` values + the new (optional) `GameState` fields with **stub
+handlers**, ADDITIVELY over the current v1 reducer. Flags OFF ⇒ only the v1 path runs
+⇒ current game, 54 tests green. Draft (bug-hunt) and sim (codex-ui) flesh out the ROLL/
+PLACE/REARRANGE_XI and ENTER_PLAYBACK/NEXT_FEATURED/WATCH_MARQUEE handlers respectively,
+extending the skeleton instead of colliding on the file.
 
 ---
 
@@ -432,14 +508,8 @@ export const COARSE_TO_DETAILED: Record<'GK'|'DF'|'MF'|'FW', Position> = {
    keeps `xi` dense) or EXPANDS a bench (adds `bench` to `ManagerV2`)? (draft Q10, QA)
 8. **Off-position model**: affinity-with-penalty (low `compatibleThreshold`) vs 7a0-strict
    eligibility (high). Shape supports both; answer only sets the value. (draft Q1)
-9. **⚠️ Chemistry redefinition (conflict 6).** Same-`(nation,year)` is near-dead under
-   the new draft. Options: **(a)** same-`(nation,year)` — effectively removes chemistry;
-   **(b)** same-nation-any-year — revives it cheaply (roll Brazil twice across years and
-   it counts); **(c)** club/era cohesion (needs `club` on players, currently Tier-B
-   flavor); **(d)** drop nation chem, replace with **formation cohesion** (adjacent
-   filled slots) which is reliably earnable under free-pick. **My recommendation: (b)
-   for Tier A** (one-line change, keeps the national-spine fantasy, all fields already
-   present), consider **(d)** for Tier B. Lucca decides.
+9. **✅ Chemistry — RULED (DECISIONS): DELETED**, replaced by **morale** (§6). No open
+   question remains; the same-nation bonus and cohesion reframe are removed.
 
 _Reconciliation log:_
 - **v0.1** — pre-peer draft from the six briefs + engine source.
@@ -451,6 +521,12 @@ _Reconciliation log:_
   scoreAfter + `counter`; `MatchResult.goals`; affinity strictly-`>0`; chemistry
   design flag; Tier-A demo contract → PLAN-architecture). Field-name reconciliation
   `pos/altPos`↔`position/secondary`, `Squad`→`SquadEntry`, `rolledTeams`→`rolledSquads`.
-- **Next:** freeze on Lucca's answers to the questionnaires (esp. Q9 chemistry, the
-  affinity/rating calibration, and the Tier-A lever set), then this becomes v1.0 and
-  implementation begins per the sequencing in `PLAN-architecture.md`.
+- **v0.4 (Phase I / binding):** folded `DECISIONS.md` — chemistry DELETED + morale
+  runtime state; no-draws penalty shootouts (events + `MatchResultV2.shootout` + `POINTS`
+  W3/PW2/PL1/L0); 2D-pitch `band`/`lane` ticks; scorer/assister on goals; more-forgiving
+  affinity posture; varied bot tactics; between-match `REARRANGE_XI`; no stamina. Names
+  the v2 draft actions `ROLL`/`PLACE` (legacy `SPIN`/`PICK` retained for green tests).
+- **Now implementing:** sequencing step 1 — v2 types (`src/engine/types.ts`), feature
+  flags (`src/game/flags.ts`), and the additive reducer skeleton (`src/game/state.ts`).
+- **Next:** remaining calibration is Lucca's later red-pen pass (rating ladder, Tier-A
+  lever tuning); not blocking. Steps 2–5 (data → engine → draft → sim) build on this.
