@@ -11,7 +11,10 @@ import {
   pickBotStyle,
   pickValueV2,
   placeholderAffinity,
+  playerV2ById,
+  rankStealCandidates,
   slotFitsForPlayer,
+  sortByBoost,
   spinSquadV2,
   swapSlots,
 } from './draft';
@@ -169,6 +172,64 @@ describe('integration with game-engine AFFINITY_MATRIX (the wired-in values)', (
   it('rewards natural fit: a CB values a CB slot over a distant ST slot', () => {
     const cb = bra2002.find((p) => p.position === 'CB')!;
     expect(pickValueV2(cb, 'CB', realAffinity)).toBeGreaterThan(pickValueV2(cb, 'ST', realAffinity));
+  });
+});
+
+describe('sortByBoost — squad-card options ranked by achievable points added', () => {
+  it('ranks by best-slot pickValue, descending and deterministic', () => {
+    const ranked = sortByBoost(bra2002, emptySlate(11), F433, placeholderAffinity);
+    expect(ranked).toHaveLength(bra2002.length);
+    for (let i = 1; i < ranked.length; i++) expect(ranked[i - 1].boost).toBeGreaterThanOrEqual(ranked[i].boost);
+    // boost equals pickValue at the chosen best open slot
+    for (const r of ranked) {
+      expect(r.bestSlot).not.toBeNull();
+      expect(r.boost).toBeCloseTo(pickValueV2(r.player, r.bestSlot!.position, placeholderAffinity), 6);
+    }
+    // deterministic
+    const again = sortByBoost(bra2002, emptySlate(11), F433, placeholderAffinity);
+    expect(again.map((r) => r.player.id)).toEqual(ranked.map((r) => r.player.id));
+  });
+  it('the top option is the strongest available pick', () => {
+    const ranked = sortByBoost(bra2002, emptySlate(11), F433, placeholderAffinity);
+    const maxBoost = Math.max(
+      ...bra2002.map((p) => Math.max(...slotFitsForPlayer(emptySlate(11), F433, p, placeholderAffinity).map((f) => pickValueV2(p, f.position, placeholderAffinity)))),
+    );
+    expect(ranked[0].boost).toBeCloseTo(maxBoost, 6);
+  });
+  it('boost is 0 when the slate is full (no open slot)', () => {
+    const full = bra2002.slice(0, 11).map((player, i) => ({ position: F433.slots[i], player }));
+    const ranked = sortByBoost([bra2002[12]], full, F433, placeholderAffinity);
+    expect(ranked[0].boost).toBe(0);
+    expect(ranked[0].bestSlot).toBeNull();
+  });
+});
+
+describe('rankStealCandidates — detailed steal list for a full XI', () => {
+  const xi = bra2002.slice(0, 11).map((player, i) => ({ position: F433.slots[i], player }));
+  const pool = squadByRef('ARG', 1986).players;
+  it('carries the DETAILED position label and best swap slot, best gain first', () => {
+    const ranked = rankStealCandidates(pool, xi, F433, placeholderAffinity);
+    expect(ranked.length).toBeGreaterThan(0);
+    for (let i = 1; i < ranked.length; i++) expect(ranked[i - 1].gain).toBeGreaterThanOrEqual(ranked[i].gain);
+    for (const c of ranked) {
+      expect(POSITIONS).toContain(c.position); // detailed, never GK/DF/MF/FW
+      expect(c.bestSlotIndex).toBeGreaterThanOrEqual(0);
+      expect(c.bestSlotIndex).toBeLessThan(11);
+      expect(c.bestPosition).toBe(F433.slots[c.bestSlotIndex]);
+    }
+  });
+  it('excludes players already on the XI', () => {
+    const withOwn = [...pool, xi[0].player];
+    const ranked = rankStealCandidates(withOwn, xi, F433, placeholderAffinity);
+    expect(ranked.some((c) => c.player.id === xi[0].player.id)).toBe(false);
+  });
+});
+
+describe('playerV2ById — lift a coarse-projected id back to detailed', () => {
+  it('resolves a known id and misses an unknown one', () => {
+    const known = bra2002[0];
+    expect(playerV2ById(known.id)?.position).toBe(known.position);
+    expect(playerV2ById('nope-9999-x')).toBeUndefined();
   });
 });
 

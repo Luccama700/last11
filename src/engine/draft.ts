@@ -1,6 +1,6 @@
 import { NATIONS, nationSquad } from './data';
 import { CHEM_PAIR_BONUS, FORMATION, STAR_BONUS, STAR_THRESHOLD, effectiveRating } from './rating';
-import { squadByRef, squadRefsV2 } from './data/loader';
+import { playersV2, squadByRef, squadRefsV2 } from './data/loader';
 import { POSITION_ZONE, type PlayerV2, type Position as DetailedPosition, type Zone } from './data/schema';
 import { FORMATIONS } from './types';
 import type { AffinityFn, Formation, PlayingStyle, RolledTeam, XiSlotV2 } from './types';
@@ -282,4 +282,96 @@ export function autoArrange(
     slate[bestSlot] = { position: formation.slots[bestSlot], player };
   }
   return slate as XiSlotV2[];
+}
+
+// ---- Squad-card ranking + steal-list helpers (pure; consumed by the UI) -------
+
+const V2_BY_ID: Map<string, PlayerV2> = new Map(playersV2().map((p) => [p.id, p]));
+
+/** Recover the DETAILED PlayerV2 for an id — lets a coarse steal pool (legacy
+ *  `Player[]`) be lifted back to detailed positions (ids are stable across the
+ *  coarse projection). Returns undefined for a non-v2 id. */
+export function playerV2ById(id: string): PlayerV2 | undefined {
+  return V2_BY_ID.get(id);
+}
+
+export interface RankedOption {
+  player: PlayerV2;
+  /** The player's best OPEN slot on the current slate (null if the slate is full). */
+  bestSlot: SlotFit | null;
+  /** Points this pick can ADD right now = pickValue at his best open slot. */
+  boost: number;
+}
+
+/**
+ * Rank squad-card options by the best points they can add right now: for each
+ * option, the max pickValue over the open slots (its best achievable placement).
+ * Descending; deterministic ties (higher rating, then id). Pure — no chemistry.
+ */
+export function sortByBoost(
+  options: readonly PlayerV2[],
+  slate: readonly (XiSlotV2 | null)[],
+  formation: Formation,
+  aff: AffinityFn,
+): RankedOption[] {
+  return options
+    .map((player): RankedOption => {
+      const bestSlot = slotFitsForPlayer(slate, formation, player, aff)[0] ?? null;
+      return { player, bestSlot, boost: bestSlot ? pickValueV2(player, bestSlot.position, aff) : 0 };
+    })
+    .sort(
+      (a, b) =>
+        b.boost - a.boost ||
+        b.player.rating - a.player.rating ||
+        (a.player.id < b.player.id ? -1 : 1),
+    );
+}
+
+export interface StealCandidate {
+  player: PlayerV2;
+  /** Detailed position label (no coarse GK/DF/MF/FW). */
+  position: DetailedPosition;
+  /** Slot to swap him into for the biggest effective-rating gain. */
+  bestSlotIndex: number;
+  /** That slot's formation position. */
+  bestPosition: DetailedPosition;
+  /** Effective-rating improvement vs the current occupant (may be ≤ 0). */
+  gain: number;
+}
+
+/**
+ * Rank a DETAILED steal pool for a FULL XI (steals REPLACE a starter): for each
+ * pool player, the slot whose current occupant he most improves on (max effective-
+ * rating gain), carrying his detailed position label + best-slot data. Best gain
+ * first; players already on the XI are excluded. Pure.
+ *
+ * Shares its gain metric (`effectiveRatingV2`) with the bot auto-swap so the human
+ * ranking and `evaluateStealV2` agree on "best swap" (coordinate: architect).
+ */
+export function rankStealCandidates(
+  pool: readonly PlayerV2[],
+  slate: readonly XiSlotV2[],
+  formation: Formation,
+  aff: AffinityFn,
+): StealCandidate[] {
+  const onTeam = new Set(slate.map((s) => s.player.id));
+  const out: StealCandidate[] = [];
+  for (const player of pool) {
+    if (onTeam.has(player.id)) continue;
+    let best: StealCandidate | null = null;
+    for (let i = 0; i < slate.length; i++) {
+      const slot = formation.slots[i];
+      const gain = effectiveRatingV2(player, slot, aff) - effectiveRatingV2(slate[i].player, slot, aff);
+      if (!best || gain > best.gain) {
+        best = { player, position: player.position, bestSlotIndex: i, bestPosition: slot, gain };
+      }
+    }
+    if (best) out.push(best);
+  }
+  return out.sort(
+    (a, b) =>
+      b.gain - a.gain ||
+      b.player.rating - a.player.rating ||
+      (a.player.id < b.player.id ? -1 : 1),
+  );
 }
