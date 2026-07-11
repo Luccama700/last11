@@ -4,6 +4,7 @@ import { displayedSquadRating } from '../engine/squad-rating';
 import type { MatchTimeline } from '../engine/types';
 import { flagOf } from '../game/flags';
 import { buildNameLookup, topAssists, topScorers, type StatLine } from '../game/player-stats';
+import { readChampions } from '../game/champions';
 import { aliveOf, humanOf, type GameState } from '../game/state';
 import MatchPlaybackScreen from './MatchPlaybackScreen';
 import { Crest } from './BattleScreen';
@@ -128,6 +129,8 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
           </div>
         </div>
 
+        <HallOfChampions />
+
         <button
           onClick={props.onReset}
           className="btn-gold headline mt-1 cursor-pointer rounded-xl px-12 py-4 text-xl"
@@ -236,6 +239,48 @@ function TournamentRecap(props: {
           );
         })}
       </ol>
+    </div>
+  );
+}
+
+/** Every crowned champion across all runs on this machine — bot dynasties and
+ *  your own reigns, newest first, tallied by name. */
+function HallOfChampions() {
+  const champions = readChampions();
+  if (champions.length === 0) return null;
+  const tally = new Map<string, { count: number; isHuman: boolean; last: string }>();
+  for (const c of champions) {
+    const t = tally.get(c.name) ?? { count: 0, isHuman: c.isHuman, last: c.date };
+    t.count++;
+    if (c.date > t.last) t.last = c.date;
+    tally.set(c.name, t);
+  }
+  const rows = [...tally.entries()].sort(
+    (a, b) => b[1].count - a[1].count || b[1].last.localeCompare(a[1].last),
+  );
+  return (
+    <div className="card-gloss w-full rounded-2xl p-5 text-left">
+      <h2 className="headline mb-2.5 text-xs tracking-[0.3em] text-gold-400">
+        HALL OF CHAMPIONS
+      </h2>
+      <ul className="space-y-1">
+        {rows.slice(0, 8).map(([name, t], i) => (
+          <li key={name} className="flex items-baseline gap-2 text-sm">
+            <span className="headline w-4 shrink-0 text-xs text-ink-500">{i + 1}</span>
+            <Crest name={name} id={name} you={t.isHuman} size="sm" />
+            <span className={`truncate font-bold ${t.isHuman ? 'text-gold-300' : 'text-ink-100'}`}>
+              {name}
+              {t.isHuman && ' (you)'}
+            </span>
+            <span className="headline ml-auto shrink-0 text-base text-gold-300">
+              {t.count > 1 ? `${t.count}×` : ''}🏆
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-[10px] text-ink-500">
+        {champions.length} tournament{champions.length === 1 ? '' : 's'} decided on this machine.
+      </p>
     </div>
   );
 }
