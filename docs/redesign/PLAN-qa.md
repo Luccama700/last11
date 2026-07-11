@@ -231,14 +231,209 @@ line, not necessarily individual tests):
 
 ## Review of the other five plans
 
-**Status as of this writing (2026-07-11): PLAN-draft.md has landed and is
-reviewed below. PLAN-database.md, PLAN-engine.md, PLAN-sim.md,
-PLAN-architecture.md, and CONTRACT.md do not exist yet** (CONTRACT.md exists
-as an uncommitted work-in-progress in the local tree — worker-7 is
-mid-draft, per its brief's "start with a draft, iterate as others arrive"
-instruction — so I'm not reviewing it as landed). I have not been
-re-invoked to review the remaining four; the cross-brief risk list below is
-written against the briefs only for those four.
+**Update (2026-07-11, second pass): all five plans + CONTRACT.md have now
+landed.** PLAN-draft.md's review stands from the first pass (below). This
+pass adds PLAN-engine.md, PLAN-database.md, PLAN-sim.md,
+PLAN-architecture.md, and CONTRACT.md. Leading with the single most
+time-sensitive finding, then per-plan reviews, then a synthesis.
+
+### 🔴 CONTRACT.md is stale relative to what's actually landed — top priority
+
+`CONTRACT.md`'s own header still reads **"v0.2 ... awaiting PLAN-database,
+PLAN-engine, PLAN-sim"** — but all three exist in `docs/redesign/` now (I
+just read them for this review). Nothing in the repo is lying, exactly —
+worker-7 just hasn't had a pass since they landed — but it means every
+consumer reading `CONTRACT.md` today is reading a **known-incomplete**
+snapshot, and at least two concrete conflicts below (formation catalog,
+`boxScore` shape) exist *because* that reconciliation pass hasn't happened
+yet. With ~24h to deadline, this is the highest-leverage single action
+left in Phase R: **worker-7 publishing CONTRACT v0.3 unblocks every other
+stream's implementation start.** Flagging this first because it's blocking,
+not just imprecise.
+
+### Review: PLAN-engine.md (hackathon-builder)
+
+Excellent research (Dixon-Coles for the low-score draw problem is a genuinely
+good find, not just a citation), and the "(a) now, (b) later, same
+zonal-strength front-end" architecture decision is the right call — it means
+Tier A isn't throwaway. Two concrete, verifiable issues and one reconciliation
+gap:
+
+1. **CONFIRMED: the 8-formation set disagrees with CONTRACT's frozen catalog.**
+   `CONTRACT.md §3` (`FORMATIONS`, reconciled from PLAN-draft) lists **4-2-4**
+   as the eighth formation. `PLAN-engine.md §3.3`'s tactics-lever table
+   independently lists the eighth formation as **4-2-2-2**. These are
+   different formations (4-2-4 has two out-and-out strikers and no second
+   midfield pivot; 4-2-2-2 has two banks of two). This is exactly the kind of
+   silent cross-plan disagreement CONTRACT.md exists to prevent, caught before
+   either stream writes code against it. Someone (worker-7, reconciling v0.3)
+   needs to pick one; I'd default to CONTRACT's 4-2-4 since it's already
+   frozen and draft's UI plan is built against it, but flagging for Lucca/
+   worker-7 to actually decide, not silently resolving it myself.
+2. **`boxScore` is embedded in PLAN-engine's `MatchTimeline` but not in
+   CONTRACT's.** `PLAN-engine.md §4` emits `boxScore: { home: ZoneBox; away:
+   ZoneBox; xg: {...} }` as a field of `MatchTimeline`; `CONTRACT.md §4`'s
+   `MatchTimeline` has no such field. Draft's tactics-board box-score panel
+   (`PLAN-draft.md §2b`) needs this data from *somewhere* — CONTRACT v0.3
+   needs to decide whether it's a `MatchTimeline` field (engine's proposal) or
+   a separately-computed value derived from `ZoneStrength` at draft/pre-match
+   time (cleaner separation — box score is really a property of the two XIs +
+   tactics, not of a specific simulated match, so it shouldn't need a full
+   timeline to exist). I'd lean toward the latter since it'd let the
+   tactics-board panel render *before* a match is simulated at all, which is
+   what draft's UI actually needs (pre-match, not post-match).
+3. **Draw-rate research disagrees with my own PLAN-qa findings from the same
+   underlying source.** `PLAN-engine.md §1a`'s table cites WC group-stage draw
+   rate as **"~16–20% (2018 = 16%)"** from footballhistory.org. My own Job-1
+   research (this document, above) cites the same footballhistory.org
+   coverage as **"~22%"** for group matches. Same source, two different reads
+   — worth a citation double-check before either number becomes a hard
+   tuning target, though in practice it's low-stakes: engine's own §1a
+   "read-through" recommends a **~22–25% draw-rate target** anyway, which
+   sits inside my proposed 20–28% band regardless of which raw citation is
+   more precise. Not blocking; flagging so nobody cites the 16-20% figure
+   as authoritative later.
+4. **My own upset-rate band doesn't yet reconcile with engine's Q1 default,
+   and that's partly my error, not just theirs.** I proposed (Job 1, above)
+   30–45% weaker-side win rate for strength gaps <10. Engine's Decision Q1
+   recommends a 10-point zonal-strength gap ⇒ ~60/22/18 (win/draw/loss for
+   the *stronger* side) — i.e. the weaker side winning **~18%**, not 30–45%.
+   Before treating this as a contradiction to resolve, I need to flag the
+   more basic problem: **my band was written against the current v1
+   `teamStrength` scale (totals ~850–1030), and engine's Q1 is written
+   against the not-yet-implemented v2 zonal-edge scale — "10 points" may not
+   mean the same magnitude on both.** I'm marking my own upset-band numbers
+   as **v1-scale placeholders that need to be redefined once engine v2's
+   zonal scale is real**, not asserting engine's Q1 is wrong. Once Lucca
+   answers Q1/Q2, my Job 1 upset-bucket boundaries should be rewritten in the
+   same units, and I'll reconcile then rather than guess now.
+
+### Review: PLAN-database.md (worker-6)
+
+The ratings rubric is the strongest piece of research across all five plans —
+the anchor ladder with 15 named cross-era players and the explicit "absolute
+scale, quality not athleticism" reasoning directly answers Lucca's original
+complaint with a real methodology, not just a vibe. One real product-quality
+risk for the demo specifically:
+
+1. **The year-roll mechanic will feel broken for 11 of 12 nations in Tier A.**
+   §8's Tier A ships the current 12 nations at 2026 **plus 3 historical hero
+   squads, all under Brazil (1970, 2002) and Argentina (1986)**. That means a
+   spin landing on Brazil or Argentina can roll a real year choice, but a spin
+   landing on France, England, Spain, Germany, Portugal, Netherlands, Belgium,
+   Croatia, Morocco, or Japan (10 of 12 nations) only ever has **one** year
+   available — 2026. The "year roll" is the headline new mechanic in the
+   draft brief (§1.1's "e.g. Brazil 2002"), and as currently scoped it's a
+   near-guaranteed single outcome for 83% of nations. This isn't wrong
+   exactly — database's plan is honest that its Tier A target is deliberately
+   thin (§4: "far below 7a0's scale, deliberate") — but I don't think the
+   demo-visibility implication has been named out loud anywhere: **a judge
+   who spins France twice sees no year variety at all.** Worth surfacing to
+   Lucca directly: either broaden Tier A's historical coverage beyond
+   Brazil/Argentina (even 1 extra hero squad on a 3rd nation meaningfully
+   changes the "does this feel alive" perception), or explicitly frame the
+   demo narration around spinning toward Brazil/Argentina so the year-roll
+   payoff actually gets shown.
+2. **Steal-pool size/perf mitigation (§6) is proposed but not owned by a
+   test.** Database's own plan flags the risk (late-round pool could be
+   thousands of entries) and proposes 3 mitigations (round-scoped not
+   cumulative, deduped, ranked) but doesn't claim a test for it, and neither
+   does architecture's plan. I'm noting this as a gap in my own Job 2 test
+   list rather than just a complaint: once steal-pool v2 lands, I'll add a
+   test asserting pool size stays bounded by (this round's eliminated
+   managers × their rolled-squad count), not by total tournament history.
+3. Rating-rescale calibration dependency is already correctly flagged by
+   engine's own plan (§7: "if the rating scale changes, re-run the balance
+   sweep") and by database's own dependencies section — no gap there, just
+   confirming the two plans agree on sequencing (data v2 ratings must land
+   before engine v2's constants are tuned against real numbers, which
+   matches architecture's step 2-before-3 integration order).
+
+### Review: PLAN-sim.md (codex-ui)
+
+The best-reconciled of the five — it explicitly diffed its own schema against
+CONTRACT.md and adopted CONTRACT's naming (`ticks`/`TimelineTick`/
+`ballPosition` over its own `frames`/`MomentumTick`/`ballX`), which is exactly
+the discipline the other plans should follow once CONTRACT v0.3 lands. Two
+small, concrete notes:
+
+1. **The reconciliation silently drops a `TimelineEventType` value.** Sim's
+   original (§2, pre-reconciliation) event-type union included `'counter'`
+   (for counter-attack captions — its own screen-flow wireframe in §4
+   references counter-attack moments). CONTRACT's canonical union (`§4`,
+   which sim says it's adopting) does **not** have `'counter'`, and neither
+   does PLAN-engine's independently-written union. Mechanically this is
+   fine — a counter-attack is presumably just a `'chance'` or `'shot'` event
+   with `text: "Counter-attack — saved!"` — but the drop is implicit, not
+   stated. One line confirming "counter-attacks are a caption style, not a
+   distinct event type" would remove the ambiguity for whoever implements
+   the ticker.
+2. **Possible duplicate fallback-adapter work.** Both engine (§4.3, "Tier A
+   timeline synthesis... deterministically distribute Poisson goals across
+   minutes") and sim (§8 Q8, "OK for me to ship against a UI-side adapter
+   that fabricates a timeline from MatchScore if engine v2 slips?") propose
+   building essentially the same fallback: a synthetic `MatchTimeline` from a
+   final score. If both streams build this independently, that's real hours
+   spent twice on the same hackathon night for a fallback that, by design,
+   only one of them should ever need to ship. Recommend architecture's v0.3
+   pass names ONE owner for "synthesize timeline from score" (I'd say
+   engine, since `MatchTimeline` production is engine's contract
+   responsibility regardless of tier) so sim's Q8 becomes "consume whatever
+   engine ships, always," with no separate UI-side implementation.
+3. Confirms rather than conflicts with my own Job 2 determinism-trap note:
+   sim's memo (§6) independently names `performance.now()`-at-mount as "the
+   only local, stateful, non-deterministic input," matching exactly the
+   `Date.now()`-boundary rule I wrote in Job 2 before reading this plan —
+   good independent convergence, no action needed.
+
+### Review: PLAN-architecture.md + CONTRACT.md (worker-7)
+
+Beyond the staleness flagged above, the plan does real integration work, not
+just paperwork — the peer-plan review section inside PLAN-architecture.md
+already caught the affinity arg-order flip between draft and CONTRACT (a real
+bug caught pre-code, correctly resolved) and already named the exact
+composition risk I raised in my own first-pass review ("R-compose": do the
+five Tier-A cuts actually add up to one working demo), committing to publish
+a "Tier-A demo contract" in v0.3. That commitment is good; it just hasn't
+landed yet (see the top-priority item above) — the demo-composition risk
+that both my first pass and architecture's own plan flagged is **still
+open**, not resolved by having been named.
+
+One thing worth restating precisely against CONTRACT specifically, not just
+against draft: **CONTRACT's own `Affinity` type (`§1`) permits exactly 0**
+(`type Affinity = number; // 0..1 inclusive`), and nothing in CONTRACT states
+a cell may never be exactly 0. PLAN-draft's entire "never dead-ends" product
+guarantee (flagged in my first-pass review) depends on that never happening.
+Since CONTRACT is the frozen shape everyone builds against, this is the
+right place to fix it: either CONTRACT v0.3 adds "no cell is exactly 0" as a
+named invariant (my preference — cheap, and turns "never dead-ends" from an
+assumption into a checkable contract), or draft's flow needs an explicit
+fallback for the case CONTRACT currently allows.
+
+### Synthesis: do the five Tier-A cuts actually compose?
+
+This was the single question I said (first pass) mattered more than any
+individual plan's quality, and re-reading all five together, the honest
+answer right now is **probably, but with real seams still open**:
+
+- Formation catalog mismatch (engine vs CONTRACT) means the draft's
+  formation picker and the engine's tactics table are not yet guaranteed to
+  agree on what "the 8 formations" even are.
+- Box-score panel (draft's UI) has no confirmed data source yet (engine
+  embeds it in `MatchTimeline`; CONTRACT doesn't have the field).
+- Year-roll (draft's headline new mechanic) will visibly under-deliver for
+  10 of 12 nations under database's current Tier A scope — not a shape bug,
+  a felt-experience gap a judge will notice.
+- Two streams (engine, sim) may independently build the same score→timeline
+  fallback adapter — wasted hours, not a correctness bug, but a real cost
+  with ~24h left.
+
+None of these are fatal, and every one of them is fixable in under an hour
+of coordination — but they're exactly the kind of thing that's invisible
+reading any single plan in isolation and only shows up cross-referencing
+all five, which is what Job 3 is for. Recommend Lucca or worker-7 treat
+CONTRACT v0.3 (already promised) as the forcing function that resolves all
+four before implementation starts, not as a nice-to-have.
 
 ### Review: PLAN-draft.md (bug-hunt)
 
