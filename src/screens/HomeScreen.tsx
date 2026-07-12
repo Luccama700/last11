@@ -38,7 +38,7 @@ export default function HomeScreen(props: { onStart: () => void; onOnline?: () =
           </button>
         )}
       </div>
-      <p className="text-xs text-ink-500">11a0.com · United Hacks V7</p>
+      <p className="text-xs text-ink-500">last11.app · United Hacks V7</p>
     </div>
   );
 }

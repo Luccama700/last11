@@ -137,7 +137,7 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
         >
           PLAY AGAIN
         </button>
-        <p className="text-xs text-ink-500">Last11 · 11a0.com</p>
+        <p className="text-xs text-ink-500">Last11 · last11.app</p>
       </div>
     </div>
   );
