@@ -242,7 +242,7 @@ New, surfaced by this spec:
 
 1. **Viewing model: LOCKSTEP, not own-speed.** One steady simulation speed for
    everyone on a shared clock; §4's decision-deadline/own-speed model is
-   SUPERSEDED. Cycle: 3 synced match slots → one synced 20s pit stop → repeat.
+   SUPERSEDED. Cycle: 3 synced match slots → one synced pit stop → repeat.
    Speed buttons/skip do not exist in MP (solo keeps them). Coarse clock sync
    (transport timestamps, ±150ms tolerance) returns to scope; NTP-grade sync
    still unnecessary. Shared finale comes free; slow-watcher policy is moot.
@@ -253,7 +253,7 @@ New, surfaced by this spec:
    re-slotting on the between-match board (solo is untimed). Feature queued.
 4. **MP match slots run 30s** (not 45) to cut tournament time. Duration becomes
    a mode parameter: solo playback stays 45s unless Lucca says otherwise.
-   Round ≈ 3×~30–42s (pens add 6s/kick) + 20s ≈ **~2 min; tournament ≈ 10–12 min**.
+   Round ≈ 3×~30–42s (pens add 6s/kick) + 45s pit ≈ **~2.5 min; tournament ≈ 10–12 min**.
 5. **Cut ladder confirmed: 20 → 16 → 8 → 4 → 2 → 1.**
 6. **Rooting-for mechanic: IN** — eliminated players pick a survivor to back;
    shown during pit stops and on the end screen.
@@ -262,6 +262,13 @@ New, surfaced by this spec:
    commit–reveal ships as a LATER FEATURE** (additive on the same message
    schema, per protocol §4.4; flip on for ranked/public rooms). With this,
    every multiplayer design decision is closed — the format is fully locked.
+9. **All-locked-in fast-forward (Lucca, 2026-07-11, from lobby feedback in the
+   wave-2 playtest):** the moment EVERY human in the room has locked in a pick
+   (or, in the pit stop, every surviving human has submitted), the countdown
+   snaps to a 5s fuse (`MP_HURRY_MS`) instead of running out the full window.
+   The host pulls its deadline forward and broadcasts a `hurry` message so all
+   countdowns jump together; the timer label flips to a gold "ALL LOCKED IN".
+   The 30s/45s windows are ceilings for slow lobbies, not mandatory waits.
 
 ## 7. What this means for plan v1.1
 

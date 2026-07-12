@@ -80,6 +80,8 @@ disjoint per-spin team pools — no pick contention by construction, global
 player uniqueness), lockstep viewing on a shared clock at 1.5×, a combined
 45-second pit stop (loot + re-slot + tactics), spectators with a rooting-for
 pick, trust-based tactics (commit-reveal is a planned later feature for ranked).
+The timers are ceilings, not waits: once every human has locked in, the
+countdown snaps to a 5-second fuse ("ALL LOCKED IN") on every screen at once.
 
 Host-authoritative over **Supabase Realtime** (broadcast + presence only — no
 database): the wire carries seeds, picks and deadlines; every client derives
@@ -90,7 +92,7 @@ never diverge. Config: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`
 
 ## Tests
 
-The engine is kept honest by 315 tests: determinism (same seed ⇒ byte-identical
+The engine is kept honest by 341 tests: determinism (same seed ⇒ byte-identical
 tournament), balance targets (3.4 goals/match, +10 strength ≈ +0.75 xG, ~15%
 level after 90'), affinity invariants over the entire player DB (natural
 position is always zero-cost), elimination bookkeeping, steal integrity,

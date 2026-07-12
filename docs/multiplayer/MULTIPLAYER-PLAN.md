@@ -107,8 +107,10 @@ certification/ranked; **v3** = matchmaking, persistent accounts.
 1. ~~MVP seat count~~ → **20-manager rooms**, fill-with-bots start.
 2. ~~Trust vs commit-reveal~~ → **trust for MVP; commit–reveal is a planned
    later feature** (ranked/public rooms).
-3. ~~Phase timers~~ → 10s picks · **30s match slots (lockstep)** · combined 20s
-   pit stop (loot + re-slot + tactics). Cut ladder 20→16→8→4→2→1.
+3. ~~Phase timers~~ → **30s picks · 30s match slots (lockstep) · combined 45s
+   pit stop** (loot + re-slot + tactics; wave-2 retune from 10s/20s). When
+   every human has locked in, the countdown snaps to a **5s fuse** instead of
+   running out the window (§6b ruling 9). Cut ladder 20→16→8→4→2→1.
 4. ~~Rooting-for~~ → **IN** — eliminated managers pick a survivor to back.
 
 The format is fully locked as of 2026-07-11; FORMAT-REPORT-v1.1.md §6b is the
@@ -126,10 +128,15 @@ authoritative ruling list.
   apply path (host self-receives its own canonical stream); host-only code is
   the deadline timer. Wire carries seeds/picks/deadlines only — pairings, bots,
   morale, pools and timelines are derived locally and deterministically.
+  Wave-2 hardening: every host message stamps `hostNow` (clients keep a median
+  clock offset — real phones sit seconds off NTP) and a mirror checksum
+  (`sync`) that surfaces divergence as a loud SYNC LOST banner, never silently.
+  When every human has locked in, the host snaps the deadline to 5s and
+  broadcasts `hurry` so all countdowns jump together (all-locked-in rule).
 - `src/screens/online/OnlineApp.tsx` — entry → lobby (setup while waiting,
-  fill-with-bots) → simultaneous draft (SpinReveal + 10s countdown + board
+  fill-with-bots) → simultaneous draft (SpinReveal + 30s countdown + board
   moves) → lockstep viewing (MatchPlaybackScreen wall-clock mode, no skips) →
-  20s combined pit stop (loot rail + re-slot + tactics on the pit board) →
+  45s combined pit stop (loot rail + re-slot + tactics on the pit board) →
   spectator view with rooting-for → EndScreen + Hall of Champions.
 - Tests: `mp.test.ts` (15) + `controller.test.ts` loopback end-to-end (a full
   host+guest tournament over an in-memory bus, mirrors asserted identical —
