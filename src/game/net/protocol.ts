@@ -46,7 +46,9 @@ export type Intent =
       steal: { playerId: string; slotIndex: number } | null;
     }
   /** Eliminated player's "rooting for" pick. */
-  | { t: 'root'; clientId: string; forSeatId: string };
+  | { t: 'root'; clientId: string; forSeatId: string }
+  /** My mirror is behind (missed a broadcast) — please send the message log. */
+  | { t: 'resync'; clientId: string };
 
 // ── Host → Room messages ──────────────────────────────────────────────────────
 
@@ -113,4 +115,16 @@ export type HostMsgBody =
       roots: Record<string, string>; // eliminated seatId → rooted-for seatId
     }
   /** Tournament over — clients already know the champion deterministically. */
-  | { t: 'gameEnd' };
+  | { t: 'gameEnd' }
+  /** Full recovery for ONE client (resync after a dropped broadcast, or a
+   *  reloaded tab rejoining): the durable message log since gameStart. The
+   *  target resets its mirror and replays the log through the one apply path;
+   *  everyone else ignores it. Realtime broadcasts are NOT replayed by the
+   *  transport after a reconnect — this is the replay. */
+  | {
+      t: 'catchup';
+      forClientId: string;
+      roomSeed: number;
+      hostClientId: string;
+      log: HostMsgBody[];
+    };

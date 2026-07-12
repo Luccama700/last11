@@ -51,7 +51,7 @@ import { playerV2ById } from '../../engine/draft';
 import { SupabaseLobbyDirectory, type LobbyDirectory } from '../net/directory';
 import { RoomChannel, type RoomHandlers } from '../net/room';
 import { onlineConfigured } from '../net/supa';
-import type { HostMsg, Intent, PresenceMeta, SeatAssignment } from '../net/protocol';
+import type { HostMsg, HostMsgBody, Intent, PresenceMeta, SeatAssignment } from '../net/protocol';
 
 /** The transport surface the controller needs — RoomChannel implements it; tests
  *  inject an in-memory loopback to run whole multi-client games with no network. */
@@ -157,6 +157,10 @@ export class OnlineController {
 
   // host-only bookkeeping
   private joinOrder: { clientId: string; name: string }[] = [];
+  /** Durable game messages since gameStart — the catchup replay source. */
+  private hostLog: HostMsgBody[] = [];
+  /** Client: last time we begged for a catchup (cooldown vs request storms). */
+  private lastResyncAt = 0;
   private pendingPicks = new Map<string, { playerId: string; slotIndex: number }>(); // seatId →
   private pendingMoves = new Map<string, { from: number; to: number }[]>();
   private pendingPits = new Map<
@@ -176,9 +180,11 @@ export class OnlineController {
       new RoomChannel(code, me, handlers),
     private injected = false, // tests: skip the onlineConfigured gate
     directory?: LobbyDirectory | null,
+    fixedClientId?: string, // tests: simulate a reloaded tab (same identity)
   ) {
     this.directory =
       directory !== undefined ? directory : injected ? null : new SupabaseLobbyDirectory();
+    if (fixedClientId) this.clientId = fixedClientId;
     const { formation, tactics } = defaultSeatTactics();
     this.view = {
       phase: 'idle',
@@ -293,6 +299,20 @@ export class OnlineController {
     if (!this.injected && !onlineConfigured()) {
       this.emit({ phase: 'error', error: 'Online is not configured on this build.' });
       return;
+    }
+    // Tab-stable identity: a reloaded tab re-enters this room as the SAME
+    // client, so the host recognizes it and replays the game (rejoin).
+    // sessionStorage on purpose — per-tab (two tabs in one browser must not
+    // collide) and it survives reloads. Tests keep their random ids.
+    if (!this.injected) {
+      try {
+        const key = `last11.mp.cid.${code}`;
+        const stored = sessionStorage.getItem(key);
+        if (stored) this.clientId = stored;
+        else sessionStorage.setItem(key, this.clientId);
+      } catch {
+        // storage blocked — random id still works, rejoin just won't
+      }
     }
     this.emit({ phase: 'connecting', code, isHost });
     const me: PresenceMeta = {
@@ -433,11 +453,23 @@ export class OnlineController {
     switch (i.t) {
       case 'hello': {
         if (i.version !== MP_ENGINE_VERSION) return;
-        if (!this.joinOrder.some((j) => j.clientId === i.clientId)) {
-          this.joinOrder.push({ clientId: i.clientId, name: i.name });
+        const known = this.joinOrder.some((j) => j.clientId === i.clientId);
+        if (this.hostStage !== 'lobby') {
+          // Mid-game hello: a seated client's tab reloaded — replay the game to
+          // them (rejoin). Strangers still get the room snapshot (→ refused).
+          if (known) this.hostSendCatchup(i.clientId);
+          else this.broadcastRoom('draft');
+          break;
         }
-        this.broadcastRoom(this.hostStage === 'lobby' ? 'lobby' : 'draft');
-        if (this.hostStage === 'lobby' && this.joinOrder.length >= MP_LOBBY_SIZE) this.startGame();
+        if (!known) this.joinOrder.push({ clientId: i.clientId, name: i.name });
+        this.broadcastRoom('lobby');
+        if (this.joinOrder.length >= MP_LOBBY_SIZE) this.startGame();
+        break;
+      }
+      case 'resync': {
+        if (this.hostStage !== 'lobby' && this.joinOrder.some((j) => j.clientId === i.clientId)) {
+          this.hostSendCatchup(i.clientId);
+        }
         break;
       }
       case 'setup':
@@ -506,13 +538,40 @@ export class OnlineController {
 
   // ── Host: phase driver ──────────────────────────────────────────────────────
 
+  /** Message types a rejoining mirror needs to rebuild the whole game.
+   *  ('room' is lobby meta, 'hurry' a transient deadline, 'catchup' the replay
+   *  itself — none of them belong in the log.) */
+  private static readonly DURABLE = new Set<HostMsgBody['t']>([
+    'gameStart',
+    'spinStart',
+    'spinResult',
+    'roundStart',
+    'pitStart',
+    'pitResult',
+    'gameEnd',
+  ]);
+
   /** All host sends go through here: stamps the host clock (client offset
-   *  estimation) and the host's current mirror checksum (desync detection). */
+   *  estimation) and the host's current mirror checksum (desync detection),
+   *  and appends durable messages to the catchup log. */
   private send(body: HostMsg): void {
+    if (OnlineController.DURABLE.has(body.t)) this.hostLog.push(body as HostMsgBody);
     this.channel?.sendHost({
       ...body,
       hostNow: Date.now(),
       ...(this.lastSyncHash ? { sync: this.lastSyncHash } : {}),
+    });
+  }
+
+  /** Replay the whole game to ONE client (resync or a reloaded tab). */
+  private hostSendCatchup(forClientId: string): void {
+    if (this.hostLog.length === 0) return;
+    this.send({
+      t: 'catchup',
+      forClientId,
+      roomSeed: this.roomSeed,
+      hostClientId: this.hostClientId,
+      log: this.hostLog,
     });
   }
 
@@ -731,6 +790,51 @@ export class OnlineController {
     return t - this.clockOffset;
   }
 
+  /** Wipe everything the catchup replay rebuilds. gameStart (always the log's
+   *  first message) re-derives most of it; this clears the rest so no stale
+   *  state from the diverged mirror leaks through. Presence/identity stay. */
+  private resetMirror(): void {
+    this.squadOrder = [];
+    this.draftedIds = new Set();
+    this.assignments = [];
+    this.morale = {};
+    this.matchIndexStart = 0;
+    this.lastResult = null;
+    this.viewingEndsAt = 0;
+    this.pitState = null;
+    const { formation, tactics } = defaultSeatTactics();
+    this.emit({
+      seats: [],
+      managers: [],
+      aliveIds: new Set(),
+      rounds: [],
+      round: 0,
+      startAt: null,
+      slots: [],
+      matchday: null,
+      featuredIndex: 0,
+      spinIndex: -1,
+      spinDeadline: null,
+      hurried: false,
+      reelSettled: false,
+      myRoll: null,
+      myOptions: [],
+      myPick: null,
+      formation,
+      mySlate: new Array(formation.slots.length).fill(null),
+      style: tactics.style,
+      pitDeadline: null,
+      stealPool: [],
+      myStealChoice: null,
+      pitReady: false,
+      roots: {},
+      myRoot: null,
+      eliminated: false,
+      placement: null,
+      champion: null,
+    });
+  }
+
   /** FNV-1a over the mirror's gameplay-relevant state: slates, tactics, and the
    *  latest table. Identical mirrors ⇒ identical hash, on every client. */
   private computeSync(): string {
@@ -756,15 +860,26 @@ export class OnlineController {
   private applyHostMsg(m: HostMsg): void {
     if (typeof m.hostNow === 'number') this.noteClock(m.hostNow);
     // compare the HOST's checksum (state after its previous apply) against OURS
-    // before applying this message — a mismatch means the mirrors diverged.
-    if (!this.view.isHost && m.sync && this.lastSyncHash && m.sync !== this.lastSyncHash) {
+    // before applying this message — a mismatch means the mirrors diverged
+    // (in practice: a broadcast dropped during a reconnect — the transport
+    // never replays missed messages). Self-heal: ask for the catchup log.
+    if (!this.view.isHost && m.sync && this.lastSyncHash && m.sync !== this.lastSyncHash && m.t !== 'catchup') {
       if (!this.view.desynced) this.emit({ desynced: true });
+      this.requestResync();
     }
     this.applyBody(m);
     this.lastSyncHash = this.computeSync();
     const followUp = this.afterApply;
     this.afterApply = null;
     followUp?.();
+  }
+
+  /** Ask the host to replay the game (cooldown-guarded; also the REJOIN button). */
+  requestResync(): void {
+    const t = now();
+    if (t - this.lastResyncAt < 6_000) return;
+    this.lastResyncAt = t;
+    this.channel?.sendIntent({ t: 'resync', clientId: this.clientId });
   }
 
   private applyBody(m: HostMsg): void {
@@ -1004,6 +1119,18 @@ export class OnlineController {
           }
         }
         this.emit({ phase: 'end', aliveIds, champion, placement, eliminated: placement !== 1 });
+        break;
+      }
+      case 'catchup': {
+        // Recovery replay for ONE mirror: me. (The host self-applies its own
+        // broadcast and everyone else sees it too — they all skip here.)
+        if (m.forClientId !== this.clientId || this.view.isHost) break;
+        this.roomSeed = m.roomSeed;
+        this.hostClientId = m.hostClientId;
+        this.resetMirror();
+        for (const body of m.log) this.applyBody(body);
+        this.afterApply = null; // replay is guest-side; discard any host hooks
+        this.emit({ desynced: false, error: null });
         break;
       }
     }

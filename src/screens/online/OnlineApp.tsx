@@ -54,12 +54,20 @@ function OnlineRoom(props: { name: string; onExit: () => void }) {
   const { view, ctl } = useOnlineRoom(props.name);
   useEffect(() => () => ctl.leave(), [ctl]);
 
-  // A desync is loud, never silent: results on this screen may differ from the room's.
+  // A desync is loud, never silent — and self-healing: the controller already
+  // asked the host to replay the game (a dropped broadcast is the usual cause).
   const desyncBanner = view.desynced ? (
-    <div className="fixed inset-x-0 top-0 z-50 bg-loss/90 px-4 py-1.5 text-center">
+    <div className="fixed inset-x-0 top-0 z-50 flex items-center justify-center gap-3 bg-loss/90 px-4 py-1.5 text-center">
       <span className="headline text-xs tracking-[0.2em] text-white">
-        SYNC LOST — scores shown here may differ from the room. Rejoin to fix.
+        SYNC LOST — resyncing with the room…
       </span>
+      <button
+        type="button"
+        onClick={() => ctl.requestResync()}
+        className="headline cursor-pointer rounded border border-white/60 px-2 py-0.5 text-[10px] tracking-[0.2em] text-white hover:bg-white/10"
+      >
+        REJOIN NOW
+      </button>
     </div>
   ) : null;
 

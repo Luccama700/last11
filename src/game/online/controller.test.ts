@@ -19,6 +19,7 @@ import {
   MP_PIT_MS,
   MP_REEL_MS,
   MP_SURVIVORS_PER_ROUND,
+  seatId,
 } from '../../engine/mp';
 
 /** In-memory bus: ordered, self-receiving, synchronous — a strict-FIFO stand-in
@@ -27,6 +28,13 @@ class LoopbackBus {
   private members: { me: PresenceMeta; handlers: RoomHandlers }[] = [];
   private queue: (() => void)[] = [];
   private draining = false;
+  /** Drop the NEXT host broadcast for this clientId — simulates the real-world
+   *  failure (message lost during a websocket reconnect; never replayed). */
+  dropNextHostFor: string | null = null;
+
+  clientIdOf(name: string): string {
+    return this.members.find((m) => m.me.name === name)!.me.clientId;
+  }
 
   private dispatch(fn: () => void): void {
     this.queue.push(fn);
@@ -59,7 +67,13 @@ class LoopbackBus {
         // JSON round-trip = the serialization boundary a real wire imposes
         const wire = JSON.parse(JSON.stringify(msg)) as HostMsg;
         bus.dispatch(() => {
-          for (const m of bus.members) m.handlers.onHostMsg(wire);
+          for (const m of bus.members) {
+            if (bus.dropNextHostFor === m.me.clientId) {
+              bus.dropNextHostFor = null;
+              continue;
+            }
+            m.handlers.onHostMsg(wire);
+          }
         });
       },
     };
@@ -276,6 +290,89 @@ describe('online controller — loopback end-to-end', () => {
     expect(solo.getView().isHost).toBe(true);
     expect(solo.getView().isPublic).toBe(true);
     expect(listing!.humans).toBe(1); // listed and waiting for randoms
+  });
+
+  it('a dropped broadcast desyncs the guest, and the auto-resync catchup heals it', () => {
+    const bus = new LoopbackBus();
+    const host = new OnlineController('Lucca', (_c, me, h) => bus.connect(me, h), true);
+    const guest = new OnlineController('Johnny', (_c, me, h) => bus.connect(me, h), true);
+    host.create(SEED + 5);
+    guest.join(host.getView().code);
+    vi.advanceTimersByTime(250);
+    host.fillWithBots();
+    vi.advanceTimersByTime(250);
+
+    // ride one clean spin, then LOSE the next spinResult on the guest's wire
+    vi.advanceTimersByTime(MP_REEL_MS + MP_PICK_MS + 400);
+    expect(host.getView().spinIndex).toBe(1);
+    bus.dropNextHostFor = bus.clientIdOf('Johnny');
+    vi.advanceTimersByTime(MP_REEL_MS + MP_PICK_MS + 400); // spin 1 closes; guest misses it
+    // the next host message exposed the gap; the guest flagged it AND begged for
+    // a catchup in the same beat — by now the replay has already healed it.
+    expect(guest.getView().desynced).toBe(false);
+    expect(slateIds(guest)).toEqual(slateIds(host));
+
+    // the rest of the tournament plays out clean on both mirrors
+    for (let spin = host.getView().spinIndex; spin < MP_DRAFT_SPINS; spin++) {
+      vi.advanceTimersByTime(MP_REEL_MS + MP_PICK_MS + 400);
+    }
+    for (let round = 1; round <= MP_SURVIVORS_PER_ROUND.length; round++) {
+      vi.advanceTimersByTime(3_500);
+      const totalMs = host.getView().slots.reduce((s, x) => s + x.durationMs, 0);
+      vi.advanceTimersByTime(totalMs + 1_000);
+      if (round < MP_SURVIVORS_PER_ROUND.length) vi.advanceTimersByTime(MP_PIT_MS + 500);
+    }
+    expect(host.getView().phase).toBe('end');
+    expect(guest.getView().phase).toBe('end');
+    expect(guest.getView().desynced).toBe(false);
+    expect(slateIds(guest)).toEqual(slateIds(host));
+    expect(guest.getView().champion?.id).toBe(host.getView().champion?.id);
+  });
+
+  it('a reloaded tab rejoins mid-game via catchup and lands on the live mirror', () => {
+    const bus = new LoopbackBus();
+    const host = new OnlineController('Lucca', (_c, me, h) => bus.connect(me, h), true);
+    const guest = new OnlineController('Johnny', (_c, me, h) => bus.connect(me, h), true);
+    host.create(SEED + 6);
+    guest.join(host.getView().code);
+    vi.advanceTimersByTime(250);
+    host.fillWithBots();
+    vi.advanceTimersByTime(250);
+
+    // three spins in, Johnny's phone eats the tab
+    for (let s = 0; s < 3; s++) vi.advanceTimersByTime(MP_REEL_MS + MP_PICK_MS + 400);
+    const johnnyId = bus.clientIdOf('Johnny');
+    guest.leave();
+
+    // ...and reopens: same tab identity (sessionStorage in prod), fresh mirror
+    const back = new OnlineController(
+      'Johnny',
+      (_c, me, h) => bus.connect(me, h),
+      true,
+      undefined,
+      johnnyId,
+    );
+    back.join(host.getView().code);
+    vi.advanceTimersByTime(250); // hello → host recognizes → catchup replay
+    expect(back.getView().phase).toBe('draft');
+    expect(back.getView().spinIndex).toBe(host.getView().spinIndex);
+    expect(back.getView().mySeatId).toBe(seatId(1)); // his original seat
+    expect(slateIds(back)).toEqual(slateIds(host));
+    expect(back.getView().desynced).toBe(false);
+
+    // and he keeps playing to the crown on the same mirror
+    for (let spin = host.getView().spinIndex; spin < MP_DRAFT_SPINS; spin++) {
+      vi.advanceTimersByTime(MP_REEL_MS + MP_PICK_MS + 400);
+    }
+    for (let round = 1; round <= MP_SURVIVORS_PER_ROUND.length; round++) {
+      vi.advanceTimersByTime(3_500);
+      const totalMs = host.getView().slots.reduce((s, x) => s + x.durationMs, 0);
+      vi.advanceTimersByTime(totalMs + 1_000);
+      if (round < MP_SURVIVORS_PER_ROUND.length) vi.advanceTimersByTime(MP_PIT_MS + 500);
+    }
+    expect(back.getView().phase).toBe('end');
+    expect(slateIds(back)).toEqual(slateIds(host));
+    expect(back.getView().desynced).toBe(false);
   });
 
   it('a joiner into a full/playing room is refused cleanly', () => {
