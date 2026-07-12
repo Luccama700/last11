@@ -5,11 +5,12 @@ import {
   MP_DRAFT_SPINS,
   MP_SURVIVORS_PER_ROUND,
   MP_TIME_SCALE,
+  contentEndMs,
 } from '../../engine/mp';
 import type { MpSeat } from '../../engine/mp';
 import type { Manager } from '../../engine/tournament';
-import { FORMATIONS, formationById } from '../../engine/types';
-import type { PlayingStyle, XiSlotV2 } from '../../engine/types';
+import { FORMATIONS, MATCH_DURATION_MS, formationById } from '../../engine/types';
+import type { MatchTimeline, PlayingStyle, XiSlotV2 } from '../../engine/types';
 import type { PlayerV2 } from '../../engine/data/schema';
 import { v2Nations } from '../../engine/data/loader';
 import { flagOf } from '../../game/flags';
@@ -564,6 +565,15 @@ function OnlineWatch(props: { view: OnlineView; ctl: OnlineController }) {
 
   if (spectating) return <SpectatorView view={props.view} ctl={props.ctl} />;
 
+  // My match can end before the slot does (the slot runs as long as the set's
+  // LONGEST match — usually one that went to pens). Once mine is over, switch
+  // to the waiting room: full-time score + the other matches ticking live.
+  const slotStart = (view.startAt ?? 0) + (slot?.offsetMs ?? 0);
+  const mine = view.matchday?.featured[Math.min(view.featuredIndex, (view.matchday?.featured.length ?? 1) - 1)];
+  const contentElapsed = (Date.now() - slotStart) * MP_TIME_SCALE;
+  const waiting =
+    !preKick && !!mine && contentElapsed > contentEndMs(mine) + 3_500; // a beat to see FT
+
   return (
     <div className="bg-stadium min-h-screen text-ink-100">
       <div className="mx-auto max-w-6xl px-4 py-5">
@@ -581,6 +591,8 @@ function OnlineWatch(props: { view: OnlineView; ctl: OnlineController }) {
           <p className="headline animate-gold-pulse mx-auto w-fit rounded-xl px-8 py-16 text-3xl text-gold-300">
             KICK-OFF…
           </p>
+        ) : waiting ? (
+          <WaitingRoom view={view} mine={mine!} slot={slot} contentElapsed={contentElapsed} />
         ) : (
           <MatchPlaybackScreen
             state={synthState(view, managers)}
@@ -594,6 +606,98 @@ function OnlineWatch(props: { view: OnlineView; ctl: OnlineController }) {
             }}
           />
         )}
+      </div>
+    </div>
+  );
+}
+
+/** Full time on YOUR pitch, but the slot is still running — show the score you
+ *  finished on and every other match of this set ticking live, pens included. */
+function WaitingRoom(props: {
+  view: OnlineView;
+  mine: MatchTimeline;
+  slot: { set: number; offsetMs: number; durationMs: number } | undefined;
+  contentElapsed: number;
+}) {
+  const { view, mine, contentElapsed } = props;
+  const nameOf = (id: string) => view.seats.find((s) => s.id === id)?.name ?? id;
+  const virtualMinute = Math.min(90, (contentElapsed / MATCH_DURATION_MS) * 90);
+  const others = (view.matchday?.rail ?? []).filter((r) => r.set === (props.slot?.set ?? 0));
+  const slotEndsAt = (view.startAt ?? 0) + (props.slot ? props.slot.offsetMs + props.slot.durationMs : 0);
+  const myPens = mine.shootout;
+
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="card-gloss rounded-2xl p-6 text-center">
+        <p className="headline text-[10px] tracking-[0.35em] text-ink-500">FULL TIME</p>
+        <p className="headline mt-2 text-3xl text-ink-100">
+          {nameOf(mine.homeId)}{' '}
+          <span className="headline-gold">
+            {mine.finalScore.home}–{mine.finalScore.away}
+          </span>{' '}
+          {nameOf(mine.awayId)}
+        </p>
+        {myPens && (
+          <p className="mt-1 text-sm font-bold text-gold-300">
+            {myPens.home}–{myPens.away} on pens · {nameOf(myPens.winner === 'home' ? mine.homeId : mine.awayId)} through
+          </p>
+        )}
+        <p className="headline animate-gold-pulse mt-4 text-xs tracking-[0.25em] text-gold-400">
+          WAITING FOR THE OTHER MATCHES TO FINISH…
+        </p>
+      </div>
+
+      {others.length > 0 && (
+        <div className="card-gloss mt-4 rounded-2xl p-4">
+          <h3 className="headline mb-2 text-[10px] tracking-[0.3em] text-ink-500">
+            STILL PLAYING · MATCH {(props.slot?.set ?? 0) + 1} EVERYWHERE
+          </h3>
+          <div className="space-y-1">
+            {others.map((m) => {
+              let h = 0;
+              let a = 0;
+              for (const g of m.goals) if (g.minute <= virtualMinute) g.team === 'home' ? h++ : a++;
+              const kicksIn = (m.pens ?? []).filter((k) => k.atMs <= contentElapsed);
+              const inPens = (m.pens?.length ?? 0) > 0 && contentElapsed >= MATCH_DURATION_MS;
+              const pensDone = inPens && kicksIn.length === (m.pens?.length ?? 0);
+              const ph = kicksIn.filter((k) => k.team === 'home' && k.scored).length;
+              const pa = kicksIn.filter((k) => k.team === 'away' && k.scored).length;
+              const over = !inPens && virtualMinute >= 90 && !m.pens;
+              return (
+                <div
+                  key={m.matchId}
+                  className="flex items-baseline justify-between rounded-lg bg-night-800/60 px-3 py-1.5 text-sm"
+                >
+                  <span className="truncate text-ink-300">
+                    {nameOf(m.homeId)} <span className="text-night-600">v</span> {nameOf(m.awayId)}
+                  </span>
+                  <span className="ml-3 flex shrink-0 items-baseline gap-2 tabular-nums">
+                    <span className="font-bold text-gold-400">
+                      {h}–{a}
+                    </span>
+                    {inPens && (
+                      <span
+                        className={`headline text-[10px] tracking-[0.15em] ${
+                          pensDone ? 'text-ink-500' : 'animate-gold-pulse text-loss'
+                        }`}
+                      >
+                        PENS {ph}–{pa}
+                      </span>
+                    )}
+                    {(over || pensDone) && <span className="text-[10px] text-ink-500">FT</span>}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4">
+        <Countdown
+          deadline={slotEndsAt}
+          label={(props.slot?.set ?? 0) >= 2 ? 'ROUND RESULTS IN' : 'YOUR NEXT MATCH IN'}
+        />
       </div>
     </div>
   );

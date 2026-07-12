@@ -285,7 +285,8 @@ export interface MpSlot {
   durationMs: number;
 }
 
-const contentEndMs = (r: { shootout?: { kicks: unknown[] } }): number =>
+/** Content end of a match: 90' plus its shootout kicks on the fixed beat. */
+export const contentEndMs = (r: { shootout?: { kicks: unknown[] } }): number =>
   MATCH_DURATION_MS + (r.shootout ? r.shootout.kicks.length * SHOOTOUT_KICK_MS : 0);
 
 /**
@@ -324,6 +325,10 @@ export interface MpMatchday {
     homeId: string;
     awayId: string;
     goals: { minute: number; team: 'home' | 'away' }[];
+    /** Shootout kicks stamped on the shared content clock (atMs after kickoff,
+     *  same fixed beat the featured playback uses) — lets the waiting screen
+     *  tick OTHER matches' pens live while yours is already done. */
+    pens?: { team: 'home' | 'away'; scored: boolean; atMs: number }[];
   }[];
 }
 
@@ -363,6 +368,15 @@ export function buildMpMatchday(
         homeId: r.homeId,
         awayId: r.awayId,
         goals: r.goals.map((g) => ({ minute: g.minute, team: g.team })),
+        ...(r.shootout
+          ? {
+              pens: r.shootout.kicks.map((k, i) => ({
+                team: k.team,
+                scored: k.scored,
+                atMs: MATCH_DURATION_MS + (i + 1) * SHOOTOUT_KICK_MS,
+              })),
+            }
+          : {}),
       });
     }
   });
