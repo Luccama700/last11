@@ -29,9 +29,12 @@ export default function HomeScreen(props: { onStart: () => void; onOnline?: () =
         {props.onOnline && (
           <button
             onClick={props.onOnline}
-            className="headline cursor-pointer rounded-xl border border-gold-500/60 px-12 py-4 text-xl text-gold-300 transition hover:bg-gold-400/10"
+            className="headline relative cursor-pointer rounded-xl border border-gold-500/60 px-12 py-4 text-xl text-gold-300 transition hover:bg-gold-400/10"
           >
             PLAY ONLINE
+            <span className="ml-2 align-middle rounded bg-orange-400/15 px-1.5 py-0.5 text-[10px] tracking-widest text-orange-300">
+              BETA
+            </span>
           </button>
         )}
       </div>
