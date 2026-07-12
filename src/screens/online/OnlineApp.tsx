@@ -53,6 +53,25 @@ function OnlineRoom(props: { name: string; onExit: () => void }) {
   const { view, ctl } = useOnlineRoom(props.name);
   useEffect(() => () => ctl.leave(), [ctl]);
 
+  // A desync is loud, never silent: results on this screen may differ from the room's.
+  const desyncBanner = view.desynced ? (
+    <div className="fixed inset-x-0 top-0 z-50 bg-loss/90 px-4 py-1.5 text-center">
+      <span className="headline text-xs tracking-[0.2em] text-white">
+        SYNC LOST — scores shown here may differ from the room. Rejoin to fix.
+      </span>
+    </div>
+  ) : null;
+
+  return (
+    <>
+      {desyncBanner}
+      <OnlinePhaseView view={view} ctl={ctl} onExit={props.onExit} />
+    </>
+  );
+}
+
+function OnlinePhaseView(props: { view: OnlineView; ctl: OnlineController; onExit: () => void }) {
+  const { view, ctl } = props;
   switch (view.phase) {
     case 'idle':
     case 'connecting':
@@ -271,9 +290,11 @@ function Countdown(props: { deadline: number | null; label: string }) {
     <div className="card-gloss flex items-center justify-between rounded-xl px-4 py-2">
       <span className="headline text-[10px] tracking-[0.25em] text-ink-500">{props.label}</span>
       <span
-        className={`headline text-2xl tabular-nums ${secs <= 3 ? 'animate-gold-pulse text-loss' : 'text-gold-300'}`}
+        className={`headline text-2xl tabular-nums ${secs <= 5 ? 'animate-gold-pulse text-loss' : 'text-gold-300'}`}
       >
-        {secs}s
+        {secs}
+        {/* lowercase, small and dim — a full-size S reads as a 5 (playtest) */}
+        <span className="ml-0.5 text-xs font-normal text-ink-500">s</span>
       </span>
     </div>
   );

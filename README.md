@@ -75,10 +75,10 @@ npm run build    # typecheck + production build
 ## Multiplayer (SHIPPED — MVP)
 
 Hit **PLAY ONLINE** on the home screen: 20-manager rooms with 5-letter codes,
-fill-with-bots start, simultaneous slot-machine drafting (10-second picks,
+fill-with-bots start, simultaneous slot-machine drafting (30-second picks,
 disjoint per-spin team pools — no pick contention by construction, global
 player uniqueness), lockstep viewing on a shared clock at 1.5×, a combined
-20-second pit stop (loot + re-slot + tactics), spectators with a rooting-for
+45-second pit stop (loot + re-slot + tactics), spectators with a rooting-for
 pick, trust-based tactics (commit-reveal is a planned later feature for ranked).
 
 Host-authoritative over **Supabase Realtime** (broadcast + presence only — no

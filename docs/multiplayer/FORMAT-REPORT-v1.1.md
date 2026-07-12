@@ -246,7 +246,7 @@ New, surfaced by this spec:
    Speed buttons/skip do not exist in MP (solo keeps them). Coarse clock sync
    (transport timestamps, ±150ms tolerance) returns to scope; NTP-grade sync
    still unnecessary. Shared finale comes free; slow-watcher policy is moot.
-2. **The pit stop is COMBINED and 20s, tight**: loot steal + re-slotting +
+2. **The pit stop is COMBINED — 45s** (wave-2 retune; the original 20s proved too tight in the first live playtest, and picks went 10s → 30s): loot steal + re-slotting +
    formation/style changes in one window. Fallbacks at deadline: no steal,
    keep arrangement, keep tactics.
 3. **Solo gets the combined pit stop too** — formation/style changes join

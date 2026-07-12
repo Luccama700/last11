@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { playerV2ById } from '../engine/draft';
 import { formationById, type MatchTimeline, type Team } from '../engine/types';
 import { humanOf, type GameState, type Matchday } from '../game/state';
 import {
@@ -478,21 +479,24 @@ function Ticker(props: { pb: PlaybackState }) {
 }
 
 /** The most exciting moment of the match — staged ON the pitch. One kick per 6s
- *  beat (playback.ts SHOOTOUT_KICK_MS): taker steps up, result pops, tally fills. */
+ *  beat (playback.ts SHOOTOUT_KICK_MS): the TAKER's name steps up (Lucca's
+ *  playtest note: the player, not the manager), result pops, tally fills. */
 function ShootoutOverlay(props: { pb: PlaybackState; homeName: string; awayName: string; homeYou: boolean }) {
   const so = props.pb.shootout!;
   const pip = (team: Team) => so.kicks.filter((k) => k.team === team);
   const dotFor = (scored: boolean) =>
     scored ? 'bg-gold-400 border-gold-300 animate-kick-pop' : 'bg-night-700 border-loss animate-kick-pop';
+  const takerName = (id?: string) => (id ? (playerV2ById(id)?.name ?? 'The taker') : 'The taker');
+  const lastKick = so.kicks.length > 0 ? so.kicks[so.kicks.length - 1] : null;
   const line =
     so.winner !== null
       ? `${so.winner === 'home' ? props.homeName : props.awayName} win it ${so.home}–${so.away}!`
-      : so.stepping !== null
-        ? `${so.stepping === 'home' ? props.homeName : props.awayName} steps up…`
+      : so.pendingKicker !== null
+        ? `${takerName(so.pendingKicker.playerId)} steps up…`
         : so.lastResult === 'scored'
-          ? 'SCORED!'
+          ? `${takerName(lastKick?.playerId)} SCORES!`
           : so.lastResult === 'missed'
-            ? 'MISSED!'
+            ? `${takerName(lastKick?.playerId)} MISSES!`
             : '';
   const row = (team: Team, label: string, you: boolean) => (
     <div className="flex flex-col items-center gap-1.5">

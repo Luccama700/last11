@@ -13,7 +13,8 @@
  * outcome draws in `resolveMatchOutcome` (TICKSPEC §5). Deterministic throughout.
  */
 import { resolveMatchOutcome, outcomeBoxScore, type MatchSide } from './match';
-import { createRng } from './rng';
+import { shotWeight } from './rating';
+import { createRng, type Rng } from './rng';
 import * as P from './params';
 import {
   VIRTUAL_MINUTES,
@@ -21,7 +22,9 @@ import {
   type Team,
   type TimelineEvent,
   type TimelineTick,
+  type XiSlotV2,
 } from './types';
+import type { Position } from './data/schema';
 
 const clamp01 = (x: number): number => Math.max(0, Math.min(1, x));
 
@@ -111,6 +114,11 @@ export function simulateMatchTimeline(
     }
   }
 
+  // ── Match furniture (Lucca, 2026-07-11 playtest): fouls, corners, goal kicks,
+  // throw-ins — cosmetic ticker events with CORRECTLY attributed players, drawn
+  // ONLY from the cosmetic rng so the outcome is untouched. ──
+  addFurnitureEvents(events, ticks, home, away, goalMinutes, names, cos);
+
   events.push({ minute: VIRTUAL_MINUTES, type: 'fulltime', team: null, text: 'Full-time' });
 
   // Shootout events (all stamped at minute 90, in kick order).
@@ -153,4 +161,102 @@ export function simulateMatchTimeline(
     awayFormationId: away.tactics.formationId,
     boxScore: outcomeBoxScore(o),
   };
+}
+
+// ── Match furniture ───────────────────────────────────────────────────────────
+
+const WIDE: readonly Position[] = ['LW', 'RW', 'LM', 'RM', 'LB', 'RB'];
+const DEFENSIVE: readonly Position[] = ['CB', 'RB', 'LB', 'CDM', 'CM'];
+const FORWARD: readonly Position[] = ['CM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'ST'];
+
+const inGroup = (xi: readonly XiSlotV2[], group: readonly Position[]): XiSlotV2[] =>
+  xi.filter((s) => group.includes(s.position));
+
+const pickFrom = (list: readonly XiSlotV2[], fallback: readonly XiSlotV2[], rng: Rng): XiSlotV2 => {
+  const pool = list.length > 0 ? list : fallback;
+  return pool[Math.min(pool.length - 1, Math.floor(rng.next() * pool.length))];
+};
+
+/** The side's set-piece taker: highest shot weight among WIDE players, falling
+ *  back to the best attacker — the same corner taker all match, like real life. */
+const cornerTaker = (xi: readonly XiSlotV2[]): XiSlotV2 => {
+  const wide = inGroup(xi, WIDE);
+  const pool = wide.length > 0 ? wide : xi;
+  return pool.reduce((best, s) => (shotWeight(s) > shotWeight(best) ? s : best), pool[0]);
+};
+
+/**
+ * 5–9 attributed furniture events per match, minutes drawn (cosmetic rng) with
+ * rejection against goal minutes, each other, and the 0/45/90 landmarks. The
+ * side an event favors follows that minute's possession tick: corners and
+ * throw-ins go to the attacking side, goal kicks to the defending side, and a
+ * foul is committed by the defending side's DEF/MID on an attacking MID/ATT
+ * (the fouled player's team is the event's team — they get the free kick).
+ */
+function addFurnitureEvents(
+  events: TimelineEvent[],
+  ticks: readonly TimelineTick[],
+  home: MatchSide,
+  away: MatchSide,
+  goalMinutes: ReadonlySet<number>,
+  names: ReadonlyMap<string, string>,
+  cos: Rng,
+): void {
+  const xiOf = (team: Team) => (team === 'home' ? home.xi : away.xi);
+  const nameOf = (s: XiSlotV2) => names.get(s.player.id) ?? s.player.name;
+  const used = new Set<number>([0, 45, VIRTUAL_MINUTES]);
+  const count = 5 + Math.floor(cos.next() * 5); // 5..9
+  for (let i = 0; i < count; i++) {
+    let minute = 2 + Math.floor(cos.next() * (VIRTUAL_MINUTES - 4));
+    let guard = 0;
+    while ((used.has(minute) || goalMinutes.has(minute)) && guard++ < 50) {
+      minute = 2 + Math.floor(cos.next() * (VIRTUAL_MINUTES - 4));
+    }
+    used.add(minute);
+    const attacking: Team = ticks[minute]?.possession ?? 'home';
+    const defending: Team = attacking === 'home' ? 'away' : 'home';
+    const roll = cos.next();
+    if (roll < 0.3) {
+      // throw-in: the attacking side's wide man hurls it back in
+      const s = pickFrom(inGroup(xiOf(attacking), WIDE), xiOf(attacking), cos);
+      events.push({
+        minute,
+        type: 'throw_in',
+        team: attacking,
+        text: `Out of bounds — throw-in, ${nameOf(s)}`,
+        playerId: s.player.id,
+      });
+    } else if (roll < 0.6) {
+      // foul: defending DEF/MID chops down an attacking MID/ATT — free kick
+      const by = pickFrom(inGroup(xiOf(defending), DEFENSIVE), xiOf(defending), cos);
+      const on = pickFrom(inGroup(xiOf(attacking), FORWARD), xiOf(attacking), cos);
+      events.push({
+        minute,
+        type: 'foul',
+        team: attacking,
+        text: `Foul: ${nameOf(by)} brings down ${nameOf(on)}`,
+        playerId: by.player.id,
+      });
+    } else if (roll < 0.85) {
+      // corner to the attacking side, taken by their set-piece man
+      const s = cornerTaker(xiOf(attacking));
+      events.push({
+        minute,
+        type: 'corner',
+        team: attacking,
+        text: `Corner — ${nameOf(s)} swings it in`,
+        playerId: s.player.id,
+      });
+    } else {
+      // goal kick: the DEFENDING side's keeper restarts
+      const gk = xiOf(defending).find((s) => s.position === 'GK') ?? xiOf(defending)[0];
+      events.push({
+        minute,
+        type: 'goal_kick',
+        team: defending,
+        text: `Goal kick — ${nameOf(gk)}`,
+        playerId: gk.player.id,
+      });
+    }
+  }
 }

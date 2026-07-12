@@ -45,18 +45,19 @@ export const MP_LOBBY_SIZE = 20;
 export const MP_SURVIVORS_PER_ROUND: readonly number[] = [16, 8, 4, 2, 1];
 /** Lockstep playback runs 1.5× wall speed: 45 s of content in a 30 s slot. */
 export const MP_TIME_SCALE = 1.5;
-/** Pick timer per spin — starts when the reels SETTLE (the ceremony isn't taxed). */
-export const MP_PICK_MS = 10_000;
+/** Pick timer per spin (Lucca, playtest wave 2: 30s — 10s was too tight live). */
+export const MP_PICK_MS = 30_000;
 /** Fixed slot-machine ceremony before the pick timer opens. */
 export const MP_REEL_MS = 3_500;
-/** The combined pit stop: loot + re-slot + tactics. Tight by request. */
-export const MP_PIT_MS = 20_000;
+/** The combined pit stop: loot + re-slot + tactics (playtest wave 2: 45s). */
+export const MP_PIT_MS = 45_000;
 /** startAt lead so every client has the round in hand before elapsed goes +. */
 export const MP_START_LEAD_MS = 3_000;
 /** Breath between lockstep match slots. */
 export const MP_SLOT_GAP_MS = 1_500;
-/** Engine build handshake — bump on ANY change that alters engine output. */
-export const MP_ENGINE_VERSION = 'last11-mp-1';
+/** Engine build handshake — bump on ANY change that alters engine output.
+ *  mp-2: goal minute spacing + furniture events (playtest wave 2). */
+export const MP_ENGINE_VERSION = 'last11-mp-2';
 
 // ── Room codes ────────────────────────────────────────────────────────────────
 

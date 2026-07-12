@@ -99,6 +99,7 @@ export type TimelineEventType =
   | 'kickoff' | 'halftime' | 'fulltime'
   | 'chance' | 'shot' | 'save' | 'goal' | 'counter'
   | 'card'
+  | 'foul' | 'corner' | 'goal_kick' | 'throw_in' // match furniture (cosmetic, attributed)
   | 'shootout_start' | 'penalty_scored' | 'penalty_missed' | 'shootout_end';
 
 export interface TimelineEvent {

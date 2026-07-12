@@ -158,6 +158,10 @@ describe('online controller — loopback end-to-end', () => {
     // placements are coherent: exactly one champion
     const hv = host.getView();
     expect(hv.aliveIds.size).toBe(1);
+    // the sync checksum never tripped across the ENTIRE game — mirrors agreed
+    // at every message boundary (wave-2 desync guard)
+    expect(guest.getView().desynced).toBe(false);
+    expect(host.getView().desynced).toBe(false);
   });
 
   it('global uniqueness holds across BOTH mirrors after the draft', () => {

@@ -74,6 +74,9 @@ export type OnlinePhase =
 export interface OnlineView {
   phase: OnlinePhase;
   error: string | null;
+  /** True when this mirror's checksum stopped matching the host's — results on
+   *  this screen may differ from the room's. Surfaced as a banner, never silent. */
+  desynced: boolean;
   code: string;
   isHost: boolean;
   myName: string;
@@ -136,6 +139,15 @@ export class OnlineController {
   private matchIndexStart = 0;
   private lastResult: RoundResult | null = null;
   private viewingEndsAt = 0;
+  /** hostClock − myClock, median of recent samples (one per host message).
+   *  Real phones sit SECONDS off NTP; all host-epoch times are converted to
+   *  the local clock through this on apply. */
+  private clockSamples: number[] = [];
+  private clockOffset = 0;
+  private lastSyncHash: string | null = null;
+  /** Host follow-up (next spin / next round) queued by applyBody and fired only
+   *  AFTER lastSyncHash is recomputed — an inline send would stamp a stale hash. */
+  private afterApply: (() => void) | null = null;
 
   // host-only bookkeeping
   private joinOrder: { clientId: string; name: string }[] = [];
@@ -159,6 +171,7 @@ export class OnlineController {
     this.view = {
       phase: 'idle',
       error: null,
+      desynced: false,
       code: '',
       isHost: false,
       myName,
@@ -432,13 +445,23 @@ export class OnlineController {
 
   // ── Host: phase driver ──────────────────────────────────────────────────────
 
+  /** All host sends go through here: stamps the host clock (client offset
+   *  estimation) and the host's current mirror checksum (desync detection). */
+  private send(body: HostMsg): void {
+    this.channel?.sendHost({
+      ...body,
+      hostNow: Date.now(),
+      ...(this.lastSyncHash ? { sync: this.lastSyncHash } : {}),
+    });
+  }
+
   private broadcastRoom(phase: 'lobby' | 'draft' | 'round' | 'pit' | 'end'): void {
     const seats: SeatAssignment[] = this.joinOrder.map((j, idx) => ({
       seat: idx,
       clientId: j.clientId,
       name: j.name,
     }));
-    this.channel?.sendHost({
+    this.send({
       t: 'room',
       roomSeed: this.roomSeed,
       code: this.view.code,
@@ -461,7 +484,7 @@ export class OnlineController {
         name: humans[s]?.name ?? '',
       });
     }
-    this.channel?.sendHost({ t: 'gameStart', seats, setups: this.setups });
+    this.send({ t: 'gameStart', seats, setups: this.setups });
     // spin 0 is triggered from the APPLIED gameStart (one ordered stream) — firing
     // it here would race the host's own self-broadcast (bots not yet drafted).
   }
@@ -471,7 +494,7 @@ export class OnlineController {
     this.pendingMoves.clear();
     const deadlineAt = now() + MP_REEL_MS + MP_PICK_MS;
     this.hostPhaseDeadline = deadlineAt;
-    this.channel?.sendHost({ t: 'spinStart', spinIndex, deadlineAt });
+    this.send({ t: 'spinStart', spinIndex, deadlineAt });
   }
 
   private hostCloseSpin(): void {
@@ -491,14 +514,10 @@ export class OnlineController {
     }
     const moves: Record<string, { from: number; to: number }[]> = {};
     for (const [sid, list] of this.pendingMoves) moves[sid] = list;
-    this.channel?.sendHost({ t: 'spinResult', spinIndex: this.view.spinIndex, picks, moves });
-    const next = this.view.spinIndex + 1;
-    if (next < MP_DRAFT_SPINS) {
-      this.hostSpinStart(next);
-    } else {
-      this.hostStage = 'viewing';
-      this.channel?.sendHost({ t: 'roundStart', round: 1, startAt: now() + MP_START_LEAD_MS });
-    }
+    // The follow-up (next spin / round 1) fires from the APPLIED spinResult —
+    // back-to-back sends would stamp a stale sync hash (loopback caught it).
+    this.hostPhaseDeadline = Number.MAX_SAFE_INTEGER; // parked until the next spinStart
+    this.send({ t: 'spinResult', spinIndex: this.view.spinIndex, picks, moves });
   }
 
   private hostAfterViewing(): void {
@@ -508,13 +527,13 @@ export class OnlineController {
     );
     if (aliveAfter.length <= 1) {
       this.hostStage = 'done';
-      this.channel?.sendHost({ t: 'gameEnd' });
+      this.send({ t: 'gameEnd' });
       return;
     }
     this.hostStage = 'pit';
     this.pendingPits.clear();
     this.hostPhaseDeadline = now() + MP_PIT_MS;
-    this.channel?.sendHost({ t: 'pitStart', round: result.round, deadlineAt: this.hostPhaseDeadline });
+    this.send({ t: 'pitStart', round: result.round, deadlineAt: this.hostPhaseDeadline });
   }
 
   private hostClosePit(): void {
@@ -560,17 +579,13 @@ export class OnlineController {
       }
       upd[seat.id] = { slate, tactics: base.tactics, stolen };
     }
-    this.channel?.sendHost({
+    this.hostStage = 'viewing';
+    // the next roundStart fires from the APPLIED pitResult (fresh sync hash)
+    this.send({
       t: 'pitResult',
       round: result.round,
       updates: upd,
       roots: { ...this.pendingRoots },
-    });
-    this.hostStage = 'viewing';
-    this.channel?.sendHost({
-      t: 'roundStart',
-      round: result.round + 1,
-      startAt: now() + MP_START_LEAD_MS,
     });
   }
 
@@ -616,9 +631,57 @@ export class OnlineController {
     } else if (this.hostStage === 'pit' && t >= this.hostPhaseDeadline) this.hostClosePit();
   }
 
+  // ── Clock offset + sync checksum ────────────────────────────────────────────
+
+  private noteClock(hostNow: number): void {
+    this.clockSamples.push(hostNow - Date.now());
+    if (this.clockSamples.length > 9) this.clockSamples.shift();
+    const sorted = [...this.clockSamples].sort((a, b) => a - b);
+    this.clockOffset = sorted[Math.floor(sorted.length / 2)];
+  }
+
+  /** Convert a host-epoch timestamp to this device's clock. */
+  private toLocal(t: number): number {
+    return t - this.clockOffset;
+  }
+
+  /** FNV-1a over the mirror's gameplay-relevant state: slates, tactics, and the
+   *  latest table. Identical mirrors ⇒ identical hash, on every client. */
+  private computeSync(): string {
+    let s = '';
+    for (const seat of [...this.view.seats].sort((a, b) => a.seat - b.seat)) {
+      s += seat.id + ':' + (seat.slate as (XiSlotV2 | null)[]).map((x) => x?.player.id ?? '_').join(',');
+      s += '|' + seat.tactics.formationId + '/' + seat.tactics.style + ';';
+    }
+    if (this.lastResult) {
+      s += '#' + this.lastResult.round;
+      for (const row of this.lastResult.table) s += row.managerId + '=' + row.points + '.' + row.gd + ';';
+    }
+    let h = 0x811c9dc5;
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return h.toString(36);
+  }
+
   // ── The ONE apply path (host + clients) ─────────────────────────────────────
 
   private applyHostMsg(m: HostMsg): void {
+    if (typeof m.hostNow === 'number') this.noteClock(m.hostNow);
+    // compare the HOST's checksum (state after its previous apply) against OURS
+    // before applying this message — a mismatch means the mirrors diverged.
+    if (!this.view.isHost && m.sync && this.lastSyncHash && m.sync !== this.lastSyncHash) {
+      if (!this.view.desynced) this.emit({ desynced: true });
+    }
+    this.applyBody(m);
+    this.lastSyncHash = this.computeSync();
+    const followUp = this.afterApply;
+    this.afterApply = null;
+    followUp?.();
+  }
+
+  private applyBody(m: HostMsg): void {
     switch (m.t) {
       case 'room': {
         this.roomSeed = m.roomSeed;
@@ -674,7 +737,7 @@ export class OnlineController {
           mySlate: mine ? [...(mine.slate as (XiSlotV2 | null)[])] : this.view.mySlate,
           managers: [],
         });
-        if (this.view.isHost) this.hostSpinStart(0);
+        if (this.view.isHost) this.afterApply = () => this.hostSpinStart(0);
         break;
       }
       case 'spinStart': {
@@ -692,7 +755,7 @@ export class OnlineController {
             : [];
         this.emit({
           spinIndex: m.spinIndex,
-          spinDeadline: m.deadlineAt,
+          spinDeadline: this.toLocal(m.deadlineAt),
           reelSettled: false,
           myRoll,
           myOptions,
@@ -729,9 +792,22 @@ export class OnlineController {
           mySlate: mine ? [...(mine.slate as (XiSlotV2 | null)[])] : this.view.mySlate,
           myPick: null,
         });
+        // host: the follow-up fires AFTER the fresh sync hash is computed
+        if (this.view.isHost && this.hostStage === 'spin') {
+          const next = m.spinIndex + 1;
+          this.afterApply = () => {
+            if (next < MP_DRAFT_SPINS) {
+              this.hostSpinStart(next);
+            } else {
+              this.hostStage = 'viewing';
+              this.send({ t: 'roundStart', round: 1, startAt: now() + MP_START_LEAD_MS });
+            }
+          };
+        }
         break;
       }
       case 'roundStart': {
+        const startAt = this.toLocal(m.startAt); // lockstep runs on the LOCAL clock
         const aliveSeats = this.view.seats
           .filter((s) => this.view.aliveIds.has(s.id))
           .sort((a, b) => a.seat - b.seat);
@@ -747,14 +823,14 @@ export class OnlineController {
         const viewer = this.view.mySeatId ?? seatId(0);
         const matchday = buildMpMatchday(result, aliveSeats, viewer);
         const totalMs = slots.reduce((sum, s) => sum + s.durationMs, 0);
-        this.viewingEndsAt = m.startAt + totalMs + 400;
+        this.viewingEndsAt = startAt + totalMs + 400;
         const managers = [...this.view.seats]
           .sort((a, b) => a.seat - b.seat)
           .map((s) => seatToManager(s, this.view.aliveIds.has(s.id)));
         this.emit({
           phase: 'watching',
           round: m.round,
-          startAt: m.startAt,
+          startAt,
           slots,
           matchday,
           featuredIndex: 0,
@@ -784,7 +860,7 @@ export class OnlineController {
         this.emit({
           phase: 'pit',
           aliveIds,
-          pitDeadline: m.deadlineAt,
+          pitDeadline: this.toLocal(m.deadlineAt),
           stealPool: this.currentStealPool(),
           eliminated: iFell || this.view.eliminated,
           placement,
@@ -809,6 +885,11 @@ export class OnlineController {
           this.matchIndexStart = this.lastResult.engineNext?.matchIndex ?? this.matchIndexStart;
         }
         this.emit({ seats, roots: { ...this.view.roots, ...m.roots } });
+        // host: next round fires AFTER the fresh sync hash is computed
+        if (this.view.isHost && this.hostStage === 'viewing') {
+          this.afterApply = () =>
+            this.send({ t: 'roundStart', round: m.round + 1, startAt: now() + MP_START_LEAD_MS });
+        }
         break;
       }
       case 'gameEnd': {

@@ -56,7 +56,16 @@ export interface SeatAssignment {
   name: string;
 }
 
-export type HostMsg =
+/** Every host message carries the host's wall clock (`hostNow`) so clients can
+ *  estimate their device-clock offset — real phones proved to be SECONDS off
+ *  NTP, which broke lockstep (playtest wave 2). `sync` is the host's mirror
+ *  checksum after its previous apply; a client whose own checksum differs knows
+ *  it has desynced and says so instead of silently showing different results. */
+export type HostEnvelope = { hostNow?: number; sync?: string };
+
+export type HostMsg = HostMsgBody & HostEnvelope;
+
+export type HostMsgBody =
   /** Authoritative room snapshot — sent on every lobby change and to joiners. */
   | {
       t: 'room';

@@ -163,17 +163,28 @@ function pickAssist(
   return weightedPick(pool, rng, morale);
 }
 
-/** Minute-stamp + attribute each goal (scorer/assister feed morale). */
+/** Minute-stamp + attribute each goal (scorer/assister feed morale).
+ *  Lucca's ruling (2026-07-11 playtest): goals NEVER share a minute — each
+ *  minute is drawn with rejection against the used set (≤ ~10 goals over 90
+ *  minutes, so rejection terminates fast and stays fully rng-deterministic). */
 function buildGoals(
   home: MatchSide,
   away: MatchSide,
   score: { home: number; away: number },
   rng: Rng,
 ): GoalEvent[] {
+  const used = new Set<number>();
+  const drawMinute = (): number => {
+    let m = 1 + rng.int(90);
+    let guard = 0;
+    while (used.has(m) && guard++ < 300) m = 1 + rng.int(90);
+    used.add(m);
+    return m;
+  };
   const raw: { team: Team; minute: number; seq: number }[] = [];
   let seq = 0;
-  for (let i = 0; i < score.home; i++) raw.push({ team: 'home', minute: 1 + rng.int(90), seq: seq++ });
-  for (let i = 0; i < score.away; i++) raw.push({ team: 'away', minute: 1 + rng.int(90), seq: seq++ });
+  for (let i = 0; i < score.home; i++) raw.push({ team: 'home', minute: drawMinute(), seq: seq++ });
+  for (let i = 0; i < score.away; i++) raw.push({ team: 'away', minute: drawMinute(), seq: seq++ });
   raw.sort((a, b) => a.minute - b.minute || a.seq - b.seq); // stable tiebreak for determinism
   return raw.map((g) => {
     const side = g.team === 'home' ? home : away;
