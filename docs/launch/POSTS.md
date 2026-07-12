@@ -4,9 +4,11 @@ Copy-paste bank, one custom post per venue. Voice: honest, humble, first person.
 Nothing here overclaims: it's a free browser game, built in a hackathon weekend,
 multiplayer is BETA.
 
-**Before posting anything:** hackathon submission locked (post AFTER Sunday 9am
-PST), production build green on last11.app, and play one full online room on
-your phone. Nothing kills a launch like the top comment being "site's broken."
+**Timing (updated):** Lucca's call — r/WebGames + r/futebol go out NOW
+(2026-07-11 night); the rest stagger after the Sunday submission. Pre-flight
+before hitting post: production build green on last11.app and play one full
+online room on your phone. Nothing kills a launch like the top comment being
+"site's broken."
 
 **How to run it:** don't post everywhere the same day. One or two venues per
 day, and live in the comments for the first 2–3 hours after each post — reply
@@ -22,19 +24,19 @@ Show HN → r/SideProject → X thread pinned on the account.
 
 ## 1. r/WebGames
 
-**Title:** Last11 — a football draft battle royale I built during a hackathon. 32 managers, draft an XI on a slot machine, bottom of the table gets cut every round. Free, no signup.
+**Title:** Last11 — multiplayer football draft battle royale. 32 managers draft XIs on a slot machine, bottom of the table gets cut every round. Free, no signup, solo or 20-player online rooms.
 
 **Body:**
 
-I've been hooked on the spin-to-draft football sims (38-0, 7a0 and their clones) and kept wishing one of them was a battle royale, so I built it during a hackathon last weekend.
+The spin-to-draft football sims (38-0, 7a0 and their clones) are everywhere right now, but none of them is a battle royale, so I made one for a hackathon this weekend.
 
 You're one of 32 managers. Every spin lands on a national squad from World Cup history (Brazil '70, Spain '10, Germany '26...) and you take one player into any slot of your formation. Then rounds of matches happen and the bottom of the table goes home: 32 → 24 → 16 → 8 → 4 → 2 → 1. Between rounds you get one pit stop: re-slot, change tactics, and loot a player from someone who got eliminated. From 16 alive there are no draws — level matches go to penalties, full stakes.
 
-There's also an online mode (20-player rooms with a room code) but it's in beta and rough in places, so bring patience or bring bots — empty seats fill with them.
+Multiplayer is live in beta: 20-player rooms with a room code, empty seats fill with bots, so it works with 2 friends or 20. No reconnect yet if you drop — it's a weekend-old build, rough edges included.
 
-It's free, browser-only, no account needed: https://last11.app
+Free, browser-only, no account needed: https://last11.app
 
-I'd honestly love feedback, especially on match pacing and whether the drafting feels fair. Made-up ratings debates also welcome, that's half the point.
+Feedback welcome, especially on match pacing and whether the drafting feels fair. Ratings arguments also welcome — I calibrated them myself, Pelé '70 is the ceiling.
 
 **Notes:** check the sidebar for title format on the day. If a [free] or [multiplayer] tag convention exists, use it.
 
@@ -91,7 +93,7 @@ Happy to answer questions about the orchestration setup. And if you want to see 
 
 **Corpo:**
 
-Sou brasileiro morando no Canadá e viciei nos jogos de draft tipo 7a0 e 38-0 durante a Copa. Sentia falta de uma versão battle royale, então fiz uma num hackathon no fim de semana passado: Last11 (https://last11.app).
+Os jogos de draft tipo 7a0 e 38-0 estão em todo lugar nessa Copa, mas nenhum tem modo battle royale — então fiz um num hackathon esse fim de semana: Last11 (https://last11.app).
 
 Funciona assim: 32 técnicos no lobby, cada giro da roleta cai numa seleção histórica (Brasil 70, Brasil 2002, Espanha 2010...) e você escolhe um jogador pra qualquer posição do seu esquema. Rodada de jogos, os piores da tabela vão embora, e entre rodadas você pode roubar um jogador de quem foi eliminado. Com 16 vivos não tem mais empate — vai pros pênaltis valendo tudo.
 
