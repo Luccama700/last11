@@ -6,8 +6,7 @@ device first (engine `last11-mp-6`).
 
 ## Cold open (10s)
 
-- last11.app on screen. **"Every draft football sim is single-player. Nobody
-  has built the battle royale — so we did, in a weekend."**
+- last11.app on screen. **"Hey! My name is Lucca, and I'm Johnny, and with all the World Cup fun going on, we decided to build a football sim battle royale, in one weekend!"**
 - Home screen: the three-step pitch cards (Draft 🎡 / Survive 📉 / Loot 💀).
 
 ## Act 1 — SINGLE PLAYER
