@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { affinity } from '../engine/affinity';
-import { playerV2ById, stealGainV2 } from '../engine/draft';
+import { affinityForV2, effectiveRatingV2, playerV2ById, stealGainV2 } from '../engine/draft';
 import { STAR_THRESHOLD, teamStrength } from '../engine/rating';
 import { applySteal } from '../engine/tournament';
 import type { Player, XiSlotV2 } from '../engine/types';
@@ -107,6 +107,19 @@ export default function StealScreen(props: {
                 const slotLabel = detailedReady
                   ? state.formation!.slots[i]
                   : (detailedOf(slot.player.id)?.position ?? '');
+                // Show what the occupant is WORTH AT THIS SLOT, not his base rating —
+                // otherwise a +6 over a "91" is unreconcilable (Lucca's Xavi/Musiala
+                // report: a natural-CAM Musiala fielded at CM is an 87 there, so a
+                // natural-CM 93 really is +6). Off-position occupants get a tag with
+                // their natural position + base so the delta adds up on screen.
+                const occ = detailedReady ? denseSlate[i] : null;
+                const slotPos = detailedReady ? state.formation!.slots[i] : null;
+                const eff =
+                  occ && slotPos
+                    ? Math.round(effectiveRatingV2(occ.player, slotPos, affinity))
+                    : slot.player.rating;
+                const offPos =
+                  occ && slotPos ? affinityForV2(occ.player, slotPos, affinity) < 1 : false;
                 return (
                   <li key={i}>
                     <button
@@ -122,7 +135,15 @@ export default function StealScreen(props: {
                           <span className="headline mr-1.5 text-[10px] text-gold-300">{slotLabel}</span>
                         )}
                         {flagOf(slot.player.nation)} {slot.player.name}{' '}
-                        <span className="text-xs text-ink-500">{slot.player.rating}</span>
+                        <span className="text-xs text-ink-500">{eff}</span>
+                        {offPos && occ && (
+                          <span
+                            className="ml-1.5 rounded bg-night-700 px-1 py-0.5 text-[9px] font-bold text-orange-300"
+                            title={`Natural ${occ.player.position} (${occ.player.rating}) playing ${slotLabel} — worth ${eff} here`}
+                          >
+                            {occ.player.position} {occ.player.rating}
+                          </span>
+                        )}
                       </span>
                       {gain !== null && (
                         <span

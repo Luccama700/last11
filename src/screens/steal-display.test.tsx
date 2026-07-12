@@ -127,3 +127,70 @@ describe('StealScreen — display layer (bug A2 regression: base rating vs affin
     expect(xiRows[10].textContent).not.toContain('+6.0');
   });
 });
+
+describe('StealScreen — off-position occupant rows show slot-worth (Lucca: Xavi +6 on Musiala)', () => {
+  // The reported confusion: "CM Jamal Musiala 91" with a +6.0 chip for a 93 Xavi.
+  // The +6 is CORRECT (natural-CAM Musiala at CM = 91 × .956 ≈ 87; natural-CM Xavi = 93)
+  // but the row claimed 91. The row must show what the occupant is worth AT THE SLOT,
+  // plus a natural-position tag, so every delta reconciles from visible numbers.
+  const musiala = squadByRef('GER', 2026).players.find((p) => p.id === 'ger-2026-musiala')!;
+  const xavi = squadByRef('ESP', 2010).players.find((p) => p.id === 'esp-2010-xavi')!;
+  const CM_SLOT = 6; // F433.slots[6] === 'CM'
+
+  function offPosState(): GameState {
+    const base = buildState();
+    const slate = base.humanSlate!.map((s, i) =>
+      i === CM_SLOT ? { position: s!.position, player: musiala } : s,
+    );
+    const managers = base.managers.map((m) => ({
+      ...m,
+      xi: m.xi.map((s, i) =>
+        i === CM_SLOT
+          ? {
+              position: detailedToCoarse(F433.slots[CM_SLOT]),
+              player: {
+                id: musiala.id,
+                name: musiala.name,
+                nation: musiala.nation,
+                position: detailedToCoarse(musiala.position),
+                rating: musiala.rating,
+              },
+            }
+          : s,
+      ),
+    }));
+    return {
+      ...base,
+      managers,
+      humanSlate: slate,
+      pool: [
+        {
+          id: xavi.id,
+          name: xavi.name,
+          nation: xavi.nation,
+          position: detailedToCoarse(xavi.position),
+          rating: xavi.rating,
+        },
+      ],
+    };
+  }
+
+  it('shows the occupant worth 87 at CM with a "CAM 91" natural tag, and Xavi nets +6.0', () => {
+    render(<StealScreen state={offPosState()} onDone={() => {}} />);
+    const row = screen.getAllByTestId('xi-slot')[CM_SLOT];
+    expect(row.textContent).toContain('Musiala');
+    expect(row.textContent).toContain('87'); // slot-worth, NOT base 91
+    expect(row.textContent).toContain('CAM 91'); // natural position + base, reconciling the delta
+
+    const card = screen.getAllByTestId('loot-card').find((el) => el.textContent?.includes('Xavi'));
+    fireEvent.click(card!);
+    expect(screen.getAllByTestId('xi-slot')[CM_SLOT].textContent).toContain('+6.0');
+  });
+
+  it('natural occupants keep showing their base rating with no tag', () => {
+    render(<StealScreen state={offPosState()} onDone={() => {}} />);
+    const ronaldoRow = screen.getAllByTestId('xi-slot')[9]; // natural ST 96
+    expect(ronaldoRow.textContent).toContain('96');
+    expect(ronaldoRow.textContent).not.toContain('ST 96'); // no off-position tag
+  });
+});
