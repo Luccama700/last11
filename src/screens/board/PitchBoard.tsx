@@ -86,7 +86,7 @@ export default function PitchBoard(props: {
   const compact = props.compact ?? false;
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border border-emerald-900/40 ${compact ? 'aspect-[3/4] w-full' : 'aspect-[3/4] w-full lg:h-full lg:w-auto'}`}
+      className={`relative overflow-hidden rounded-2xl border border-emerald-900/40 ${compact ? 'aspect-[3/4] w-full' : 'aspect-[3/4] w-full lg:h-full lg:w-auto lg:max-w-full'}`}
       style={{
         background:
           'linear-gradient(0deg, #0b3d1f 0%, #0d4a26 50%, #0b3d1f 100%)',

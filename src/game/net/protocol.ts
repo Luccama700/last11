@@ -75,6 +75,8 @@ export type HostMsgBody =
       hostClientId: string;
       seats: SeatAssignment[];
       phase: 'lobby' | 'draft' | 'round' | 'pit' | 'end';
+      /** Listed in the public directory — randoms can quick-play into it. */
+      isPublic?: boolean;
     }
   /** The game begins: final seat map is locked; bots fill the rest. */
   | { t: 'gameStart'; seats: SeatAssignment[]; setups: Record<string, { formationId: string; style: Tactics['style'] }> }

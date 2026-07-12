@@ -86,8 +86,8 @@ export function parseSquadsFile(file: SquadsFileV2): SquadEntry[] {
       }
       assertPosition(p.pos, `player ${p.id}`);
       if (p.altPos) {
-        if (!Array.isArray(p.altPos) || p.altPos.length > 2) {
-          throw new SquadDataError(`player ${p.id}: altPos must be an array of ≤2`);
+        if (!Array.isArray(p.altPos) || p.altPos.length > 3) {
+          throw new SquadDataError(`player ${p.id}: altPos must be an array of ≤3`);
         }
         for (const a of p.altPos) assertPosition(a, `player ${p.id} altPos`);
       }

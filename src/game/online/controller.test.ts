@@ -9,9 +9,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { OnlineController, type RoomTransport } from './controller';
 import type { RoomHandlers } from '../net/room';
+import type { LobbyDirectory, PublicLobby } from '../net/directory';
 import type { HostMsg, Intent, PresenceMeta } from '../net/protocol';
 import {
   MP_DRAFT_SPINS,
+  MP_ENGINE_VERSION,
   MP_HURRY_MS,
   MP_PICK_MS,
   MP_PIT_MS,
@@ -205,6 +207,68 @@ describe('online controller — loopback end-to-end', () => {
     expect(guest.getView().spinIndex).toBe(1);
     expect(guest.getView().hurried).toBe(false); // reset for the new spin
     expect(guest.getView().desynced).toBe(false);
+  });
+
+  it('public lobbies: the listing tracks the lobby and quick play joins it', async () => {
+    const bus = new LoopbackBus();
+    const calls: string[] = [];
+    let listing: PublicLobby | null = null;
+    const makeDir = (found: PublicLobby | null): LobbyDirectory => ({
+      announce(l) {
+        listing = l;
+        calls.push(`announce:${l.humans}`);
+      },
+      withdraw() {
+        calls.push('withdraw');
+      },
+      find: async () => found,
+    });
+
+    const host = new OnlineController('Lucca', (_c, me, h) => bus.connect(me, h), true, makeDir(null));
+    host.create(SEED + 4);
+    await vi.advanceTimersByTimeAsync(250);
+    expect(listing).toBeNull(); // private by default
+    host.setPublic(true);
+    expect(listing!.humans).toBe(1);
+
+    // a rando's quick play finds the listing and lands in the lobby
+    const guest = new OnlineController(
+      'Rando',
+      (_c, me, h) => bus.connect(me, h),
+      true,
+      makeDir({ code: host.getView().code, humans: 1, version: MP_ENGINE_VERSION }),
+    );
+    guest.quickPlay();
+    await vi.advanceTimersByTimeAsync(250);
+    expect(guest.getView().phase).toBe('lobby');
+    expect(guest.getView().isPublic).toBe(true); // badge travels on the room msg
+    expect(listing!.humans).toBe(2); // host refreshed the count on the join
+
+    // the game starting pulls the room from the directory
+    host.fillWithBots();
+    await vi.advanceTimersByTimeAsync(250);
+    expect(calls[calls.length - 1]).toBe('withdraw');
+    expect(host.getView().phase).toBe('draft');
+    expect(guest.getView().phase).toBe('draft');
+  });
+
+  it('quick play with no public lobby up opens a fresh PUBLIC room', async () => {
+    const bus = new LoopbackBus();
+    let listing: PublicLobby | null = null;
+    const dir: LobbyDirectory = {
+      announce(l) {
+        listing = l;
+      },
+      withdraw() {},
+      find: async () => null,
+    };
+    const solo = new OnlineController('Lucca', (_c, me, h) => bus.connect(me, h), true, dir);
+    solo.quickPlay();
+    await vi.advanceTimersByTimeAsync(250);
+    expect(solo.getView().phase).toBe('lobby');
+    expect(solo.getView().isHost).toBe(true);
+    expect(solo.getView().isPublic).toBe(true);
+    expect(listing!.humans).toBe(1); // listed and waiting for randoms
   });
 
   it('a joiner into a full/playing room is refused cleanly', () => {

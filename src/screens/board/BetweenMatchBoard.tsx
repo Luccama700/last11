@@ -25,10 +25,10 @@ export default function BetweenMatchBoard(props: {
   onStyleChange: (style: PlayingStyle) => void;
   onFormationChange?: (f: Formation) => void;
   onDone: () => void;
-  /** MP pit stop: countdown banner above the board and extra rail content
-   *  (the loot list) under the tactics column. Solo passes neither. */
+  /** MP pit stop: countdown banner above the board and a third column on the
+   *  right (loot + standings). Solo passes neither. */
   banner?: React.ReactNode;
-  extraAside?: React.ReactNode;
+  rightAside?: React.ReactNode;
   doneLabel?: string;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
@@ -50,9 +50,17 @@ export default function BetweenMatchBoard(props: {
   );
 
   return (
-    <div className="bg-stadium min-h-screen text-ink-100">
-      <div className="mx-auto grid max-w-5xl gap-5 px-4 py-6 lg:grid-cols-[16rem_1fr]">
-        <aside className="order-2 space-y-4 lg:order-1">
+    // lg: the board IS the viewport — the pitch takes the remaining height and
+    // the side rails scroll internally if they must. No page scroll.
+    <div className="bg-stadium min-h-screen text-ink-100 lg:h-dvh lg:min-h-0 lg:overflow-hidden">
+      <div
+        className={`mx-auto grid gap-5 px-4 py-4 lg:h-full ${
+          props.rightAside
+            ? 'max-w-7xl lg:grid-cols-[15rem_minmax(0,1fr)_19rem]'
+            : 'max-w-5xl lg:grid-cols-[16rem_minmax(0,1fr)]'
+        }`}
+      >
+        <aside className="scrollbar-hide order-2 min-h-0 space-y-4 lg:order-1 lg:overflow-y-auto">
           <TacticsRail
             formationName={props.formation.name}
             style={props.style}
@@ -93,8 +101,6 @@ export default function BetweenMatchBoard(props: {
             </div>
           )}
 
-          {props.extraAside}
-
           <button
             type="button"
             onClick={props.onDone}
@@ -103,9 +109,9 @@ export default function BetweenMatchBoard(props: {
             {props.doneLabel ?? 'READY →'}
           </button>
         </aside>
-        <main className="order-1 lg:order-2">
+        <main className="order-1 flex min-h-0 flex-col lg:order-2">
           {props.banner}
-          <header className="mb-3 flex items-baseline justify-between">
+          <header className="mb-2 flex items-baseline justify-between">
             <h1 className="headline text-xl text-ink-100">Adjust your side</h1>
             <p className="text-xs font-semibold text-ink-500">
               {selected === null
@@ -113,14 +119,21 @@ export default function BetweenMatchBoard(props: {
                 : 'tap a second player to swap · tap again to cancel'}
             </p>
           </header>
-          <PitchBoard
-            formation={props.formation}
-            slate={props.xi}
-            mode={props.mode}
-            selectedSlot={selected}
-            onSlotClick={tapSlot}
-          />
+          <div className="flex min-h-0 flex-1 justify-center">
+            <PitchBoard
+              formation={props.formation}
+              slate={props.xi}
+              mode={props.mode}
+              selectedSlot={selected}
+              onSlotClick={tapSlot}
+            />
+          </div>
         </main>
+        {props.rightAside && (
+          <aside className="scrollbar-hide order-3 min-h-0 space-y-4 lg:overflow-y-auto">
+            {props.rightAside}
+          </aside>
+        )}
       </div>
     </div>
   );

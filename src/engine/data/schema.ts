@@ -44,7 +44,7 @@ export interface RawPlayerV2 {
   id: string;            // `${nationLower}-${year}-${slug}`, e.g. 'bra-2002-ronaldo'
   name: string;
   pos: Position;         // primary, detailed (NOTE: field is `pos` on disk)
-  altPos?: Position[];   // 0..2 secondaries, treated as natural (affinity 1.0)
+  altPos?: Position[];   // 0..3 secondaries, treated as natural (affinity 1.0)
   rating: number;        // 1..99, per-tournament snapshot
   fullName?: string;
   club?: string;

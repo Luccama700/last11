@@ -141,7 +141,7 @@ function RoomGate(props: { view: OnlineView; ctl: OnlineController; onExit: () =
       <p className="headline text-xs tracking-[0.35em] text-gold-400">BATTLE ROYALE ONLINE</p>
       {view.phase === 'connecting' ? (
         <p className="headline animate-gold-pulse rounded-xl px-6 py-3 text-xl text-gold-300">
-          Connecting to {view.code}…
+          {view.code ? `Connecting to ${view.code}…` : 'Finding a public lobby…'}
         </p>
       ) : (
         <>
@@ -150,6 +150,16 @@ function RoomGate(props: { view: OnlineView; ctl: OnlineController; onExit: () =
               {view.error}
             </p>
           )}
+          <button
+            type="button"
+            onClick={() => ctl.quickPlay()}
+            className="btn-gold headline w-full max-w-lg cursor-pointer rounded-2xl px-6 py-4 text-xl"
+          >
+            QUICK PLAY →
+            <span className="mt-0.5 block text-[11px] font-semibold normal-case tracking-normal opacity-80">
+              drop into a public lobby — or open one if none are up
+            </span>
+          </button>
           <div className="grid w-full max-w-lg gap-4 sm:grid-cols-2">
             <button
               type="button"
@@ -204,6 +214,23 @@ function LobbyScreen(props: { view: OnlineView; ctl: OnlineController; onExit: (
           <p className="mt-2 text-sm text-ink-500">
             {view.present.length}/{view.lobbySize} managers · empty seats become bots at kickoff
           </p>
+          {view.isHost ? (
+            <button
+              type="button"
+              onClick={() => ctl.setPublic(!view.isPublic)}
+              className={`mt-3 cursor-pointer rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                view.isPublic
+                  ? 'btn-gold'
+                  : 'border border-night-600 text-ink-300 hover:border-gold-500'
+              }`}
+            >
+              {view.isPublic ? '● PUBLIC — randoms can quick-play in' : '○ PRIVATE — make it public'}
+            </button>
+          ) : view.isPublic ? (
+            <p className="headline mt-3 text-[10px] tracking-[0.25em] text-gold-400">
+              PUBLIC LOBBY — open to quick play
+            </p>
+          ) : null}
         </header>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -355,10 +382,13 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
   );
 
   return (
-    <div className="bg-stadium min-h-screen text-ink-100">
-      <div className="mx-auto grid max-w-6xl gap-4 px-4 py-5 lg:grid-cols-[minmax(0,1fr)_21rem]">
-        <main>
-          <header className="mb-3 flex items-baseline justify-between">
+    // lg: the page IS the viewport — the pitch sizes from the remaining height
+    // and the options list scrolls internally. Nothing on this screen scrolls
+    // the page (Lucca: everything fits one page).
+    <div className="bg-stadium min-h-screen text-ink-100 lg:h-dvh lg:min-h-0 lg:overflow-hidden">
+      <div className="mx-auto grid max-w-6xl gap-4 px-4 py-4 lg:h-full lg:grid-cols-[minmax(0,1fr)_21rem]">
+        <main className="flex min-h-0 flex-col">
+          <header className="mb-2 flex items-baseline justify-between">
             <h1 className="headline text-xl">
               <span className="text-ink-100">Draft</span>{' '}
               <span className="headline-gold">spin {Math.max(1, view.spinIndex + 1)}/{MP_DRAFT_SPINS}</span>
@@ -373,21 +403,23 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
                     : 'pick from your squad →'}
             </p>
           </header>
-          <PitchBoard
-            formation={view.formation}
-            slate={view.mySlate}
-            mode="classic"
-            glowSlots={selPlayer || moveFrom !== null ? open : null}
-            clickableSlots={clickable}
-            selectedSlot={moveFrom}
-            onSlotClick={tapSlot}
-          />
-          <p className="mt-2 text-right text-xs text-ink-500">
+          <div className="flex min-h-0 flex-1 justify-center">
+            <PitchBoard
+              formation={view.formation}
+              slate={view.mySlate}
+              mode="classic"
+              glowSlots={selPlayer || moveFrom !== null ? open : null}
+              clickableSlots={clickable}
+              selectedSlot={moveFrom}
+              onSlotClick={tapSlot}
+            />
+          </div>
+          <p className="mt-1.5 text-right text-xs text-ink-500">
             Squad strength <span className="headline text-base text-gold-300">{strength}</span>
           </p>
         </main>
 
-        <aside className="space-y-3">
+        <aside className="flex min-h-0 flex-col gap-3">
           {view.myRoll && (
             <SpinReveal
               key={view.spinIndex}
@@ -398,7 +430,7 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
             />
           )}
           <Countdown deadline={view.spinDeadline} label="PICK CLOSES" hurried={view.hurried} />
-          <div className="card-gloss scrollbar-hide max-h-[24rem] space-y-1 overflow-y-auto rounded-xl p-2">
+          <div className="card-gloss scrollbar-hide max-h-[24rem] min-h-0 space-y-1 overflow-y-auto rounded-xl p-2 lg:max-h-none lg:flex-1">
             {view.myOptions.map((p) => {
               const sel = selPlayer?.id === p.id;
               const picked = view.myPick?.playerId === p.id;
@@ -446,6 +478,9 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
 
 /** Minimal GameState synthesis so the solo screens render MP data unchanged. */
 function synthState(view: OnlineView, managers: Manager[]): GameState {
+  // The live-scores rail shows ONLY the current slot's matches — while you play
+  // your first match you see everyone else's first match, and so on (Lucca).
+  const currentSet = view.slots[Math.min(view.featuredIndex, view.slots.length - 1)]?.set ?? 0;
   return {
     screen: 'battle',
     seed: 0,
@@ -458,7 +493,11 @@ function synthState(view: OnlineView, managers: Manager[]): GameState {
     pool: [],
     humanPlacement: view.placement,
     matchday: view.matchday
-      ? { featured: view.matchday.featured, featuredIndex: view.featuredIndex, rail: view.matchday.rail }
+      ? {
+          featured: view.matchday.featured,
+          featuredIndex: view.featuredIndex,
+          rail: view.matchday.rail.filter((r) => r.set === currentSet),
+        }
       : null,
   };
 }
@@ -611,7 +650,7 @@ function OnlinePit(props: { view: OnlineView; ctl: OnlineController }) {
       <h3 className="headline mb-1.5 text-[10px] tracking-[0.3em] text-loss">
         LOOT THE FALLEN · pick one
       </h3>
-      <div className="scrollbar-hide max-h-48 space-y-1 overflow-y-auto">
+      <div className="scrollbar-hide max-h-48 space-y-1 overflow-y-auto lg:max-h-[38vh]">
         {stealTargets.map((p) => {
           const chosen = view.myStealChoice?.playerId === p.id;
           const best = bestSlotFor(p);
@@ -663,7 +702,7 @@ function OnlinePit(props: { view: OnlineView; ctl: OnlineController }) {
           <Countdown deadline={view.pitDeadline} label="PIT STOP — STEAL · RE-SLOT · TACTICS" hurried={view.hurried} />
         </div>
       }
-      extraAside={
+      rightAside={
         <div className="space-y-3">
           {lootRail}
           <MpStandings view={view} compact />

@@ -48,6 +48,7 @@ import { formationById } from '../../engine/types';
 import type { Formation, Tactics, XiSlotV2 } from '../../engine/types';
 import type { PlayerV2, SquadRef } from '../../engine/data/schema';
 import { playerV2ById } from '../../engine/draft';
+import { SupabaseLobbyDirectory, type LobbyDirectory } from '../net/directory';
 import { RoomChannel, type RoomHandlers } from '../net/room';
 import { onlineConfigured } from '../net/supa';
 import type { HostMsg, Intent, PresenceMeta, SeatAssignment } from '../net/protocol';
@@ -85,6 +86,8 @@ export interface OnlineView {
   /** Lobby: connected humans (presence), seat cap. */
   present: { name: string; you: boolean }[];
   lobbySize: number;
+  /** Listed in the public directory — randoms can quick-play into this room. */
+  isPublic: boolean;
   // draft
   spinIndex: number; // 0-based; -1 before the first spin
   spinDeadline: number | null;
@@ -164,12 +167,18 @@ export class OnlineController {
   private hostPhaseDeadline = 0;
   private hostStage: 'lobby' | 'spin' | 'viewing' | 'pit' | 'done' = 'lobby';
 
+  /** Public-lobby directory; null when offline/tests (all uses are guarded). */
+  private directory: LobbyDirectory | null = null;
+
   constructor(
     myName: string,
     private transportFactory: TransportFactory = (code, me, handlers) =>
       new RoomChannel(code, me, handlers),
     private injected = false, // tests: skip the onlineConfigured gate
+    directory?: LobbyDirectory | null,
   ) {
+    this.directory =
+      directory !== undefined ? directory : injected ? null : new SupabaseLobbyDirectory();
     const { formation, tactics } = defaultSeatTactics();
     this.view = {
       phase: 'idle',
@@ -181,6 +190,7 @@ export class OnlineController {
       mySeatId: null,
       present: [],
       lobbySize: MP_LOBBY_SIZE,
+      isPublic: false,
       spinIndex: -1,
       spinDeadline: null,
       hurried: false,
@@ -237,6 +247,48 @@ export class OnlineController {
     this.open(code.trim().toUpperCase(), false);
   }
 
+  /** Quick play: join the fullest public lobby on this build, or open a fresh
+   *  PUBLIC room and wait — either way the button always lands you in a lobby. */
+  quickPlay(): void {
+    if (!this.injected && !onlineConfigured()) {
+      this.emit({ phase: 'error', error: 'Online is not configured on this build.' });
+      return;
+    }
+    this.emit({ phase: 'connecting', code: '', isHost: false });
+    const search = this.directory?.find(MP_ENGINE_VERSION) ?? Promise.resolve(null);
+    void search.then((lobby) => {
+      if (this.view.phase !== 'connecting') return; // user backed out meanwhile
+      if (lobby) {
+        this.join(lobby.code);
+      } else {
+        this.create();
+        this.setPublic(true);
+      }
+    });
+  }
+
+  /** Host, lobby only: list/unlist this room in the public directory. */
+  setPublic(isPublic: boolean): void {
+    if (!this.view.isHost || this.hostStage !== 'lobby') return;
+    this.emit({ isPublic });
+    this.broadcastRoom('lobby'); // refreshes the listing + guests see the badge flip
+  }
+
+  /** The directory listing mirrors the lobby: public + still filling ⇒ listed
+   *  with a live human count; anything else ⇒ withdrawn. */
+  private refreshListing(): void {
+    if (!this.directory || !this.view.isHost) return;
+    if (this.view.isPublic && this.hostStage === 'lobby') {
+      this.directory.announce({
+        code: this.view.code,
+        humans: this.joinOrder.length,
+        version: MP_ENGINE_VERSION,
+      });
+    } else {
+      this.directory.withdraw();
+    }
+  }
+
   private open(code: string, isHost: boolean): void {
     if (!this.injected && !onlineConfigured()) {
       this.emit({ phase: 'error', error: 'Online is not configured on this build.' });
@@ -277,6 +329,7 @@ export class OnlineController {
   leave(): void {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    this.directory?.withdraw();
     this.channel?.leave();
     this.channel = null;
     this.emit({ phase: 'idle', error: null });
@@ -464,6 +517,7 @@ export class OnlineController {
   }
 
   private broadcastRoom(phase: 'lobby' | 'draft' | 'round' | 'pit' | 'end'): void {
+    this.refreshListing(); // every lobby change re-syncs the public directory
     const seats: SeatAssignment[] = this.joinOrder.map((j, idx) => ({
       seat: idx,
       clientId: j.clientId,
@@ -477,12 +531,14 @@ export class OnlineController {
       hostClientId: this.hostClientId,
       seats,
       phase,
+      isPublic: this.view.isPublic,
     });
   }
 
   private startGame(): void {
     if (this.hostStage !== 'lobby') return;
     this.hostStage = 'spin';
+    this.refreshListing(); // the room is playing — pull it from the directory
     const humans = this.joinOrder.slice(0, MP_LOBBY_SIZE);
     const seats: SeatAssignment[] = [];
     for (let s = 0; s < MP_LOBBY_SIZE; s++) {
@@ -725,7 +781,7 @@ export class OnlineController {
             this.emit({ phase: 'error', error: 'That room is already playing.' });
             return;
           }
-          this.emit({ phase: 'lobby' });
+          this.emit({ phase: 'lobby', isPublic: m.isPublic ?? false });
         }
         break;
       }

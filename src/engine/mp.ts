@@ -45,8 +45,9 @@ export const MP_LOBBY_SIZE = 20;
 export const MP_SURVIVORS_PER_ROUND: readonly number[] = [16, 8, 4, 2, 1];
 /** Lockstep playback runs 1.5× wall speed: 45 s of content in a 30 s slot. */
 export const MP_TIME_SCALE = 1.5;
-/** Pick timer per spin (Lucca, playtest wave 2: 30s — 10s was too tight live). */
-export const MP_PICK_MS = 30_000;
+/** Pick timer per spin (Lucca: 20s — 10s too tight live, 30s dragged; the
+ *  all-locked-in fast-forward absorbs the fast-lobby case anyway). */
+export const MP_PICK_MS = 20_000;
 /** Fixed slot-machine ceremony before the pick timer opens. */
 export const MP_REEL_MS = 3_500;
 /** The combined pit stop: loot + re-slot + tactics (playtest wave 2: 45s). */
@@ -59,8 +60,9 @@ export const MP_START_LEAD_MS = 3_000;
 /** Breath between lockstep match slots. */
 export const MP_SLOT_GAP_MS = 1_500;
 /** Engine build handshake — bump on ANY change that alters engine output.
- *  mp-2: goal minute spacing + furniture events (playtest wave 2). */
-export const MP_ENGINE_VERSION = 'last11-mp-2';
+ *  mp-2: goal minute spacing + furniture events (playtest wave 2).
+ *  mp-3: player-data positions pass (Messi ST; wingers gain wide-mid altPos). */
+export const MP_ENGINE_VERSION = 'last11-mp-3';
 
 // ── Room codes ────────────────────────────────────────────────────────────────
 
@@ -314,6 +316,9 @@ export interface MpMatchday {
   featured: MatchTimeline[]; // this seat's match per set (empty if not playing)
   rail: {
     matchId: string;
+    /** Which lockstep slot (0..2) this match plays in — the rail only shows
+     *  the CURRENT slot's matches, so scores land as they happen, not early. */
+    set: number;
     homeId: string;
     awayId: string;
     goals: { minute: number; team: 'home' | 'away' }[];
@@ -333,7 +338,10 @@ export function buildMpMatchday(
   const bySeat = new Map(seats.map((s) => [s.id, s]));
   const featured: MatchTimeline[] = [];
   const rail: MpMatchday['rail'] = [];
-  for (const r of result.resultsV2 ?? []) {
+  const results = result.resultsV2 ?? [];
+  // same set arithmetic as roundSlots: chunk k of the results order IS slot k
+  const setSize = Math.max(1, Math.floor(results.length / 3));
+  results.forEach((r, idx) => {
     const mine = r.homeId === viewerSeatId || r.awayId === viewerSeatId;
     if (mine) {
       const home = bySeat.get(r.homeId)!;
@@ -349,12 +357,13 @@ export function buildMpMatchday(
     } else {
       rail.push({
         matchId: `${result.round}-${r.homeId}-${r.awayId}`,
+        set: Math.min(2, Math.floor(idx / setSize)),
         homeId: r.homeId,
         awayId: r.awayId,
         goals: r.goals.map((g) => ({ minute: g.minute, team: g.team })),
       });
     }
-  }
+  });
   return { featured, rail };
 }
 
