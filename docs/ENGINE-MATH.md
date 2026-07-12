@@ -29,8 +29,8 @@ Every player has a single integer rating on a 0–99 scale, hand-calibrated in
 | "Very good starter" today | high 80s |
 | Star threshold (⭐ + engine star bonus) | ≥ 90 |
 
-The database (`src/engine/data/squads-v2.json`) currently holds **47 squads /
-857 players across 20 nations**, spanning historical World Cup sides (Brazil '70,
+The database (`src/engine/data/squads-v2.json`) currently holds **57 squads /
+1,038 players across 20 nations**, spanning historical World Cup sides (Brazil '70,
 Spain '10, Germany '14…) and 2026 rosters. Each player carries `pos` (one of the
 12 detailed positions), optional `altPos` secondaries, and `rating`. The same
 person can appear as multiple year-snapshots (Messi '14 vs Messi '26) but the
@@ -179,7 +179,7 @@ No screen ever calls the engine or rolls dice.
 
 | On screen | The math behind it |
 |---|---|
-| **Clock** | 90 virtual minutes mapped onto 45 s of wall clock (`MATCH_DURATION_MS`); minute = elapsed/45000×90. Multiplayer will run 30 s slots (mode parameter). |
+| **Clock** | 90 virtual minutes mapped onto 45 s of wall clock (`MATCH_DURATION_MS`); minute = elapsed/45000×90. Multiplayer runs 30 s slots (1.5× time scale, mode parameter). |
 | **Score digits** | Latest goal event whose minute-stamp ≤ current virtual minute — the engine's attributed goals (§7), nothing recomputed. Digits remount + bump on change. |
 | **Ball** | Interpolated between per-minute engine ticks (`ballPosition` × `ballLane` — 5 bands × 3 lanes with ±0.06 jitter, cosmetic RNG). Snaps to centre during goal celebrations. |
 | **22 dots** | Formation anchors per position, then the C1 "character" model: per-index phase/tempo/stride (pure hash), positional energy budget (GK 0.15 → ST 1.25), personal patrol orbit + micro-jitter, per-player ball-pull with a slow ebb, and **urgency** — the side losing the momentum reads faster/longer strides and its back line sinks toward goal. All `f(elapsed, index, …)`, MP-safe. |

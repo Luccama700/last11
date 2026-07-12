@@ -59,7 +59,7 @@ What I most want feedback on:
 - Match playback: watchable, or do you just want to skip?
 - Ratings: hand-calibrated (Pelé '70 is the 97 ceiling) and I will absolutely take arguments about them.
 
-Known rough edges: no reconnect in online rooms yet (a drop means bots take over), and mobile layout has some tight spots. I'll be in the comments.
+Known rough edges: mobile layout has some tight spots (reconnect shipped — a reloaded phone rejoins its own seat mid-game). I'll be in the comments.
 
 **Notes:** r/playmygame expects genuine engagement. Commit to replying, and some periods require feedback-for-feedback (play someone else's game too).
 
@@ -71,7 +71,7 @@ Known rough edges: no reconnect in online rooms yet (a drop means bots take over
 
 **Body:**
 
-Last weekend I entered a hackathon and shipped Last11 (https://last11.app), a football draft battle royale: deterministic match engine, 857-player historical database, online 20-player rooms on Supabase Realtime, 315 tests. The part I think this sub will find interesting is that it was built essentially entirely with Claude Code, and not as one long chat.
+Last weekend I entered a hackathon and shipped Last11 (https://last11.app), a football draft battle royale: deterministic match engine, 1,038-player historical database, online 20-player rooms on Supabase Realtime, 353 tests. The part I think this sub will find interesting is that it was built essentially entirely with Claude Code, and not as one long chat.
 
 The setup that actually worked:
 

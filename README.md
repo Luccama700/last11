@@ -5,7 +5,8 @@ XI on the slot machine under pressure. Every round the bottom of the table is
 cut — survive every elimination and you're the Last11.
 
 Built at **United Hacks V7** (Sport theme track), July 2026.
-Production: **last11.app** · testing builds deploy from the `preview` branch.
+Production: **last11.app** — every commit to `main` deploys straight to prod;
+a green test suite + build is the gate.
 
 ## The game
 
@@ -39,7 +40,7 @@ Everything is deterministic: one seed replays the identical tournament.
 ```bash
 npm install
 npm run dev      # play at http://localhost:5173
-npx vitest run   # 315 unit + integration + DOM tests
+npx vitest run   # 353 unit + integration + DOM tests
 npm run build    # typecheck + production build
 ```
 
@@ -58,7 +59,7 @@ npm run build    # typecheck + production build
 - **`src/screens/`** — setup, slot-machine draft board, the arena (standings
   popup, cut line), match playback, steal window, pit-stop board, end screen
   with Hall of Champions.
-- **Data** — `src/engine/data/`: 47 squads / 857 players across 20 nations,
+- **Data** — `src/engine/data/`: 57 squads / 1,038 players across 20 nations,
   historical World Cup sides and 2026 rosters, each with detailed positions,
   secondaries and a calibrated rating. No servers, no accounts.
 
@@ -74,30 +75,41 @@ npm run build    # typecheck + production build
 
 ## Multiplayer (SHIPPED — MVP)
 
-Hit **PLAY ONLINE** on the home screen: 20-manager rooms with 5-letter codes,
-fill-with-bots start, simultaneous slot-machine drafting (30-second picks,
-disjoint per-spin team pools — no pick contention by construction, global
-player uniqueness), lockstep viewing on a shared clock at 1.5×, a combined
-45-second pit stop (loot + re-slot + tactics), spectators with a rooting-for
-pick, trust-based tactics (commit-reveal is a planned later feature for ranked).
-The timers are ceilings, not waits: once every human has locked in, the
-countdown snaps to a 5-second fuse ("ALL LOCKED IN") on every screen at once.
+Hit **PLAY ONLINE** on the home screen: 20-manager rooms with 5-letter codes
+OR **public lobbies** — a host flips a room public and anyone on **QUICK PLAY**
+drops into the fullest open lobby. Fill-with-bots start, simultaneous
+slot-machine drafting (20-second picks, disjoint per-spin team pools — no pick
+contention by construction, and **every player is globally unique across all
+20 teams**), lockstep viewing on a shared clock at 1.5×, a waiting room after
+your final whistle (other matches tick live, pens included, above a
+spoiler-safe live table with the cut line), a combined 45-second pit stop
+(loot + re-slot + tactics), spectators with a rooting-for pick, trust-based
+tactics (commit-reveal is a planned later feature for ranked). The timers are
+ceilings, not waits: once every human has locked in, the countdown snaps to a
+5-second fuse ("ALL LOCKED IN") on every screen at once.
 
 Host-authoritative over **Supabase Realtime** (broadcast + presence only — no
 database): the wire carries seeds, picks and deadlines; every client derives
-bots, pairings, scores and timelines deterministically from the room seed, and
-a loopback test plays a full host+guest tournament asserting the two mirrors
-never diverge. Config: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`
+bots, pairings, scores and timelines deterministically from the room seed.
+Public lobbies are a presence channel too — a listing lives exactly as long as
+its host's tab. The sync layer self-heals: every host message carries an
+FNV-1a state checksum, a desynced or reloaded client replays the host's
+durable event log to rejoin mid-game into its own seat, and a phase watchdog
+catches losses with no successor message. Loopback tests play full host+guest
+tournaments (including dropped-message and rejoin scenarios) asserting the two
+mirrors never diverge. Config: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`
 (`.env.example`; set the same two in Vercel for deploys).
 
 ## Tests
 
-The engine is kept honest by 341 tests: determinism (same seed ⇒ byte-identical
+The engine is kept honest by 353 tests: determinism (same seed ⇒ byte-identical
 tournament), balance targets (3.4 goals/match, +10 strength ≈ +0.75 xG, ~15%
 level after 90'), affinity invariants over the entire player DB (natural
 position is always zero-cost), elimination bookkeeping, steal integrity,
-playback projection (no-spoiler pens, monotone multi-goal clusters), and
-DOM-level tests that click through entire games.
+playback projection (no-spoiler pens, monotone multi-goal clusters),
+DOM-level tests that click through entire games, MP loopback tournaments
+(dropped messages, rejoin, hostile pit-fold injection), and a Monte-Carlo
+draft-balance ceiling over 1,200 simulated 20-seat drafts.
 
 ## Team
 

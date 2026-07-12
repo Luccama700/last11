@@ -43,7 +43,7 @@ and **BATTLE ROYALE ONLINE** → create room / join by code. One game, two entry
 doors; everything after the lobby looks identical in both modes.
 
 ### Lobby
-- Room code (5 letters, shareable link `11a0.com/r/GOLDN`). Host creates, picks
+- Room code (5 letters, shareable link `last11.app/r/GOLDN`). Host creates, picks
   lobby size cap and phase-timer profile (Casual / Fast).
 - Seats fill with humans as they join; at kickoff every empty seat gets a bot
   (the funny names stay). 2 humans minimum, 32 seats always.
@@ -107,10 +107,11 @@ certification/ranked; **v3** = matchmaking, persistent accounts.
 1. ~~MVP seat count~~ → **20-manager rooms**, fill-with-bots start.
 2. ~~Trust vs commit-reveal~~ → **trust for MVP; commit–reveal is a planned
    later feature** (ranked/public rooms).
-3. ~~Phase timers~~ → **30s picks · 30s match slots (lockstep) · combined 45s
-   pit stop** (loot + re-slot + tactics; wave-2 retune from 10s/20s). When
-   every human has locked in, the countdown snaps to a **5s fuse** instead of
-   running out the window (§6b ruling 9). Cut ladder 20→16→8→4→2→1.
+3. ~~Phase timers~~ → **20s picks · 30s match slots (lockstep) · combined 45s
+   pit stop** (loot + re-slot + tactics; retuned 10s → 30s → 20s across the
+   live playtests). When every human has locked in, the countdown snaps to a
+   **5s fuse** instead of running out the window (§6b ruling 9). Cut ladder
+   20→16→8→4→2→1.
 4. ~~Rooting-for~~ → **IN** — eliminated managers pick a survivor to back.
 
 The format is fully locked as of 2026-07-11; FORMAT-REPORT-v1.1.md §6b is the
@@ -134,16 +135,46 @@ authoritative ruling list.
   When every human has locked in, the host snaps the deadline to 5s and
   broadcasts `hurry` so all countdowns jump together (all-locked-in rule).
 - `src/screens/online/OnlineApp.tsx` — entry → lobby (setup while waiting,
-  fill-with-bots) → simultaneous draft (SpinReveal + 30s countdown + board
-  moves) → lockstep viewing (MatchPlaybackScreen wall-clock mode, no skips) →
-  45s combined pit stop (loot rail + re-slot + tactics on the pit board) →
-  spectator view with rooting-for → EndScreen + Hall of Champions.
-- Tests: `mp.test.ts` (15) + `controller.test.ts` loopback end-to-end (a full
-  host+guest tournament over an in-memory bus, mirrors asserted identical —
-  this caught a real gameStart/spinStart ordering race) + entry DOM tests.
-  Real-network smoke verified broadcast+presence on the live project.
+  fill-with-bots) → simultaneous draft (SpinReveal + 20s countdown + board
+  moves, sort-by-best + secondary positions) → lockstep viewing
+  (MatchPlaybackScreen wall-clock mode, no skips) → waiting room after your
+  final whistle (other matches live, pens kick-by-kick, spoiler-safe round
+  table with the cut line) → 45s combined pit stop (loot rail + re-slot +
+  tactics on the pit board) → spectator view with rooting-for → EndScreen +
+  Hall of Champions.
+- Tests: `mp.test.ts` + `controller.test.ts` loopback end-to-end (full
+  host+guest tournaments over an in-memory bus, mirrors asserted identical —
+  this caught a real gameStart/spinStart ordering race; plus dropped-message
+  self-heal, reload rejoin, hostile pit-fold injection, watchdog rescue) +
+  `mp-draft-balance.test.ts` (Monte-Carlo ceiling over 1,200 simulated
+  20-seat drafts) + entry DOM tests. Real-network smoke verified
+  broadcast+presence on the live project.
 - Deliberate MVP wire-format deviation: REPLAY coordinates (seeds+inputs)
   instead of shipped timelines — all clients run the same build (version
   handshake enforces it); `timelines` remains the ranked upgrade path.
-- Out of MVP scope (documented): reconnect/rejoin (drop = AFK fallbacks),
-  host migration (host leaves ⇒ room over), commit–reveal (later feature).
+- Out of MVP scope (documented): host migration (host leaves ⇒ room over),
+  commit–reveal (later feature).
+
+## 7. POST-MVP SHIPPED (wave 3, 2026-07-11/12 — engine `last11-mp-6`)
+
+- **Public lobbies + QUICK PLAY** — a host flips a room public; quick play
+  joins the fullest open lobby or creates a new public one. No directory
+  database: public rooms announce on a shared presence channel
+  (`last11:@public`), so a listing lives exactly as long as its host's tab.
+- **Self-healing sync + true rejoin** (supersedes the "no reconnect" scope
+  cut) — the host keeps a durable event log (`hostLog`); a desynced client
+  auto-requests a `catchup` and replays the log through the one apply path;
+  a reloaded tab reclaims its seat via a per-room sessionStorage clientId;
+  a phase watchdog rescues losses with no successor message (e.g. a dropped
+  `gameEnd`). Every host message still carries the FNV-1a mirror checksum.
+- **Global player uniqueness across ALL seats** (mp-6, final ruling) — one
+  shared drafted set for humans AND bots; loot enforces the same-person rule;
+  the host validates submitted pit slates at a trust boundary (id-multiset
+  permutation check + duplicate-person steal guard), so a doctored client
+  can't field two Pelés.
+- **20s picks** (retune from 30s) and the all-locked-in 5s fuse for both
+  draft and pit stop.
+- **Taker-vs-keeper penalties** — conversion = 0.75 + 0.010·(taker−75) −
+  0.008·(keeper−75), clamped [0.30, 0.95]; takers in shot-weight order.
+- **Data pass** — squads-v2 grown to 57 squads / 1,038 players (shared by
+  solo and MP), calibrated so <25% of drafted 20-seat XIs fall below 935.

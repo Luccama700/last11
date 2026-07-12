@@ -85,7 +85,7 @@ shuffled list, where `N` = eligible squad count.
 - **Disjoint within a spin** by construction: seats 0..19 hit 20 consecutive
   distinct indices.
 - **No manager sees the same team twice across the draft** for free when 20 is
-  invertible mod N (any N coprime with 20 — true for today's 47 squads):
+  invertible mod N (any N coprime with 20 — true for today's 57 squads):
   manager m's squads across spins are `k·20 + m mod N`, all distinct for
   k = 0..10. One shuffle + one formula = a Latin-rectangle draft with zero
   bookkeeping.
@@ -100,8 +100,8 @@ shuffled list, where `N` = eligible squad count.
   (N becomes a multiple of 2 or 5), fall back to "rotation, allow rare per-manager
   repeats" — a repeat shows the manager a squad with different players remaining,
   which is fine and worth zero engineering.
-- Capacity check: 11 picks × 20 managers = 220 players drafted, out of ~1,000+ in
-  47 squads (~23 each). Squads deplete but essentially never drain; the filter is
+- Capacity check: 11 picks × 20 managers = 220 players drafted, out of 1,038 in
+  57 squads (~18 each). Squads deplete but essentially never drain; the filter is
   a belt-and-suspenders edge case.
 
 Confirmed: **pools stay deterministic from the room seed** — assignment is
@@ -268,7 +268,21 @@ New, surfaced by this spec:
    snaps to a 5s fuse (`MP_HURRY_MS`) instead of running out the full window.
    The host pulls its deadline forward and broadcasts a `hurry` message so all
    countdowns jump together; the timer label flips to a gold "ALL LOCKED IN".
-   The 30s/45s windows are ceilings for slow lobbies, not mandatory waits.
+   The pick/pit windows are ceilings for slow lobbies, not mandatory waits.
+10. **Picks retuned 30s → 20s (Lucca, 2026-07-11, wave-3 playtest).** With the
+    5s all-locked-in fuse absorbing fast lobbies, 30s was dead air; 20s keeps
+    pressure on without punishing phones. `MP_PICK_MS = 20_000`.
+11. **Public lobbies + QUICK PLAY: IN (Lucca, 2026-07-11).** A host can flip a
+    private lobby public; quick play joins the fullest open public lobby or
+    creates a new public one. Directory = a shared presence channel, no
+    database; a listing dies with its host's tab.
+12. **Global player uniqueness across ALL seats is FINAL (Lucca, 2026-07-11,
+    engine mp-6).** One shared drafted set for humans and bots alike — once
+    anyone drafts a player, he's gone for the whole room; loot obeys the
+    same-person rule; the host enforces both at a trust boundary against
+    doctored clients. (Supersedes the brief mp-4 solo-parity experiment where
+    bots drafted from a private pool.) The 57-squad / 1,038-player data pass
+    is what makes the shared drain affordable.
 
 ## 7. What this means for plan v1.1
 

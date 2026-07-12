@@ -1,5 +1,10 @@
 # Multiplayer — Phase R2 (research & planning ONLY, no src/ changes)
 
+> **STATUS (2026-07-12): SHIPPED.** This file is the historical research-phase
+> brief. Multiplayer is live at last11.app (engine `last11-mp-6`) — the current
+> state is `MULTIPLAYER-PLAN.md` §6–7 (implementation) and
+> `FORMAT-REPORT-v1.1.md` §6b (the authoritative ruling list).
+
 Directed by Lucca (2026-07-12): "by the end of this I want to have both a single
 player or multiplayer mode" — this phase produces the research + the plan
 (implementation approach, feasibility, major changes), NOT code. Main owns the

@@ -2,7 +2,27 @@
 
 _Running log for the build agent._
 
-## Current state: V2 REDESIGN LIVE — ALL FLAGS ON ✅ (2026-07-11)
+## Current state: SHIPPED — SOLO + MULTIPLAYER LIVE AT last11.app ✅ (2026-07-12)
+
+Everything below shipped to production (Vercel, straight from `main`).
+353 tests green. Engine version `last11-mp-6`.
+
+- **Multiplayer** (docs/multiplayer/MULTIPLAYER-PLAN.md §6–7): 20-manager
+  rooms, public lobbies + quick play, simultaneous draft (20s picks, 5s
+  all-locked-in fuse), lockstep viewing at 1.5×, waiting room with
+  spoiler-safe live table, 45s combined pit stop, spectators + rooting-for.
+  Host-authoritative over Supabase Realtime (broadcast + presence, no DB);
+  FNV-1a checksums, event-log catchup, mid-game rejoin, phase watchdog.
+  Global player uniqueness across all seats, enforced at a host trust
+  boundary.
+- **Data**: 57 squads / 1,038 players, 1930–2026, shared by solo and MP;
+  Monte-Carlo draft-balance ceiling as a permanent test.
+- **Engine**: taker-vs-keeper penalties; set-tagged live-score rail (only the
+  current match set shows); total XI ratings on the scoreboard.
+- **Launch**: docs/launch/ has the demo-video run-of-show, Devpost story, and
+  community posts. Deadline: Sun Jul 12, 9:00am PST.
+
+## History: V2 REDESIGN LIVE — ALL FLAGS ON ✅ (2026-07-11)
 
 The six-worker redesign (docs/redesign/: DECISIONS.md + CONTRACT.md are the
 authority) shipped and is switched on as the default game (4bf64d5):

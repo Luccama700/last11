@@ -1,5 +1,10 @@
 # Last11 — Build Plan
 
+> **Historical document.** The original pre-build plan. Shipped reality:
+> production is **last11.app** (11a0.com superseded), deployed on Vercel from
+> `main`, with 20-player online multiplayer on Supabase Realtime. See
+> `README.md` and `PROGRESS.md` for current state.
+
 **Last11** (domain **11a0.com**) — a football **draft battle royale**. Built at
 **United Hacks V7** (Hack United, virtual, Jul 10–12 2026), **Sport theme track**.
 
