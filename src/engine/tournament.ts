@@ -188,6 +188,10 @@ export interface PlayRoundEngine {
   /** Morale to apply this round's first set, per manager (carried from last round). */
   moraleByManager: Record<string, MoraleMap>;
   tacticsOf: (m: Manager) => Tactics;
+  /** Optional DETAILED side builder (multiplayer: seats carry real v2 slates, so
+   *  the coarse `toMatchSide` projection — which flattens FW→ST etc. — must not
+   *  run). Solo omits this and keeps the legacy projection byte-identically. */
+  sideOf?: (m: Manager, morale?: MoraleMap) => MatchSide;
 }
 
 /**
@@ -229,9 +233,11 @@ export function playRound(
 
       if (engine) {
         const seed = matchSeed(engine.tournamentSeed, round, matchIndex++);
+        const sideOf =
+          engine.sideOf ?? ((m: Manager, mor?: MoraleMap) => toMatchSide(m, engine.tacticsOf(m), mor));
         const r = resolveMatch(
-          toMatchSide(home, engine.tacticsOf(home), morale[home.id]),
-          toMatchSide(away, engine.tacticsOf(away), morale[away.id]),
+          sideOf(home, morale[home.id]),
+          sideOf(away, morale[away.id]),
           seed,
           shootoutEnabled,
         );

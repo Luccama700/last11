@@ -1,6 +1,6 @@
 import { LOBBY_SIZE } from '../engine/tournament';
 
-export default function HomeScreen(props: { onStart: () => void }) {
+export default function HomeScreen(props: { onStart: () => void; onOnline?: () => void }) {
   return (
     <div className="bg-stadium flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-ink-100">
       <p className="headline text-xs tracking-[0.35em] text-gold-400">
@@ -19,12 +19,22 @@ export default function HomeScreen(props: { onStart: () => void }) {
         <Step n="2" title="Survive 📉" text="3 matches a round. The bottom of the table is eliminated: 32 → 24 → 16 → 8 → 4 → 2 → 1." />
         <Step n="3" title="Loot 💀" text="Between rounds, steal one player from a fallen squad. The bots are looting too." />
       </div>
-      <button
-        onClick={props.onStart}
-        className="btn-gold headline mt-4 cursor-pointer rounded-xl px-12 py-4 text-xl"
-      >
-        ENTER THE LOBBY
-      </button>
+      <div className="mt-4 flex flex-col items-center gap-3 sm:flex-row">
+        <button
+          onClick={props.onStart}
+          className="btn-gold headline cursor-pointer rounded-xl px-12 py-4 text-xl"
+        >
+          ENTER THE LOBBY
+        </button>
+        {props.onOnline && (
+          <button
+            onClick={props.onOnline}
+            className="headline cursor-pointer rounded-xl border border-gold-500/60 px-12 py-4 text-xl text-gold-300 transition hover:bg-gold-400/10"
+          >
+            PLAY ONLINE
+          </button>
+        )}
+      </div>
       <p className="text-xs text-ink-500">11a0.com · United Hacks V7</p>
     </div>
   );

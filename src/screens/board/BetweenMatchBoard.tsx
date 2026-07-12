@@ -25,6 +25,11 @@ export default function BetweenMatchBoard(props: {
   onStyleChange: (style: PlayingStyle) => void;
   onFormationChange?: (f: Formation) => void;
   onDone: () => void;
+  /** MP pit stop: countdown banner above the board and extra rail content
+   *  (the loot list) under the tactics column. Solo passes neither. */
+  banner?: React.ReactNode;
+  extraAside?: React.ReactNode;
+  doneLabel?: string;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
 
@@ -88,15 +93,18 @@ export default function BetweenMatchBoard(props: {
             </div>
           )}
 
+          {props.extraAside}
+
           <button
             type="button"
             onClick={props.onDone}
             className="btn-gold headline w-full cursor-pointer rounded-xl px-6 py-3 text-lg"
           >
-            READY →
+            {props.doneLabel ?? 'READY →'}
           </button>
         </aside>
         <main className="order-1 lg:order-2">
+          {props.banner}
           <header className="mb-3 flex items-baseline justify-between">
             <h1 className="headline text-xl text-ink-100">Adjust your side</h1>
             <p className="text-xs font-semibold text-ink-500">

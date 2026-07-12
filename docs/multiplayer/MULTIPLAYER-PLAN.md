@@ -112,4 +112,31 @@ certification/ranked; **v3** = matchmaking, persistent accounts.
 4. ~~Rooting-for~~ → **IN** — eliminated managers pick a survivor to back.
 
 The format is fully locked as of 2026-07-11; FORMAT-REPORT-v1.1.md §6b is the
-authoritative ruling list. Implementation can start.
+authoritative ruling list.
+
+## 6. IMPLEMENTED (MVP shipped 2026-07-11, Main)
+
+- `src/engine/mp.ts` — the pure layer: stride-rotation squad assignment,
+  global-uniqueness pools, deterministic bots + auto-picks, `resolveMpRound`
+  (playRound with an injected DETAILED `sideOf` + fixed pairing rng), lockstep
+  slot timing (1.5× scale), matchday rebuild from stamped seeds.
+- `src/game/net/` — typed protocol + Supabase Realtime channel (broadcast +
+  presence only, NO tables; project `last11`, keys in `.env.local`/Vercel env).
+- `src/game/online/controller.ts` — host-authoritative room brain with ONE
+  apply path (host self-receives its own canonical stream); host-only code is
+  the deadline timer. Wire carries seeds/picks/deadlines only — pairings, bots,
+  morale, pools and timelines are derived locally and deterministically.
+- `src/screens/online/OnlineApp.tsx` — entry → lobby (setup while waiting,
+  fill-with-bots) → simultaneous draft (SpinReveal + 10s countdown + board
+  moves) → lockstep viewing (MatchPlaybackScreen wall-clock mode, no skips) →
+  20s combined pit stop (loot rail + re-slot + tactics on the pit board) →
+  spectator view with rooting-for → EndScreen + Hall of Champions.
+- Tests: `mp.test.ts` (15) + `controller.test.ts` loopback end-to-end (a full
+  host+guest tournament over an in-memory bus, mirrors asserted identical —
+  this caught a real gameStart/spinStart ordering race) + entry DOM tests.
+  Real-network smoke verified broadcast+presence on the live project.
+- Deliberate MVP wire-format deviation: REPLAY coordinates (seeds+inputs)
+  instead of shipped timelines — all clients run the same build (version
+  handshake enforces it); `timelines` remains the ranked upgrade path.
+- Out of MVP scope (documented): reconnect/rejoin (drop = AFK fallbacks),
+  host migration (host leaves ⇒ room over), commit–reveal (later feature).

@@ -43,6 +43,7 @@ import { recordChampion } from './game/champions';
 import { assignGoals, fabricateTimeline } from './game/fabricate-timeline';
 import { aliveOf, humanOf, initialState, reducer, tournamentOver, type Matchday } from './game/state';
 import BattleScreen from './screens/BattleScreen';
+import OnlineApp from './screens/online/OnlineApp';
 import DraftScreen from './screens/DraftScreen';
 import DraftScreenV2 from './screens/draft/DraftScreenV2';
 import PreDraftSetup from './screens/setup/PreDraftSetup';
@@ -99,6 +100,9 @@ export default function App(props: { animate?: boolean }) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const rngRef = useRef<Rng | null>(null);
   const [style, setStyle] = useState<PlayingStyle>('balanced');
+  // BATTLE ROYALE ONLINE — a separate shell over the same engine + screens; solo
+  // state below is untouched while online (and vice versa).
+  const [online, setOnline] = useState(false);
   // engineV2 plumbing: bot tactics fixed at lobby creation; match counter + morale
   // threaded round-to-round via RoundResult.engineNext (refs, never in the reducer).
   const botTacticsRef = useRef<Record<string, Tactics>>({});
@@ -393,7 +397,8 @@ export default function App(props: { animate?: boolean }) {
 
   switch (state.screen) {
     case 'home':
-      return <HomeScreen onStart={handleStart} />;
+      if (online) return <OnlineApp onExit={() => setOnline(false)} />;
+      return <HomeScreen onStart={handleStart} onOnline={() => setOnline(true)} />;
     case 'setup':
     case 'draft':
       if (FEATURES.draftV2) {

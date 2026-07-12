@@ -72,14 +72,21 @@ npm run build    # typecheck + production build
 | [`docs/multiplayer/MULTIPLAYER-PLAN.md`](docs/multiplayer/MULTIPLAYER-PLAN.md) | MP architecture: host-authoritative Supabase MVP, driver seam |
 | [`docs/multiplayer/FORMAT-REPORT-v1.1.md`](docs/multiplayer/FORMAT-REPORT-v1.1.md) | The locked 20-manager online format + rulings |
 
-## Multiplayer (locked design, next up)
+## Multiplayer (SHIPPED — MVP)
 
-20-manager rooms, fill-with-bots start, simultaneous slot-machine drafting with
-10-second picks and disjoint per-spin team pools (no pick contention by
-construction), lockstep viewing on a shared clock (30s match slots), a combined
-20-second pit stop, trust-based tactics for the friends MVP (commit-reveal is a
-planned later feature for ranked). Eliminated managers spectate and pick a
-survivor to root for. Full breakdown in the format report.
+Hit **PLAY ONLINE** on the home screen: 20-manager rooms with 5-letter codes,
+fill-with-bots start, simultaneous slot-machine drafting (10-second picks,
+disjoint per-spin team pools — no pick contention by construction, global
+player uniqueness), lockstep viewing on a shared clock at 1.5×, a combined
+20-second pit stop (loot + re-slot + tactics), spectators with a rooting-for
+pick, trust-based tactics (commit-reveal is a planned later feature for ranked).
+
+Host-authoritative over **Supabase Realtime** (broadcast + presence only — no
+database): the wire carries seeds, picks and deadlines; every client derives
+bots, pairings, scores and timelines deterministically from the room seed, and
+a loopback test plays a full host+guest tournament asserting the two mirrors
+never diverge. Config: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`
+(`.env.example`; set the same two in Vercel for deploys).
 
 ## Tests
 

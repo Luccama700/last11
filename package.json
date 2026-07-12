@@ -12,6 +12,7 @@
     "balance": "BALANCE=1 vitest run balance.report"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },

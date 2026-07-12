@@ -25,6 +25,9 @@ export default function MatchPlaybackScreen(props: {
   onNextFeatured: () => void;
   onFinishRound: () => void;
   onSkipAll: () => void;
+  /** Multiplayer lockstep: the clock becomes `(now − startAt) × scale` — shared
+   *  wall time, no speed buttons, no skips; the room advances everyone together. */
+  lockstep?: { startAt: number; scale: number };
 }) {
   const { state, animate } = props;
   const md = state.matchday!;
@@ -35,7 +38,12 @@ export default function MatchPlaybackScreen(props: {
   const finishMatch = () => (isLast ? props.onFinishRound() : props.onNextFeatured());
 
   const [speed, setSpeed] = useState(1);
-  const [elapsed, skipMatch] = useMatchClock(timeline.matchId, matchEndMs(timeline), { speed, animate, onEnd: finishMatch });
+  const [elapsed, skipMatch] = useMatchClock(timeline.matchId, matchEndMs(timeline), {
+    speed,
+    animate,
+    onEnd: finishMatch,
+    lockstep: props.lockstep,
+  });
   const pb = projectMatch(timeline, elapsed);
 
   const human = humanOf(state);
@@ -85,13 +93,16 @@ export default function MatchPlaybackScreen(props: {
 
       <div className="grid items-start gap-3 sm:grid-cols-[1fr_auto]">
         <Ticker pb={pb} />
-        <Controls
-          speed={speed}
-          setSpeed={setSpeed}
-          onSkipMatch={skipMatch}
-          onSkipAll={props.onSkipAll}
-          isLast={isLast}
-        />
+        {/* lockstep rooms have no speed/skip — the shared clock is the boss */}
+        {!props.lockstep && (
+          <Controls
+            speed={speed}
+            setSpeed={setSpeed}
+            onSkipMatch={skipMatch}
+            onSkipAll={props.onSkipAll}
+            isLast={isLast}
+          />
+        )}
       </div>
 
       <Rail md={md} nameOf={nameOf} virtualMinute={pb.virtualMinute} humanId={human?.id} />
@@ -109,7 +120,12 @@ export default function MatchPlaybackScreen(props: {
 function useMatchClock(
   key: string,
   durationMs: number,
-  opts: { speed: number; animate: boolean; onEnd: () => void },
+  opts: {
+    speed: number;
+    animate: boolean;
+    onEnd: () => void;
+    lockstep?: { startAt: number; scale: number };
+  },
 ): [number, () => void] {
   const [elapsed, setElapsed] = useState(0);
   const elapsedRef = useRef(0);
@@ -122,6 +138,8 @@ function useMatchClock(
   animateRef.current = opts.animate;
   const onEndRef = useRef(opts.onEnd);
   onEndRef.current = opts.onEnd;
+  const lockstepRef = useRef(opts.lockstep);
+  lockstepRef.current = opts.lockstep;
 
   const fire = () => {
     if (endedRef.current) return;
@@ -151,10 +169,16 @@ function useMatchClock(
     }
 
     const tick = (now: number) => {
-      if (lastRef.current === null) lastRef.current = now;
-      const dt = now - lastRef.current;
-      lastRef.current = now;
-      elapsedRef.current = Math.min(durationMs, elapsedRef.current + dt * speedRef.current);
+      const ls = lockstepRef.current;
+      if (ls) {
+        // MP: pure wall-clock — every client computes the identical elapsed
+        elapsedRef.current = Math.min(durationMs, Math.max(0, (Date.now() - ls.startAt) * ls.scale));
+      } else {
+        if (lastRef.current === null) lastRef.current = now;
+        const dt = now - lastRef.current;
+        lastRef.current = now;
+        elapsedRef.current = Math.min(durationMs, elapsedRef.current + dt * speedRef.current);
+      }
       setElapsed(elapsedRef.current);
       if (elapsedRef.current >= durationMs) {
         fire();
