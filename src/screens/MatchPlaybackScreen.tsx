@@ -586,12 +586,18 @@ function Rail(props: { md: Matchday; nameOf: (id: string) => string; virtualMinu
     for (const g of goals) if (g.minute <= props.virtualMinute) g.team === 'home' ? h++ : a++;
     return `${h}–${a}`;
   };
-  if (props.md.rail.length === 0) return null;
+  // Only THIS match set's games (Lucca): watching your 1st match shows everyone
+  // else's 1st match, and so on. Untagged entries (legacy fabricated rails)
+  // keep the old show-everything behavior. Clamped: on-demand extra watches
+  // (featuredIndex past the human's 3) show the final set's rail.
+  const currentSet = Math.min(props.md.featuredIndex, 2);
+  const rail = props.md.rail.filter((m) => m.set === undefined || m.set === currentSet);
+  if (rail.length === 0) return null;
   return (
     <div>
       <h3 className="headline mb-1.5 text-[10px] tracking-[0.18em] text-ink-500">Elsewhere this round</h3>
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-        {props.md.rail.map((m) => (
+        {rail.map((m) => (
           <div key={m.matchId} className="card-gloss flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px]">
             <span className="truncate text-ink-500">
               {short(props.nameOf(m.homeId))} <span className="text-night-600">v</span> {short(props.nameOf(m.awayId))}

@@ -52,6 +52,9 @@ export interface Matchday {
   /** Lightweight goal stamps for every other match this round (the scoreboard rail). */
   rail: {
     matchId: string;
+    /** Match set (0..2) this game plays in — the rail shows only the set being
+     *  watched (Lucca). Untagged = legacy show-everything behavior. */
+    set?: number;
     homeId: string;
     awayId: string;
     goals: { minute: number; team: Team }[];

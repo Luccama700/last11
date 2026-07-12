@@ -259,10 +259,15 @@ export default function App(props: { animate?: boolean }) {
           `r${round}-f${i}`,
         );
       });
+      // Same set arithmetic as MP's roundSlots: chunk k of the results order is
+      // match set k. The rail then shows only the set being watched.
+      const setSize = Math.max(1, Math.floor(result.resultsV2.length / 3));
       const rail = result.resultsV2
-        .filter((r) => !isMine(r))
-        .map((r, i) => ({
+        .map((r, idx) => ({ r, set: Math.min(2, Math.floor(idx / setSize)) }))
+        .filter(({ r }) => !isMine(r))
+        .map(({ r, set }, i) => ({
           matchId: `r${round}-o${i}`,
+          set,
           homeId: r.homeId,
           awayId: r.awayId,
           goals: r.goals.map((g) => ({ minute: g.minute, team: g.team })),
