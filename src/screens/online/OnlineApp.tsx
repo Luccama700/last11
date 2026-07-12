@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { affinity } from '../../engine/affinity';
-import { autoArrange, stealGainV2, swapSlots } from '../../engine/draft';
+import { autoArrange, sortByBoost, stealGainV2, swapSlots } from '../../engine/draft';
 import {
   MP_DRAFT_SPINS,
   MP_SURVIVORS_PER_ROUND,
@@ -346,6 +346,13 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
     if (moveFrom !== null) setMoveFrom(null);
   }
 
+  // Solo's draft brain, same in MP: options ranked by the points they add RIGHT
+  // NOW (best open-slot fit), the top pick wearing the gold trim.
+  const ranked = useMemo(
+    () => sortByBoost(view.myOptions, view.mySlate, view.formation, affinity),
+    [view.myOptions, view.mySlate, view.formation],
+  );
+
   const open = new Set(
     view.mySlate.map((s, i) => (s === null ? i : -1)).filter((i) => i >= 0),
   );
@@ -445,9 +452,12 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
             <Countdown deadline={view.spinDeadline} label="PICK CLOSES" hurried={view.hurried} />
           </div>
           <div className="card-gloss scrollbar-hide min-h-0 space-y-1 overflow-y-auto rounded-xl p-2 max-lg:shrink-0 lg:max-h-none lg:flex-1">
-            {view.myOptions.map((p) => {
+            {ranked.map((o, rank) => {
+              const p = o.player;
               const sel = selPlayer?.id === p.id;
               const picked = view.myPick?.playerId === p.id;
+              const fit = o.bestSlot;
+              const best = rank === 0 && fit !== null;
               return (
                 <button
                   key={p.id}
@@ -458,27 +468,52 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
                     setSelPlayer(sel ? null : p);
                     setMoveFrom(null);
                   }}
-                  className={`flex w-full cursor-pointer items-baseline gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition max-lg:py-2.5 ${
+                  className={`w-full cursor-pointer rounded-lg border px-2.5 py-1.5 text-left text-sm transition max-lg:py-2.5 ${
                     picked
-                      ? 'btn-gold'
+                      ? 'btn-gold border-transparent'
                       : sel
-                        ? 'border border-gold-500 bg-night-800'
-                        : 'hover:bg-night-800'
+                        ? 'border-gold-500 bg-night-800'
+                        : best
+                          ? 'border-gold-600/50 hover:bg-night-800'
+                          : 'border-transparent hover:bg-night-800'
                   } ${locked && !picked ? 'opacity-40' : ''}`}
                 >
-                  <span className="headline w-9 shrink-0 text-[10px] text-gold-300">
-                    {p.position}
+                  <span className="flex w-full items-baseline gap-2">
+                    <span className="headline w-9 shrink-0 text-[10px] text-gold-300">
+                      {p.position}
+                    </span>
+                    <span className="truncate font-bold text-ink-100">
+                      {flagOf(p.nation)} {p.name}
+                    </span>
+                    {(p.secondary?.length ?? 0) > 0 && (
+                      <span className="shrink-0 text-[10px] text-ink-500">
+                        also {p.secondary!.join(' · ')}
+                      </span>
+                    )}
+                    <span className="headline ml-auto shrink-0 text-base text-gold-300">
+                      {p.rating}
+                    </span>
                   </span>
-                  <span className="truncate font-bold text-ink-100">
-                    {flagOf(p.nation)} {p.name}
-                  </span>
-                  <span className="headline ml-auto shrink-0 text-base text-gold-300">
-                    {p.rating}
+                  <span className="mt-0.5 flex w-full items-baseline justify-between text-[11px]">
+                    {fit ? (
+                      fit.natural ? (
+                        <span className="text-win">→ {fit.position} natural</span>
+                      ) : (
+                        <span className="text-orange-400">→ {fit.position}</span>
+                      )
+                    ) : (
+                      <span className="text-ink-500">no open slot</span>
+                    )}
+                    {fit && (
+                      <span className={`font-black ${best ? 'text-gold-300' : 'text-ink-500'}`}>
+                        +{o.boost.toFixed(1)}
+                      </span>
+                    )}
                   </span>
                 </button>
               );
             })}
-            {view.myOptions.length === 0 && (
+            {ranked.length === 0 && (
               <p className="px-2 py-3 text-xs text-ink-500">Reels rolling…</p>
             )}
           </div>
