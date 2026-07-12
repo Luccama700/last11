@@ -308,17 +308,27 @@ function Pitch(props: {
         style={{ left: `${pb.ball.x * 100}%`, top: `${pb.ball.y * 100}%` }}
       />
 
-      {/* goal celebration: gold flash + confetti; stacked goals escalate to
-          "2x GOAL"/"3x GOAL" with hotter colors (multigoal, Lucca's request).
-          Keyed by goal minute + stack count so the pop and confetti REPLAY when a
-          second goal lands inside the first one's window instead of freezing. */}
+      {/* goal celebration: shout + confetti, keyed by minute + stack count so the
+          pop and confetti REPLAY when a second goal lands inside the first one's
+          window. Team-aware (Lucca): YOUR goals climb a trophy palette
+          (gold → lime → cyan → purple), the enemy's descend into darker reds.
+          Freshest goal's team decides the read on a (rare) mixed cluster. */}
       {pb.celebrating && (
         <div
           key={`${pb.celebrating.minute}-${pb.celebratingCount}`}
           className="pointer-events-none absolute inset-0 flex items-center justify-center"
         >
-          <Confetti />
-          <GoalShout count={pb.celebratingCount || 1} />
+          {(() => {
+            const mine = pb.celebrating.team
+              ? (pb.celebrating.team === 'home') === props.homeYou
+              : true;
+            return (
+              <>
+                <Confetti enemy={!mine} />
+                <GoalShout count={pb.celebratingCount || 1} mine={mine} />
+              </>
+            );
+          })()}
         </div>
       )}
 
@@ -357,17 +367,26 @@ function PhaseBanner(props: { minute: number; shootout: boolean }) {
   );
 }
 
-/** GOAL / 2x GOAL / 3x GOAL — escalating color heat for stacked goals. Sized in
- *  container units (cqw of the PITCH, not the viewport) so the shout always fits
- *  inside the pitch whatever the layout around it does. */
-function GoalShout(props: { count: number }) {
+/** GOAL / 2x GOAL / 3x GOAL / 4x GOAL — team-aware escalation (Lucca's spec).
+ *  YOURS: 1x gold, 2x lime, 3x cyan, 4x+ purple — a trophy ladder.
+ *  ENEMY: 1x red, then darker and darker reds — the deeper the hole, the darker.
+ *  Sized in container units (cqw of the PITCH, not the viewport) so the shout
+ *  always fits inside the pitch whatever the layout around it does. */
+const SHOUT_MINE = [
+  'text-gold-300 drop-shadow-[0_0_34px_rgba(232,196,104,.8)]', // 1x gold
+  'text-lime-400 drop-shadow-[0_0_36px_rgba(163,230,53,.85)]', // 2x lime
+  'text-cyan-400 drop-shadow-[0_0_38px_rgba(34,211,238,.85)]', // 3x cyan
+  'text-purple-400 drop-shadow-[0_0_40px_rgba(192,132,252,.9)]', // 4x+ purple
+];
+const SHOUT_ENEMY = [
+  'text-red-500 drop-shadow-[0_0_34px_rgba(239,68,68,.8)]', // 1x red
+  'text-red-600 drop-shadow-[0_0_36px_rgba(220,38,38,.85)]', // 2x darker
+  'text-red-700 drop-shadow-[0_0_38px_rgba(185,28,28,.9)]', // 3x darker still
+  'text-red-800 drop-shadow-[0_0_44px_rgba(153,27,27,.95)]', // 4x+ the abyss
+];
+function GoalShout(props: { count: number; mine: boolean }) {
   const n = Math.max(1, props.count);
-  const heat =
-    n >= 3
-      ? 'text-loss drop-shadow-[0_0_38px_rgba(240,85,77,.85)]'
-      : n === 2
-        ? 'text-orange-400 drop-shadow-[0_0_36px_rgba(251,146,60,.85)]'
-        : 'text-gold-300 drop-shadow-[0_0_34px_rgba(232,196,104,.8)]';
+  const heat = (props.mine ? SHOUT_MINE : SHOUT_ENEMY)[Math.min(n, 4) - 1];
   // "GOAL" gets the big treatment; "2x GOAL" is nearly twice as wide, so it steps
   // down — the kick-pop overshoot (×1.18) still stays inside the pitch either way.
   const size = n > 1 ? 'text-[11cqw]' : 'text-[16cqw]';
@@ -378,20 +397,24 @@ function GoalShout(props: { count: number }) {
   );
 }
 
+// Festive palette for your goals; embers-and-ash reds when the enemy scores.
+const CONFETTI_MINE = ['#e8c468', '#34d399', '#f3f5f9', '#a3e635'];
+const CONFETTI_ENEMY = ['#ef4444', '#b91c1c', '#7f1d1d', '#3b0d0d'];
 const CONFETTI = Array.from({ length: 26 }, (_, i) => ({
   left: (i * 37) % 100,
   delay: (i % 9) * 0.12,
-  color: ['#e8c468', '#34d399', '#f3f5f9', '#f0554d'][i % 4],
+  hue: i % 4,
 }));
 
-function Confetti() {
+function Confetti(props: { enemy?: boolean }) {
+  const palette = props.enemy ? CONFETTI_ENEMY : CONFETTI_MINE;
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       {CONFETTI.map((c, i) => (
         <span
           key={i}
           className="confetti-piece"
-          style={{ left: `${c.left}%`, background: c.color, animationDelay: `${c.delay}s` }}
+          style={{ left: `${c.left}%`, background: palette[c.hue], animationDelay: `${c.delay}s` }}
         />
       ))}
     </div>
