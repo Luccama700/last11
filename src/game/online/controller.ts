@@ -787,9 +787,11 @@ export class OnlineController {
       }
       case 'gameStart': {
         this.squadOrder = shuffledSquadOrder(this.roomSeed);
+        // draftedIds tracks HUMAN picks only — bots draft from their own copy of
+        // the pool (solo parity), so rolled squads are never pre-drained.
         this.draftedIds = new Set();
         const botSeatNos = m.seats.filter((s) => s.clientId === null).map((s) => s.seat);
-        const bots = draftBotSeats(this.roomSeed, botSeatNos, this.draftedIds);
+        const bots = draftBotSeats(this.roomSeed, botSeatNos);
         const botBySeat = new Map(bots.map((b) => [b.seat, b]));
         const seats: MpSeat[] = m.seats.map((sa) => {
           if (sa.clientId === null) return botBySeat.get(sa.seat)!;

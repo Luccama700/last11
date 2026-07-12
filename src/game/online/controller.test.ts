@@ -167,7 +167,7 @@ describe('online controller — loopback end-to-end', () => {
     expect(host.getView().desynced).toBe(false);
   });
 
-  it('global uniqueness holds across BOTH mirrors after the draft', () => {
+  it('uniqueness after the draft: humans never collide with humans, bots never with bots', () => {
     const { host, guest } = makePair();
     host.create(SEED + 1);
     guest.join(host.getView().code);
@@ -177,8 +177,15 @@ describe('online controller — loopback end-to-end', () => {
     for (let spin = 0; spin < MP_DRAFT_SPINS; spin++) {
       vi.advanceTimersByTime(MP_REEL_MS + MP_PICK_MS + 400);
     }
-    const all = slateIds(host).flat();
-    expect(new Set(all).size).toBe(all.length); // no player exists twice anywhere
+    // solo parity: bots draft off their own pool, so bot-vs-human overlap is
+    // allowed (exactly like solo) — but humans stay unique among themselves
+    // and bots among themselves. Both mirrors agree on every slate.
+    expect(slateIds(host)).toEqual(slateIds(guest));
+    const seats = host.getView().seats;
+    const humanIds = seats.filter((s) => s.isHuman).flatMap((s) => s.slate.map((x) => x.player.id));
+    expect(new Set(humanIds).size).toBe(humanIds.length);
+    const botIds = seats.filter((s) => !s.isHuman).flatMap((s) => s.slate.map((x) => x.player.id));
+    expect(new Set(botIds).size).toBe(botIds.length);
   });
 
   it('once every human has locked in, the pick countdown snaps to the short fuse', () => {

@@ -61,8 +61,9 @@ export const MP_START_LEAD_MS = 3_000;
 export const MP_SLOT_GAP_MS = 1_500;
 /** Engine build handshake — bump on ANY change that alters engine output.
  *  mp-2: goal minute spacing + furniture events (playtest wave 2).
- *  mp-3: player-data positions pass (Messi ST; wingers gain wide-mid altPos). */
-export const MP_ENGINE_VERSION = 'last11-mp-3';
+ *  mp-3: player-data positions pass (Messi ST; wingers gain wide-mid altPos).
+ *  mp-4: solo-parity squads — bots stop draining the human draft pool. */
+export const MP_ENGINE_VERSION = 'last11-mp-4';
 
 // ── Room codes ────────────────────────────────────────────────────────────────
 
@@ -164,18 +165,18 @@ export const seatId = (seat: number): string => `seat-${seat}`;
 
 /**
  * Deterministic bot squads for every unfilled seat, drafted SEQUENTIALLY in seat
- * order under the same global-uniqueness rule humans play by (bots never hold a
- * player a human could later be offered, and never duplicate each other).
+ * order. SOLO PARITY (Lucca): bots draft from their OWN copy of the pool — they
+ * never consume players the humans could be offered, so a rolled squad in MP
+ * shows exactly what it shows in solo. Bots stay distinct from EACH OTHER (a
+ * shared bot-only set), but a bot and a human may field the same player — the
+ * same rule solo has always played by. Human-vs-human uniqueness is untouched.
  * Pure from (roomSeed, botSeatNumbers) — no bot state ever crosses the wire.
  */
-export function draftBotSeats(
-  roomSeed: number,
-  botSeats: readonly number[],
-  draftedIds: Set<string>, // MUTATED: bot picks accumulate into the room's drafted set
-): MpSeat[] {
+export function draftBotSeats(roomSeed: number, botSeats: readonly number[]): MpSeat[] {
   const nameRng = createRng(matchSeed(roomSeed, 888, 0));
   const names = nameRng.shuffle(BOT_NAMES);
   const order = shuffledSquadOrder(roomSeed);
+  const botTaken = new Set<string>(); // bots don't duplicate each other
   return botSeats.map((seat, i) => {
     const rng = createRng(matchSeed(roomSeed, 888, seat + 1));
     const formation = pickBotFormation(rng);
@@ -186,13 +187,13 @@ export function draftBotSeats(
     while (openSlots(slate).length > 0 && guard++ < 400) {
       const roll = order[cursor % order.length];
       cursor++;
-      const pick = autoPickForSlate(slate, formation, roll, draftedIds);
+      const pick = autoPickForSlate(slate, formation, roll, botTaken);
       if (!pick) continue;
       slate[pick.slotIndex] = {
         position: formation.slots[pick.slotIndex],
         player: pick.player,
       };
-      draftedIds.add(pick.player.id);
+      botTaken.add(pick.player.id);
     }
     return {
       seat,

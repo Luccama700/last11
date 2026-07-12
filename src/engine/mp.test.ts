@@ -103,25 +103,25 @@ describe('global uniqueness + auto-pick', () => {
   });
 });
 
-function makeBotRoom(seed = SEED): { seats: MpSeat[]; drafted: Set<string> } {
-  const drafted = new Set<string>();
-  const seats = draftBotSeats(seed, Array.from({ length: MP_LOBBY_SIZE }, (_, i) => i), drafted);
-  return { seats, drafted };
+function makeBotRoom(seed = SEED): { seats: MpSeat[] } {
+  return { seats: draftBotSeats(seed, Array.from({ length: MP_LOBBY_SIZE }, (_, i) => i)) };
 }
 
 describe('bot seats', () => {
-  it('drafts 20 full XIs deterministically with GLOBAL uniqueness and the person rule', () => {
+  it('drafts 20 full XIs deterministically, distinct among bots, person rule per XI', () => {
     const { seats } = makeBotRoom();
     const again = makeBotRoom();
     expect(seats.map((s) => s.slate.map((x) => x.player.id))).toEqual(
       again.seats.map((s) => s.slate.map((x) => x.player.id)),
     );
+    // solo parity: bots never duplicate EACH OTHER (they draft off one shared
+    // bot set); the human pool is untouched by construction (no shared input).
     const ids = new Set<string>();
     for (const s of seats) {
       expect(s.slate).toHaveLength(11);
       const persons = new Set<string>();
       for (const slot of s.slate) {
-        expect(ids.has(slot.player.id)).toBe(false); // nobody drafted twice ANYWHERE
+        expect(ids.has(slot.player.id)).toBe(false); // no bot drafted twice
         ids.add(slot.player.id);
         const pk = personKey(slot.player.id);
         expect(persons.has(pk)).toBe(false); // person rule within an XI
