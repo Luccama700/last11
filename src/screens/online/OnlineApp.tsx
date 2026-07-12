@@ -707,6 +707,112 @@ function WaitingRoom(props: {
           label={(props.slot?.set ?? 0) >= 2 ? 'ROUND RESULTS IN' : 'YOUR NEXT MATCH IN'}
         />
       </div>
+
+      <LiveRoundTable view={view} contentElapsed={contentElapsed} currentSet={props.slot?.set ?? 0} />
+    </div>
+  );
+}
+
+/** The round table AS OF WHAT HAS BEEN WATCHED — only matches whose content has
+ *  finished on the shared clock count, so nothing that hasn't played out on
+ *  screen (including your own next match) is ever spoiled. Fills in live. */
+function LiveRoundTable(props: { view: OnlineView; contentElapsed: number; currentSet: number }) {
+  const { view, contentElapsed, currentSet } = props;
+  const md = view.matchday;
+  if (!md) return null;
+  const nameOf = (id: string) => view.seats.find((s) => s.id === id)?.name ?? id;
+  const rows = new Map<string, { pts: number; gd: number; played: number }>();
+  for (const id of view.aliveIds) rows.set(id, { pts: 0, gd: 0, played: 0 });
+  const bump = (id: string, pts: number, gd: number) => {
+    const r = rows.get(id);
+    if (r) {
+      r.pts += pts;
+      r.gd += gd;
+      r.played += 1;
+    }
+  };
+  const count = (
+    set: number,
+    homeId: string,
+    awayId: string,
+    h: number,
+    a: number,
+    pensWinner: 'home' | 'away' | null,
+    endMs: number,
+  ) => {
+    const done = set < currentSet || (set === currentSet && contentElapsed >= endMs);
+    if (!done) return;
+    if (h > a) {
+      bump(homeId, 3, h - a);
+      bump(awayId, 0, a - h);
+    } else if (a > h) {
+      bump(awayId, 3, a - h);
+      bump(homeId, 0, h - a);
+    } else if (pensWinner) {
+      bump(pensWinner === 'home' ? homeId : awayId, 3, 0);
+      bump(pensWinner === 'home' ? awayId : homeId, 0, 0);
+    } else {
+      bump(homeId, 1, 0);
+      bump(awayId, 1, 0);
+    }
+  };
+  md.featured.forEach((t, set) => {
+    count(
+      set,
+      t.homeId,
+      t.awayId,
+      t.finalScore.home,
+      t.finalScore.away,
+      t.shootout ? t.shootout.winner : null,
+      contentEndMs(t),
+    );
+  });
+  for (const m of md.rail) {
+    let h = 0;
+    let a = 0;
+    for (const g of m.goals) g.team === 'home' ? h++ : a++;
+    const pens = m.pens ?? [];
+    let pw: 'home' | 'away' | null = null;
+    if (pens.length > 0) {
+      const ph = pens.filter((k) => k.team === 'home' && k.scored).length;
+      const pa = pens.filter((k) => k.team === 'away' && k.scored).length;
+      pw = ph > pa ? 'home' : 'away';
+    }
+    count(m.set, m.homeId, m.awayId, h, a, pw, pens.length ? pens[pens.length - 1].atMs : MATCH_DURATION_MS);
+  }
+  const target = MP_SURVIVORS_PER_ROUND[view.round - 1] ?? 1;
+  const sorted = [...rows.entries()].sort(
+    (x, y) => y[1].pts - x[1].pts || y[1].gd - x[1].gd || (nameOf(x[0]) < nameOf(y[0]) ? -1 : 1),
+  );
+  return (
+    <div className="card-gloss mt-4 rounded-2xl p-4">
+      <h3 className="headline mb-2 text-[10px] tracking-[0.3em] text-gold-400">
+        LIVE TABLE · top {target} survive
+        <span className="ml-2 font-normal normal-case tracking-normal text-ink-500">
+          fills in as matches finish
+        </span>
+      </h3>
+      <ol className="space-y-0.5">
+        {sorted.map(([id, r], i) => {
+          const you = id === view.mySeatId;
+          const cut = i === target - 1;
+          return (
+            <li
+              key={id}
+              className={`flex items-baseline gap-2 rounded px-1.5 py-0.5 text-xs ${
+                you ? 'bg-gold-400/10 font-bold text-gold-300' : 'text-ink-300'
+              } ${cut ? 'animate-cutline-pulse border-b border-loss/60' : ''}`}
+            >
+              <span className="headline w-5 shrink-0 text-[10px] text-ink-500">{i + 1}</span>
+              <span className="truncate">{nameOf(id)}</span>
+              <span className="ml-auto shrink-0 tabular-nums">
+                <span className="mr-2 text-[10px] text-ink-500">P{r.played}</span>
+                {r.pts} pts · {r.gd > 0 ? `+${r.gd}` : r.gd}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }
