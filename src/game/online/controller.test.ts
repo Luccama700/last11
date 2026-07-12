@@ -181,7 +181,7 @@ describe('online controller — loopback end-to-end', () => {
     expect(host.getView().desynced).toBe(false);
   });
 
-  it('uniqueness after the draft: humans never collide with humans, bots never with bots', () => {
+  it('GLOBAL uniqueness after the draft: no player exists twice across ALL 20 teams', () => {
     const { host, guest } = makePair();
     host.create(SEED + 1);
     guest.join(host.getView().code);
@@ -191,15 +191,53 @@ describe('online controller — loopback end-to-end', () => {
     for (let spin = 0; spin < MP_DRAFT_SPINS; spin++) {
       vi.advanceTimersByTime(MP_REEL_MS + MP_PICK_MS + 400);
     }
-    // solo parity: bots draft off their own pool, so bot-vs-human overlap is
-    // allowed (exactly like solo) — but humans stay unique among themselves
-    // and bots among themselves. Both mirrors agree on every slate.
     expect(slateIds(host)).toEqual(slateIds(guest));
-    const seats = host.getView().seats;
-    const humanIds = seats.filter((s) => s.isHuman).flatMap((s) => s.slate.map((x) => x.player.id));
-    expect(new Set(humanIds).size).toBe(humanIds.length);
-    const botIds = seats.filter((s) => !s.isHuman).flatMap((s) => s.slate.map((x) => x.player.id));
-    expect(new Set(botIds).size).toBe(botIds.length);
+    const all = slateIds(host).flat();
+    expect(new Set(all).size).toBe(all.length); // Lucca's final ruling
+  });
+
+  it('the pit fold rejects a slate that is not a re-arrangement of what the seat owns', () => {
+    const { host, guest } = makePair();
+    host.create(SEED + 7);
+    guest.join(host.getView().code);
+    vi.advanceTimersByTime(250);
+    host.fillWithBots();
+    vi.advanceTimersByTime(250);
+    for (let spin = 0; spin < MP_DRAFT_SPINS; spin++) {
+      vi.advanceTimersByTime(MP_REEL_MS + MP_PICK_MS + 400);
+    }
+    // round 1 plays out → pit opens
+    vi.advanceTimersByTime(3_500);
+    const totalMs = host.getView().slots.reduce((s, x) => s + x.durationMs, 0);
+    vi.advanceTimersByTime(totalMs + 1_000);
+    expect(guest.getView().phase).toBe('pit');
+    const gv = guest.getView();
+    expect(!gv.eliminated && gv.mySeatId !== null && gv.aliveIds.has(gv.mySeatId!)).toBe(true);
+    if (!gv.eliminated && gv.mySeatId && gv.aliveIds.has(gv.mySeatId)) {
+      const myIds = () =>
+        guest
+          .getView()
+          .seats.find((s) => s.id === gv.mySeatId)!
+          .slate.map((x) => x.player.id)
+          .sort();
+      const before = myIds();
+      // a diverged/hostile client injects a player owned by ANOTHER seat
+      const foreign = guest.getView().seats.find((s) => s.id !== gv.mySeatId)!.slate[0];
+      const doctored = [...guest.pitState!.slate];
+      doctored[0] = { position: doctored[0].position, player: foreign.player };
+      guest.setPitSlate(doctored);
+      guest.submitPit();
+      vi.advanceTimersByTime(MP_PIT_MS + 500); // pit closes, pitResult applies
+      expect(myIds()).toEqual(before); // contents unchanged — injection discarded
+      // the invariant among LIVING teams holds on both mirrors (fallen slates
+      // legitimately still list players that were just looted off them)
+      const hv = host.getView();
+      const aliveAll = hv.seats
+        .filter((s) => hv.aliveIds.has(s.id))
+        .flatMap((s) => s.slate.map((x) => x.player.id));
+      expect(new Set(aliveAll).size).toBe(aliveAll.length);
+      expect(guest.getView().desynced).toBe(false);
+    }
   });
 
   it('once every human has locked in, the pick countdown snaps to the short fuse', () => {

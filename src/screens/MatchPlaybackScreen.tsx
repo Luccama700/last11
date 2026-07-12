@@ -50,6 +50,8 @@ export default function MatchPlaybackScreen(props: {
   const human = humanOf(state);
   const managerOf = (id: string) => state.managers.find((m) => m.id === id);
   const nameOf = (id: string) => managerOf(id)?.name ?? id;
+  const totalOf = (id: string) =>
+    (managerOf(id)?.xi ?? []).reduce((sum, s) => sum + Math.round(s.player.rating), 0);
   const humanIsHome = human ? timeline.homeId === human.id : true;
   const homeYou = humanIsHome;
 
@@ -63,6 +65,8 @@ export default function MatchPlaybackScreen(props: {
         homeYou={homeYou}
         matchNo={md.featuredIndex + 1}
         matchTotal={md.featured.length}
+        homeTotal={totalOf(timeline.homeId)}
+        awayTotal={totalOf(timeline.awayId)}
       />
 
       <div className="grid gap-3 lg:grid-cols-[11.5rem_1fr_11.5rem]">
@@ -107,6 +111,25 @@ export default function MatchPlaybackScreen(props: {
       </div>
 
       <Rail md={md} nameOf={nameOf} virtualMinute={pb.virtualMinute} humanId={human?.id} />
+
+      {/* mobile: the side rails are hidden, so both lineups stack down here
+          beneath the live-scores strip (Lucca) */}
+      <div className="grid grid-cols-2 gap-3 lg:hidden">
+        <LineupRail
+          title={nameOf(timeline.homeId)}
+          xi={managerOf(timeline.homeId)?.xi ?? []}
+          you={homeYou}
+          side="home"
+          variant="stack"
+        />
+        <LineupRail
+          title={nameOf(timeline.awayId)}
+          xi={managerOf(timeline.awayId)?.xi ?? []}
+          you={!homeYou}
+          side="away"
+          variant="stack"
+        />
+      </div>
     </div>
   );
 }
@@ -205,6 +228,9 @@ function Scoreboard(props: {
   homeYou: boolean;
   matchNo: number;
   matchTotal: number;
+  /** Sum of each XI's ratings — the same "strength" number the draft shows. */
+  homeTotal?: number;
+  awayTotal?: number;
 }) {
   const { pb } = props;
   const homeColor = props.homeYou ? 'text-win' : 'text-loss';
@@ -215,7 +241,15 @@ function Scoreboard(props: {
       <div className="flex flex-col gap-0.5">
         {props.homeYou && <YouChip />}
         <span className={`headline text-sm ${homeColor}`}>{props.homeName}</span>
-        <span className="text-[10px] text-ink-500">{fmt(props.timeline.homeFormationId)}</span>
+        <span className="text-[10px] text-ink-500">
+          {fmt(props.timeline.homeFormationId)}
+          {props.homeTotal ? (
+            <>
+              {' · '}
+              <span className="headline text-gold-300">{props.homeTotal}</span>
+            </>
+          ) : null}
+        </span>
       </div>
       <div className="text-center">
         <div className="headline flex items-center justify-center gap-2 text-4xl tabular-nums text-ink-100">
@@ -236,7 +270,15 @@ function Scoreboard(props: {
       <div className="flex flex-col items-end gap-0.5">
         {!props.homeYou && <YouChip />}
         <span className={`headline text-sm ${awayColor}`}>{props.awayName}</span>
-        <span className="text-[10px] text-ink-500">{fmt(props.timeline.awayFormationId)}</span>
+        <span className="text-[10px] text-ink-500">
+          {props.awayTotal ? (
+            <>
+              <span className="headline text-gold-300">{props.awayTotal}</span>
+              {' · '}
+            </>
+          ) : null}
+          {fmt(props.timeline.awayFormationId)}
+        </span>
       </div>
     </div>
   );
@@ -250,16 +292,19 @@ function YouChip() {
   );
 }
 
-/** Fielded XI with ratings — flanks the pitch (Lucca: "lineups on the sides"). */
+/** Fielded XI with ratings — flanks the pitch on desktop (Lucca: "lineups on
+ *  the sides"); the 'stack' variant renders in the mobile lineups section. */
 function LineupRail(props: {
   title: string;
   xi: { player: { id: string; name: string; rating: number } }[];
   you: boolean;
   side: Team;
+  variant?: 'side' | 'stack';
 }) {
   if (props.xi.length === 0) return null;
+  const visibility = props.variant === 'stack' ? '' : 'hidden lg:block';
   return (
-    <aside className={`card-gloss hidden rounded-2xl p-2.5 lg:block ${props.side === 'away' ? 'text-right' : ''}`}>
+    <aside className={`card-gloss rounded-2xl p-2.5 ${visibility} ${props.side === 'away' ? 'text-right' : ''}`}>
       <h4 className={`headline mb-1.5 truncate text-[10px] tracking-[0.15em] ${props.you ? 'text-win' : 'text-loss'}`}>
         {props.title}
       </h4>

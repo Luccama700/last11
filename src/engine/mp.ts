@@ -63,8 +63,10 @@ export const MP_SLOT_GAP_MS = 1_500;
  *  mp-2: goal minute spacing + furniture events (playtest wave 2).
  *  mp-3: player-data positions pass (Messi ST; wingers gain wide-mid altPos).
  *  mp-4: solo-parity squads — bots stop draining the human draft pool.
- *  mp-5: squad quality pass — new star snapshots + rating calibration. */
-export const MP_ENGINE_VERSION = 'last11-mp-5';
+ *  mp-5: squad quality pass — new star snapshots + rating calibration.
+ *  mp-6: GLOBAL uniqueness across ALL seats (mp-4 reversed by Lucca's final
+ *        ruling) + pit-fold slate validation + same-person steal guard. */
+export const MP_ENGINE_VERSION = 'last11-mp-6';
 
 // ── Room codes ────────────────────────────────────────────────────────────────
 
@@ -166,18 +168,20 @@ export const seatId = (seat: number): string => `seat-${seat}`;
 
 /**
  * Deterministic bot squads for every unfilled seat, drafted SEQUENTIALLY in seat
- * order. SOLO PARITY (Lucca): bots draft from their OWN copy of the pool — they
- * never consume players the humans could be offered, so a rolled squad in MP
- * shows exactly what it shows in solo. Bots stay distinct from EACH OTHER (a
- * shared bot-only set), but a bot and a human may field the same player — the
- * same rule solo has always played by. Human-vs-human uniqueness is untouched.
+ * order under GLOBAL uniqueness (Lucca's final ruling, 2026-07-12: every player
+ * in the simulation is unique across ALL seats — bots consume the shared pool,
+ * so no player can ever appear on two teams). The mp-5 squad expansion (1038
+ * players) keeps rolled squads playable despite the drain.
  * Pure from (roomSeed, botSeatNumbers) — no bot state ever crosses the wire.
  */
-export function draftBotSeats(roomSeed: number, botSeats: readonly number[]): MpSeat[] {
+export function draftBotSeats(
+  roomSeed: number,
+  botSeats: readonly number[],
+  draftedIds: Set<string>, // MUTATED: bot picks accumulate into the room's drafted set
+): MpSeat[] {
   const nameRng = createRng(matchSeed(roomSeed, 888, 0));
   const names = nameRng.shuffle(BOT_NAMES);
   const order = shuffledSquadOrder(roomSeed);
-  const botTaken = new Set<string>(); // bots don't duplicate each other
   return botSeats.map((seat, i) => {
     const rng = createRng(matchSeed(roomSeed, 888, seat + 1));
     const formation = pickBotFormation(rng);
@@ -188,13 +192,13 @@ export function draftBotSeats(roomSeed: number, botSeats: readonly number[]): Mp
     while (openSlots(slate).length > 0 && guard++ < 400) {
       const roll = order[cursor % order.length];
       cursor++;
-      const pick = autoPickForSlate(slate, formation, roll, botTaken);
+      const pick = autoPickForSlate(slate, formation, roll, draftedIds);
       if (!pick) continue;
       slate[pick.slotIndex] = {
         position: formation.slots[pick.slotIndex],
         player: pick.player,
       };
-      botTaken.add(pick.player.id);
+      draftedIds.add(pick.player.id);
     }
     return {
       seat,

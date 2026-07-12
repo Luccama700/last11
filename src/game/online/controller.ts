@@ -13,7 +13,7 @@
  * (drop = AFK fallbacks), host-leaves = room over.
  */
 import { affinity } from '../../engine/affinity';
-import { movePlaced, openSlots, stealGainV2 } from '../../engine/draft';
+import { movePlaced, openSlots, personKey, stealGainV2 } from '../../engine/draft';
 import {
   MP_DRAFT_SPINS,
   MP_ENGINE_VERSION,
@@ -695,12 +695,35 @@ export class OnlineController {
     const poolIds = new Set(this.currentStealPool().map((p) => p.id));
     for (const seat of survivors) {
       const submitted = this.pendingPits.get(seat.id);
-      const base = submitted ?? { slate: seat.slate, tactics: seat.tactics, steal: null };
+      // TRUST BOUNDARY (dup bug, playtest 3): a submitted slate may only be a
+      // RE-ARRANGEMENT of what this seat canonically owns — contents change
+      // through the steal alone. A stale/diverged client (or a hand-rolled
+      // message) can otherwise inject players the room assigned elsewhere.
+      const legalSlate =
+        submitted &&
+        submitted.slate.length === seat.slate.length &&
+        [...submitted.slate.map((x) => x.player.id)].sort().join(',') ===
+          [...seat.slate.map((x) => x.player.id)].sort().join(',');
+      const base = legalSlate
+        ? submitted
+        : { slate: seat.slate, tactics: submitted?.tactics ?? seat.tactics, steal: null };
+      // a steal may not give a seat the same PERSON twice (97 Pelé × 2 bug) —
+      // unless it replaces that very slot (an upgrade of the same person).
+      const wouldDuplicate = (playerId: string, slotIndex: number): boolean => {
+        const key = personKey(playerId);
+        return base.slate.some((x, idx) => idx !== slotIndex && personKey(x.player.id) === key);
+      };
       let stolen: { playerId: string; slotIndex: number } | null = null;
       let slate = base.slate;
       if (seat.isHuman) {
-        const s = base.steal;
-        if (s && poolIds.has(s.playerId) && !taken.has(s.playerId) && s.slotIndex < slate.length) {
+        const s = legalSlate ? base.steal : null;
+        if (
+          s &&
+          poolIds.has(s.playerId) &&
+          !taken.has(s.playerId) &&
+          s.slotIndex < slate.length &&
+          !wouldDuplicate(s.playerId, s.slotIndex)
+        ) {
           stolen = s;
         }
       } else {
@@ -709,6 +732,7 @@ export class OnlineController {
         for (const p of this.currentStealPool()) {
           if (taken.has(p.id)) continue;
           for (let idx = 0; idx < slate.length; idx++) {
+            if (wouldDuplicate(p.id, idx)) continue;
             const gain = stealGainV2(slate, seat.formation, p, idx, affinity);
             if (gain > 0 && (!best || gain > best.gain)) best = { playerId: p.id, slotIndex: idx, gain };
           }
@@ -902,11 +926,11 @@ export class OnlineController {
       }
       case 'gameStart': {
         this.squadOrder = shuffledSquadOrder(this.roomSeed);
-        // draftedIds tracks HUMAN picks only — bots draft from their own copy of
-        // the pool (solo parity), so rolled squads are never pre-drained.
+        // GLOBAL uniqueness (Lucca's final ruling): bots consume the shared
+        // pool, so every player exists on at most ONE of the 20 teams.
         this.draftedIds = new Set();
         const botSeatNos = m.seats.filter((s) => s.clientId === null).map((s) => s.seat);
-        const bots = draftBotSeats(this.roomSeed, botSeatNos);
+        const bots = draftBotSeats(this.roomSeed, botSeatNos, this.draftedIds);
         const botBySeat = new Map(bots.map((b) => [b.seat, b]));
         const seats: MpSeat[] = m.seats.map((sa) => {
           if (sa.clientId === null) return botBySeat.get(sa.seat)!;
