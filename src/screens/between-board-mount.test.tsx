@@ -56,4 +56,23 @@ describe('between-match board mount (round boundary)', () => {
     // instant reveal (simV2 off) → results table
     expect(screen.getByText(/table · bottom/)).toBeTruthy();
   });
+
+  it('pit stop: changing formation re-slots the XI into the new shape (Lucca 2026-07-11)', () => {
+    toRoundIntro();
+    fireEvent.click(screen.getByText(/adjust lineup/i));
+    // pick a different shape off the "Change shape" grid (setup default is FORMATIONS[0])
+    fireEvent.click(screen.getByRole('button', { name: '4-4-2' }));
+    // the new shape is active and all eleven remain fielded on the board
+    expect(
+      screen.getByRole('button', { name: '4-4-2' }).getAttribute('aria-pressed'),
+    ).toBe('true');
+    const filled = Array.from(document.querySelectorAll('button[data-slot-position]')).filter(
+      (b) => (b.textContent ?? '').trim().length > 0,
+    );
+    expect(filled.length).toBeGreaterThanOrEqual(11);
+    // still playable after the change
+    fireEvent.click(screen.getByText(/READY/));
+    fireEvent.click(screen.getByText(/PLAY ROUND 1/));
+    expect(screen.getByText(/table · bottom/)).toBeTruthy();
+  });
 });

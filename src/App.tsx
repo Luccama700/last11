@@ -1,5 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import {
+  autoArrange,
   draftBotSlateV2,
   pickBotFormation,
   pickBotStyle,
@@ -205,6 +206,22 @@ export default function App(props: { animate?: boolean }) {
     const dense = (state.humanSlate ?? []).filter((s): s is XiSlotV2 => s !== null);
     if (!human || dense.length === 0) return;
     dispatch({ type: 'REARRANGE_XI', managerId: human.id, xi: swapSlots(dense, a, b) });
+  }
+
+  // Pit-stop formation change (Lucca 2026-07-11: formation/style join re-slotting
+  // between rounds, solo included). SET_TACTICS moves state.formation; autoArrange
+  // greedily re-slots the SAME eleven into the new shape (best affinity first) and
+  // REARRANGE_XI persists it to the slate + coarse xi the engine reads.
+  function handleBoardFormationChange(f: Formation) {
+    const human = humanOf(state);
+    const dense = (state.humanSlate ?? []).filter((s): s is XiSlotV2 => s !== null);
+    if (!human || dense.length !== f.slots.length) return;
+    dispatch({ type: 'SET_TACTICS', managerId: human.id, tactics: { formationId: f.id, style } });
+    dispatch({
+      type: 'REARRANGE_XI',
+      managerId: human.id,
+      xi: autoArrange(dense.map((s) => s.player), f, affinity),
+    });
   }
 
   // ---- battle playback (simV2 ON) ----
@@ -424,6 +441,7 @@ export default function App(props: { animate?: boolean }) {
           onSkipAll={handleFinishRound}
           onBoardSwap={handleBoardSwap}
           onBoardStyleChange={setStyle}
+          onBoardFormationChange={handleBoardFormationChange}
         />
       );
     case 'steal':

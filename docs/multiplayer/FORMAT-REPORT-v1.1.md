@@ -238,6 +238,29 @@ New, surfaced by this spec:
 
 ---
 
+## 6b. RULINGS (Lucca, 2026-07-11 — supersede the open items above)
+
+1. **Viewing model: LOCKSTEP, not own-speed.** One steady simulation speed for
+   everyone on a shared clock; §4's decision-deadline/own-speed model is
+   SUPERSEDED. Cycle: 3 synced match slots → one synced 20s pit stop → repeat.
+   Speed buttons/skip do not exist in MP (solo keeps them). Coarse clock sync
+   (transport timestamps, ±150ms tolerance) returns to scope; NTP-grade sync
+   still unnecessary. Shared finale comes free; slow-watcher policy is moot.
+2. **The pit stop is COMBINED and 20s, tight**: loot steal + re-slotting +
+   formation/style changes in one window. Fallbacks at deadline: no steal,
+   keep arrangement, keep tactics.
+3. **Solo gets the combined pit stop too** — formation/style changes join
+   re-slotting on the between-match board (solo is untimed). Feature queued.
+4. **MP match slots run 30s** (not 45) to cut tournament time. Duration becomes
+   a mode parameter: solo playback stays 45s unless Lucca says otherwise.
+   Round ≈ 3×~30–42s (pens add 6s/kick) + 20s ≈ **~2 min; tournament ≈ 10–12 min**.
+5. **Cut ladder confirmed: 20 → 16 → 8 → 4 → 2 → 1.**
+6. **Rooting-for mechanic: IN** — eliminated players pick a survivor to back;
+   shown during pit stops and on the end screen.
+7. **Solo keeps respins** (MP has none, per the locked spec).
+8. **Trust vs commit–reveal: pending** — explanation delivered to Lucca;
+   recommendation remains trust for the friends-room MVP.
+
 ## 7. What this means for plan v1.1
 
 When Lucca rules on §6, plan v1.0 §1 (product design) gets rewritten around:

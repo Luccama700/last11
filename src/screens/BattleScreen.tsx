@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { affinity } from '../engine/affinity';
 import { displayedSquadRating } from '../engine/squad-rating';
 import { SURVIVORS_PER_ROUND, type Manager, type MatchResult } from '../engine/tournament';
-import type { PlayingStyle, XiSlotV2 } from '../engine/types';
+import type { Formation, PlayingStyle, XiSlotV2 } from '../engine/types';
 import { buildNameLookup, topAssists, topScorers } from '../game/player-stats';
 import { aliveOf, humanOf, type GameState } from '../game/state';
 import BetweenMatchBoard from './board/BetweenMatchBoard';
@@ -19,6 +19,7 @@ export default function BattleScreen(props: {
   onSkipAll: () => void;
   onBoardSwap: (a: number, b: number) => void;
   onBoardStyleChange: (s: PlayingStyle) => void;
+  onBoardFormationChange: (f: Formation) => void;
 }) {
   const { state } = props;
   const human = humanOf(state)!;
@@ -42,6 +43,7 @@ export default function BattleScreen(props: {
         affinity={affinity}
         onSwap={props.onBoardSwap}
         onStyleChange={props.onBoardStyleChange}
+        onFormationChange={props.onBoardFormationChange}
         onDone={() => setBoardOpen(false)}
       />
     );
