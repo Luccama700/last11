@@ -64,54 +64,61 @@ device first (engine `last11-mp-6`).
 8. **End screen** — placement, run summary, **Hall of Champions**
    (persistent local history of your crowns).
 
-## Act 2 — MULTIPLAYER (the headline — say "no game in this genre has this")
+## Act 2 — MULTIPLAYER (the headline — say "no game in this genre has this",
+then explain HOW it works as you play; the system is the story)
 
 9. **PLAY ONLINE** → rooms with 5-letter codes, OR the **PUBLIC LOBBIES**
    system: host flips a lobby public, anyone on **QUICK PLAY** drops into
-   the fullest open lobby — nobody waits alone. Empty seats become bots at
-   kickoff (20-manager rooms).
+   the fullest open lobby — nobody waits alone. (**How:** there's no lobby
+   database — public rooms announce themselves on a **shared presence
+   channel**, so a listing lives exactly as long as its host does; close
+   the tab and it's gone. Nothing can go stale.) Empty seats become bots
+   at kickoff (20-manager rooms).
 10. **Lobby** — set your shape & style while you wait; live presence chips.
-11. **Simultaneous slot-machine draft** — all 20 managers spin AT ONCE;
-    every spin deals each manager a **different squad** (disjoint by
-    construction) and **every player in the room is globally unique** —
-    once anyone drafts him, he's gone for all 20 teams. 20s picks, and the
-    moment every human has locked in, the countdown **snaps to 5s** ("ALL
-    LOCKED IN").
-12. **Lockstep viewing** — everyone watches together on a shared clock at
-    1.5×, no skips: 3 synced match slots, per-slot live scores of every
-    other match at the bottom.
+11. **Simultaneous slot-machine draft** — all 20 managers spin AT ONCE.
+    (**How:** squads are dealt by **stride rotation in modular arithmetic**
+    — seat m gets squad (spin·20 + m) mod N — so every spin's 20 squads are
+    **disjoint by construction**, no pick contention possible; and the
+    squad count being **coprime with 20** means you never see the same
+    squad twice.) **Every player in the room is globally unique** — one
+    shared drafted set across all 20 teams; once anyone takes him, he's
+    gone for everyone. 20s picks, and the moment every human has locked
+    in, the countdown **snaps to 5s** ("ALL LOCKED IN").
+12. **Lockstep viewing** — everyone watches together at 1.5×, no skips:
+    3 synced match slots, per-slot live scores at the bottom. (**How:**
+    nobody streams video to anybody. The host broadcasts one seed and one
+    start time; every phone **simulates the identical match locally** and
+    just plays it on a shared wall clock — corrected by a
+    **median-of-samples clock-offset estimator**, because real phones sit
+    seconds off NTP. Twenty screens, one game, zero servers.)
 13. **The waiting room** — finish early and you see your full-time score,
     every other match still ticking **including their penalty shootouts
     kick-by-kick**, a countdown to your next match, and the **spoiler-safe
     LIVE TABLE** with the pulsing red cut line — it only counts matches
-    that have finished on the shared clock.
+    that have finished on the shared clock, so your own next result is
+    never leaked even though every phone already computed it.
 14. **Synced pit stop** — 45s, loot + re-slot + tactics on one board, loot
-    from real fallen opponents (players you already own show OWNED).
-15. **Eliminated ≠ gone** — spectators get standings and pick a survivor
+    from real fallen opponents (players you already own show OWNED —
+    uniqueness is enforced at the host's trust boundary, so even a
+    doctored client can't field two Pelés).
+15. **Bulletproof by design** — say it over gameplay: every message
+    carries an **FNV-1a hash of the entire game state**, so any two phones
+    either agree on everything or know it instantly; a dropped broadcast
+    **self-heals by event-log replay**, and a **reloaded phone rejoins
+    mid-game into its own seat**. (Stage it if you're brave: background
+    the phone, come back, watch it heal.)
+16. **Eliminated ≠ gone** — spectators get standings and pick a survivor
     to **root for**; it shows on the end screen.
-16. **Cut ladder 20 → 16 → 8 → 4 → 2 → 1** to a single champion; victory
+17. **Cut ladder 20 → 16 → 8 → 4 → 2 → 1** to a single champion; victory
     screen + Hall of Champions entry.
 
-## The architecture flex (30s, over B-roll of two phones in sync)
+## The architecture recap (20s, over B-roll of two phones in sync — the
+one-breath version of everything Act 2 explained in place)
 
-- **No game server, no database.** Host-authoritative over Supabase
-  Realtime — the wire carries only seeds, picks and deadlines; every
-  client derives bots, pairings, scores and timelines **deterministically**
-  from the room seed. **The simulation is a pure function, so the engine IS
-  the netcode** — we ship coordinates of the game, not the game.
-- The draft deals squads by **stride rotation in modular arithmetic** —
-  seat m gets squad (spin·20 + m) mod N, so every spin's 20 squads are
-  **disjoint by construction**, and because the squad count is **coprime
-  with 20**, no seat ever sees the same squad twice.
-- Real phones sit seconds off NTP — every message stamps the host clock and
-  clients keep a **median-of-samples offset estimator** (robust to network
-  jitter), so the lockstep never drifts.
-- Every message carries an **FNV-1a hash of the entire mirror state** — two
-  clients agree on the whole game or the checksum says so instantly. A
-  dropped broadcast **self-heals by event-log replay**: the client rebuilds
-  its state by re-folding the host's message log through the same pure
-  apply path. A **reloaded phone rejoins mid-game into its own seat**. A
-  phase watchdog rescues even a lost final whistle.
+- **"No game server. No database. The simulation is a pure function of a
+  seed, so the engine IS the netcode — we ship coordinates of the game,
+  not the game. Twenty phones each run the identical tournament and an
+  FNV-1a checksum on every message proves they never disagree."**
 - 353 tests: full host+guest tournaments over an in-memory bus asserting
   the two mirrors stay **byte-identical**, a **Monte-Carlo balance ceiling**
   over 1,200 simulated drafts, affinity invariants over the whole
