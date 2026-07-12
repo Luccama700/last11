@@ -413,6 +413,38 @@ describe('online controller — loopback end-to-end', () => {
     expect(back.getView().desynced).toBe(false);
   });
 
+  it('a dropped gameEnd (no successor message) is rescued by the phase watchdog', () => {
+    const bus = new LoopbackBus();
+    const host = new OnlineController('Lucca', (_c, me, h) => bus.connect(me, h), true);
+    const guest = new OnlineController('Johnny', (_c, me, h) => bus.connect(me, h), true);
+    host.create(SEED + 8);
+    guest.join(host.getView().code);
+    vi.advanceTimersByTime(250);
+    host.fillWithBots();
+    vi.advanceTimersByTime(250);
+    for (let spin = 0; spin < MP_DRAFT_SPINS; spin++) {
+      vi.advanceTimersByTime(MP_REEL_MS + MP_PICK_MS + 400);
+    }
+    for (let round = 1; round <= MP_SURVIVORS_PER_ROUND.length; round++) {
+      vi.advanceTimersByTime(3_500);
+      const isFinal = round === MP_SURVIVORS_PER_ROUND.length;
+      // the very LAST host message of the game vanishes on the guest's wire
+      if (isFinal) bus.dropNextHostFor = bus.clientIdOf('Johnny');
+      const totalMs = host.getView().slots.reduce((s, x) => s + x.durationMs, 0);
+      vi.advanceTimersByTime(totalMs + 1_000);
+      if (!isFinal) vi.advanceTimersByTime(MP_PIT_MS + 500);
+    }
+    expect(bus.dropNextHostFor).toBeNull(); // the drop really consumed gameEnd
+    expect(host.getView().phase).toBe('end');
+    // ~4s grace + resync round-trip: the watchdog begs for the log and lands —
+    // without it the guest would sit on the waiting screen forever (no
+    // successor message ever exposes a missing gameEnd).
+    vi.advanceTimersByTime(12_000);
+    expect(guest.getView().phase).toBe('end');
+    expect(guest.getView().champion?.id).toBe(host.getView().champion?.id);
+    expect(guest.getView().desynced).toBe(false);
+  });
+
   it('a joiner into a full/playing room is refused cleanly', () => {
     const { host, guest } = makePair();
     host.create(SEED + 2);

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { affinity } from '../../engine/affinity';
-import { autoArrange, sortByBoost, stealGainV2, swapSlots } from '../../engine/draft';
+import { autoArrange, personKey, sortByBoost, stealGainV2, swapSlots } from '../../engine/draft';
 import {
   MP_DRAFT_SPINS,
   MP_SURVIVORS_PER_ROUND,
@@ -797,11 +797,16 @@ function OnlinePit(props: { view: OnlineView; ctl: OnlineController }) {
   const formation = formationById(pit.tactics.formationId)!;
   const stealTargets = view.stealPool.slice(0, 18);
 
-  function bestSlotFor(p: PlayerV2): { slotIndex: number; gain: number } {
-    let best = { slotIndex: 0, gain: -Infinity };
+  // mirrors the host's steal guard: a steal may not give you the same PERSON
+  // twice, unless it replaces that very slot (an upgrade of the same person)
+  function bestSlotFor(p: PlayerV2): { slotIndex: number; gain: number } | null {
+    let best: { slotIndex: number; gain: number } | null = null;
+    const key = personKey(p.id);
     for (let i = 0; i < pit.slate.length; i++) {
+      const dup = pit.slate.some((x, idx) => idx !== i && personKey(x.player.id) === key);
+      if (dup) continue;
       const gain = stealGainV2(pit.slate, formation, p, i, affinity);
-      if (gain > best.gain) best = { slotIndex: i, gain };
+      if (!best || gain > best.gain) best = { slotIndex: i, gain };
     }
     return best;
   }
@@ -815,6 +820,20 @@ function OnlinePit(props: { view: OnlineView; ctl: OnlineController }) {
         {stealTargets.map((p) => {
           const chosen = view.myStealChoice?.playerId === p.id;
           const best = bestSlotFor(p);
+          if (!best) {
+            return (
+              <div
+                key={p.id}
+                className="flex w-full items-baseline gap-1.5 rounded-lg px-2 py-1 text-left text-xs opacity-40 max-lg:py-2"
+              >
+                <span className="headline w-8 shrink-0 text-[9px] text-gold-300">{p.position}</span>
+                <span className="truncate font-bold">{flagOf(p.nation)} {p.name}</span>
+                <span className="headline ml-auto shrink-0 text-[9px] tracking-[0.15em] text-ink-500">
+                  OWNED
+                </span>
+              </div>
+            );
+          }
           return (
             <button
               key={p.id}

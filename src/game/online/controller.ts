@@ -791,7 +791,20 @@ export class OnlineController {
     ) {
       this.submitPit();
     }
-    if (!this.view.isHost) return;
+    if (!this.view.isHost) {
+      // WATCHDOG (stuck-final bug): a missed broadcast normally gets exposed by
+      // the NEXT message's checksum — but the last message of a phase (gameEnd
+      // above all) has no successor. Every client knows from its own clock when
+      // the phase should have moved on; if it didn't, ask for the log.
+      const stale =
+        (this.view.phase === 'watching' && this.viewingEndsAt > 0 && t > this.viewingEndsAt + 4_000) ||
+        (this.view.phase === 'pit' && this.view.pitDeadline !== null && t > this.view.pitDeadline + 4_000) ||
+        (this.view.phase === 'draft' &&
+          this.view.spinDeadline !== null &&
+          t > this.view.spinDeadline + 4_000);
+      if (stale) this.requestResync(); // 6s cooldown paces retries
+      return;
+    }
     // host phase transitions
     if (this.hostStage === 'spin' && t >= this.hostPhaseDeadline) this.hostCloseSpin();
     else if (this.hostStage === 'viewing' && this.viewingEndsAt && t >= this.viewingEndsAt) {
