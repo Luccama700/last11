@@ -52,7 +52,7 @@ export default function TacticsRail(props: {
                 title={s.hint}
                 aria-pressed={active}
                 onClick={() => props.onStyleChange(s.id)}
-                className={`cursor-pointer rounded-lg px-1.5 py-2 text-[11px] font-bold transition ${
+                className={`cursor-pointer rounded-lg px-1.5 py-2 text-[11px] font-bold transition max-lg:py-2.5 ${
                   active
                     ? 'btn-gold'
                     : 'bg-night-700 text-ink-300 hover:bg-night-600'

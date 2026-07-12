@@ -149,38 +149,47 @@ export default function DraftScreenV2(props: {
           The machine lives in the RIGHT RAIL so the pitch column NEVER reflows
           mid-draft (Lucca's rule); rails scroll internally. */}
       <div className="mx-auto grid max-w-7xl gap-5 px-4 py-4 lg:h-screen lg:grid-cols-[21rem_1fr_17rem]">
-        {/* Left: tactics rail + squad flow */}
-        <aside className="order-2 space-y-4 scrollbar-hide lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
-          <TacticsRail
-            formationName={formation.name}
-            style={props.style}
-            onStyleChange={props.onStyleChange}
-            mode={props.mode}
-            respinTokens={props.respinTokens}
-            strength={strength}
-            filled={filled}
-            slotCount={slotCount}
-          />
+        {/* Left: tactics rail + squad flow. On mobile the rail dissolves
+            (`max-lg:contents`) and its blocks join the single column with
+            explicit orders: pitch+SPIN(1) → squad card(2) → the draw(3) →
+            tactics(4) → box score(5) — the pick list sits right under the fold
+            instead of a full pitch-height away. */}
+        <aside className="scrollbar-hide max-lg:contents lg:order-1 lg:min-h-0 lg:space-y-4 lg:overflow-y-auto lg:pr-1">
+          <div className="max-lg:order-4">
+            <TacticsRail
+              formationName={formation.name}
+              style={props.style}
+              onStyleChange={props.onStyleChange}
+              mode={props.mode}
+              respinTokens={props.respinTokens}
+              strength={strength}
+              filled={filled}
+              slotCount={slotCount}
+            />
+          </div>
           {/* Squad panel is ALWAYS mounted (static layout): content swaps inside
               one stable card instead of panels popping in and out. */}
-          {!draftDone &&
-            (props.spunRoll !== null && revealed ? (
-              <SquadCard
-                roll={props.spunRoll}
-                squadName={squadByRef(props.spunRoll.nation, props.spunRoll.year).name}
-                options={ranked}
-                mode={props.mode}
-                onPick={pickPlayer}
-                respinTokens={props.respinTokens}
-                onRespin={props.respinTokens > 0 ? props.onRespin : undefined}
-              />
-            ) : (
-              <div className="card-gloss flex min-h-[9rem] items-center justify-center rounded-2xl p-4 text-center text-xs leading-relaxed text-ink-500">
-                {props.spunRoll !== null
-                  ? 'Drawing…'
-                  : 'Spin to draw a national team and a World Cup — the squad lands here.'}
-              </div>
-            ))}
+          {!draftDone && (
+            <div className="max-lg:order-2">
+              {props.spunRoll !== null && revealed ? (
+                <SquadCard
+                  roll={props.spunRoll}
+                  squadName={squadByRef(props.spunRoll.nation, props.spunRoll.year).name}
+                  options={ranked}
+                  mode={props.mode}
+                  onPick={pickPlayer}
+                  respinTokens={props.respinTokens}
+                  onRespin={props.respinTokens > 0 ? props.onRespin : undefined}
+                />
+              ) : (
+                <div className="card-gloss flex min-h-[9rem] items-center justify-center rounded-2xl p-4 text-center text-xs leading-relaxed text-ink-500">
+                  {props.spunRoll !== null
+                    ? 'Drawing…'
+                    : 'Spin to draw a national team and a World Cup — the squad lands here.'}
+                </div>
+              )}
+            </div>
+          )}
         </aside>
 
         {/* Center: pitch + spin flow */}
@@ -211,15 +220,19 @@ export default function DraftScreenV2(props: {
           </header>
 
           <div className="lg:flex lg:min-h-0 lg:flex-1 lg:justify-center">
-            <PitchBoard
-              formation={formation}
-              slate={humanSlate}
-              mode={props.mode}
-              glowSlots={pending ? pending.glow : moveFrom !== null ? openSlotSet : null}
-              clickableSlots={boardClickable}
-              selectedSlot={moveFrom}
-              onSlotClick={boardTap}
-            />
+            {/* mobile: cap the pitch (48dvh) so SPIN + the squad card stay near
+                the fold; lg: the pitch keeps sizing itself from the viewport */}
+            <div className="mx-auto aspect-[3/4] h-[48dvh] max-w-full lg:mx-0 lg:aspect-auto lg:h-full">
+              <PitchBoard
+                formation={formation}
+                slate={humanSlate}
+                mode={props.mode}
+                glowSlots={pending ? pending.glow : moveFrom !== null ? openSlotSet : null}
+                clickableSlots={boardClickable}
+                selectedSlot={moveFrom}
+                onSlotClick={boardTap}
+              />
+            </div>
           </div>
 
           <div className="mt-3 shrink-0">
@@ -263,24 +276,29 @@ export default function DraftScreenV2(props: {
         </main>
 
         {/* Right: THE DRAW machine (always mounted — spins live, then holds the
-            last result) over the box score. */}
-        <aside className="order-3 space-y-4 scrollbar-hide lg:min-h-0 lg:overflow-y-auto">
-          {lastRoll !== null || props.spunRoll !== null ? (
-            <SpinReveal
-              key={spinNonce}
-              target={props.spunRoll ?? lastRoll!}
-              nations={nations}
-              animate={props.animate}
-              onSettled={() => setSettled(true)}
-              active={props.spunRoll !== null && !revealed}
-            />
-          ) : (
-            <div className="card-gloss flex min-h-[12rem] flex-col items-center justify-center gap-2 rounded-2xl !border-gold-600/40 p-3.5">
-              <p className="headline text-[10px] tracking-[0.4em] text-gold-400">THE DRAW</p>
-              <p className="text-center text-xs text-ink-500">Hit SPIN to fire the reels.</p>
-            </div>
-          )}
-          <BoxScorePanel slate={humanSlate} />
+            last result) over the box score. Dissolves into the mobile column
+            like the left rail. */}
+        <aside className="scrollbar-hide max-lg:contents lg:order-3 lg:min-h-0 lg:space-y-4 lg:overflow-y-auto">
+          <div className="max-lg:order-3">
+            {lastRoll !== null || props.spunRoll !== null ? (
+              <SpinReveal
+                key={spinNonce}
+                target={props.spunRoll ?? lastRoll!}
+                nations={nations}
+                animate={props.animate}
+                onSettled={() => setSettled(true)}
+                active={props.spunRoll !== null && !revealed}
+              />
+            ) : (
+              <div className="card-gloss flex min-h-[12rem] flex-col items-center justify-center gap-2 rounded-2xl !border-gold-600/40 p-3.5">
+                <p className="headline text-[10px] tracking-[0.4em] text-gold-400">THE DRAW</p>
+                <p className="text-center text-xs text-ink-500">Hit SPIN to fire the reels.</p>
+              </div>
+            )}
+          </div>
+          <div className="max-lg:order-5">
+            <BoxScorePanel slate={humanSlate} />
+          </div>
         </aside>
       </div>
     </div>

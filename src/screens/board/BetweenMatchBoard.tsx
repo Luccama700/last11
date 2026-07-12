@@ -60,19 +60,25 @@ export default function BetweenMatchBoard(props: {
             : 'max-w-5xl lg:grid-cols-[16rem_minmax(0,1fr)]'
         }`}
       >
-        <aside className="scrollbar-hide order-2 min-h-0 space-y-4 lg:order-1 lg:overflow-y-auto">
-          <TacticsRail
-            formationName={props.formation.name}
-            style={props.style}
-            onStyleChange={props.onStyleChange}
-            mode={props.mode}
-            strength={strength}
-            filled={props.xi.length}
-            slotCount={props.formation.slots.length}
-          />
+        {/* On mobile the rail dissolves (`max-lg:contents`) so its blocks join
+            the single column with explicit orders: pitch(1) → loot(2) → LOCK(3)
+            → tactics(4) → shape(5) → standings(6). The essentials — countdown,
+            pitch, loot, LOCK — all land on the first screen. */}
+        <aside className="scrollbar-hide min-h-0 max-lg:contents lg:order-1 lg:space-y-4 lg:overflow-y-auto">
+          <div className="max-lg:order-4">
+            <TacticsRail
+              formationName={props.formation.name}
+              style={props.style}
+              onStyleChange={props.onStyleChange}
+              mode={props.mode}
+              strength={strength}
+              filled={props.xi.length}
+              slotCount={props.formation.slots.length}
+            />
+          </div>
 
           {props.onFormationChange && (
-            <div className="card-gloss rounded-2xl p-4">
+            <div className="card-gloss rounded-2xl p-4 max-lg:order-5">
               <h2 className="headline mb-2 text-[11px] tracking-[0.25em] text-ink-500">
                 Change shape
               </h2>
@@ -85,7 +91,7 @@ export default function BetweenMatchBoard(props: {
                       type="button"
                       aria-pressed={active}
                       onClick={() => !active && props.onFormationChange!(f)}
-                      className={`cursor-pointer truncate rounded-lg px-1.5 py-1.5 text-[11px] font-bold transition ${
+                      className={`cursor-pointer truncate rounded-lg px-1.5 py-1.5 text-[11px] font-bold transition max-lg:py-2.5 ${
                         active ? 'btn-gold' : 'bg-night-700 text-ink-300 hover:bg-night-600'
                       }`}
                       title={f.name}
@@ -104,7 +110,7 @@ export default function BetweenMatchBoard(props: {
           <button
             type="button"
             onClick={props.onDone}
-            className="btn-gold headline w-full cursor-pointer rounded-xl px-6 py-3 text-lg"
+            className="btn-gold headline w-full cursor-pointer rounded-xl px-6 py-3 text-lg max-lg:order-3"
           >
             {props.doneLabel ?? 'READY →'}
           </button>
@@ -120,17 +126,21 @@ export default function BetweenMatchBoard(props: {
             </p>
           </header>
           <div className="flex min-h-0 flex-1 justify-center">
-            <PitchBoard
-              formation={props.formation}
-              slate={props.xi}
-              mode={props.mode}
-              selectedSlot={selected}
-              onSlotClick={tapSlot}
-            />
+            {/* mobile: cap the pitch (48dvh) so loot + LOCK fit the first screen;
+                lg: the pitch keeps sizing itself from the viewport height */}
+            <div className="aspect-[3/4] h-[48dvh] max-w-full lg:aspect-auto lg:h-full">
+              <PitchBoard
+                formation={props.formation}
+                slate={props.xi}
+                mode={props.mode}
+                selectedSlot={selected}
+                onSlotClick={tapSlot}
+              />
+            </div>
           </div>
         </main>
         {props.rightAside && (
-          <aside className="scrollbar-hide order-3 min-h-0 space-y-4 lg:overflow-y-auto">
+          <aside className="scrollbar-hide min-h-0 max-lg:contents lg:order-3 lg:space-y-4 lg:overflow-y-auto">
             {props.rightAside}
           </aside>
         )}

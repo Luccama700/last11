@@ -259,7 +259,7 @@ function LobbyScreen(props: { view: OnlineView; ctl: OnlineController; onExit: (
                 type="button"
                 aria-pressed={f.id === view.formation.id}
                 onClick={() => ctl.setSetup(f.id, view.style)}
-                className={`cursor-pointer truncate rounded-lg px-1.5 py-2 text-[11px] font-bold transition ${
+                className={`cursor-pointer truncate rounded-lg px-1.5 py-2 text-[11px] font-bold transition max-lg:py-2.5 ${
                   f.id === view.formation.id ? 'btn-gold' : 'bg-night-700 text-ink-300 hover:bg-night-600'
                 }`}
               >
@@ -274,7 +274,7 @@ function LobbyScreen(props: { view: OnlineView; ctl: OnlineController; onExit: (
                 type="button"
                 aria-pressed={s === view.style}
                 onClick={() => ctl.setSetup(view.formation.id, s)}
-                className={`cursor-pointer rounded-lg px-2 py-2 text-xs font-bold capitalize transition ${
+                className={`cursor-pointer rounded-lg px-2 py-2 text-xs font-bold capitalize transition max-lg:py-2.5 ${
                   s === view.style ? 'btn-gold' : 'bg-night-700 text-ink-300 hover:bg-night-600'
                 }`}
               >
@@ -382,11 +382,12 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
   );
 
   return (
-    // lg: the page IS the viewport — the pitch sizes from the remaining height
-    // and the options list scrolls internally. Nothing on this screen scrolls
-    // the page (Lucca: everything fits one page).
-    <div className="bg-stadium min-h-screen text-ink-100 lg:h-dvh lg:min-h-0 lg:overflow-hidden">
-      <div className="mx-auto grid max-w-6xl gap-4 px-4 py-4 lg:h-full lg:grid-cols-[minmax(0,1fr)_21rem]">
+    // The page IS the viewport at every size — the pitch sizes from the
+    // remaining height (mobile: a 42dvh cap) and the options list scrolls
+    // internally. Nothing on this screen scrolls the page (Lucca: everything
+    // fits one page). Mobile keeps the countdown pinned above the pitch.
+    <div className="bg-stadium h-dvh min-h-0 overflow-hidden text-ink-100">
+      <div className="mx-auto grid h-full max-w-6xl grid-rows-[auto_minmax(0,1fr)] gap-3 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:grid-cols-[minmax(0,1fr)_21rem] lg:grid-rows-none lg:gap-4 lg:py-4">
         <main className="flex min-h-0 flex-col">
           <header className="mb-2 flex items-baseline justify-between">
             <h1 className="headline text-xl">
@@ -403,34 +404,47 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
                     : 'pick from your squad →'}
             </p>
           </header>
+          {/* mobile: the pick clock must be visible while picking — the aside
+              copy of it lives below the pitch fold, so it hides on small tiers */}
+          <div className="mb-2 lg:hidden">
+            <Countdown deadline={view.spinDeadline} label="PICK CLOSES" hurried={view.hurried} />
+          </div>
           <div className="flex min-h-0 flex-1 justify-center">
-            <PitchBoard
-              formation={view.formation}
-              slate={view.mySlate}
-              mode="classic"
-              glowSlots={selPlayer || moveFrom !== null ? open : null}
-              clickableSlots={clickable}
-              selectedSlot={moveFrom}
-              onSlotClick={tapSlot}
-            />
+            <div className="aspect-[3/4] h-[42dvh] max-w-full lg:aspect-auto lg:h-full">
+              <PitchBoard
+                formation={view.formation}
+                slate={view.mySlate}
+                mode="classic"
+                glowSlots={selPlayer || moveFrom !== null ? open : null}
+                clickableSlots={clickable}
+                selectedSlot={moveFrom}
+                onSlotClick={tapSlot}
+              />
+            </div>
           </div>
           <p className="mt-1.5 text-right text-xs text-ink-500">
             Squad strength <span className="headline text-base text-gold-300">{strength}</span>
           </p>
         </main>
 
-        <aside className="flex min-h-0 flex-col gap-3">
+        {/* mobile: the whole rail scrolls (reel first, options peeking under it);
+            lg: the rail is fixed and only the options list scrolls */}
+        <aside className="scrollbar-hide flex min-h-0 flex-col gap-3 max-lg:overflow-y-auto">
           {view.myRoll && (
-            <SpinReveal
-              key={view.spinIndex}
-              target={view.myRoll}
-              nations={nations}
-              animate={true}
-              onSettled={() => ctl.reelSettled()}
-            />
+            <div className="shrink-0">
+              <SpinReveal
+                key={view.spinIndex}
+                target={view.myRoll}
+                nations={nations}
+                animate={true}
+                onSettled={() => ctl.reelSettled()}
+              />
+            </div>
           )}
-          <Countdown deadline={view.spinDeadline} label="PICK CLOSES" hurried={view.hurried} />
-          <div className="card-gloss scrollbar-hide max-h-[24rem] min-h-0 space-y-1 overflow-y-auto rounded-xl p-2 lg:max-h-none lg:flex-1">
+          <div className="shrink-0 max-lg:hidden">
+            <Countdown deadline={view.spinDeadline} label="PICK CLOSES" hurried={view.hurried} />
+          </div>
+          <div className="card-gloss scrollbar-hide min-h-0 space-y-1 overflow-y-auto rounded-xl p-2 max-lg:shrink-0 lg:max-h-none lg:flex-1">
             {view.myOptions.map((p) => {
               const sel = selPlayer?.id === p.id;
               const picked = view.myPick?.playerId === p.id;
@@ -444,7 +458,7 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
                     setSelPlayer(sel ? null : p);
                     setMoveFrom(null);
                   }}
-                  className={`flex w-full cursor-pointer items-baseline gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition ${
+                  className={`flex w-full cursor-pointer items-baseline gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition max-lg:py-2.5 ${
                     picked
                       ? 'btn-gold'
                       : sel
@@ -661,7 +675,7 @@ function OnlinePit(props: { view: OnlineView; ctl: OnlineController }) {
               onClick={() =>
                 ctl.setSteal(chosen ? null : { playerId: p.id, slotIndex: best.slotIndex })
               }
-              className={`flex w-full cursor-pointer items-baseline gap-1.5 rounded-lg px-2 py-1 text-left text-xs transition ${
+              className={`flex w-full cursor-pointer items-baseline gap-1.5 rounded-lg px-2 py-1 text-left text-xs transition max-lg:py-2 ${
                 chosen ? 'btn-gold' : 'hover:bg-night-800'
               }`}
             >
@@ -703,10 +717,15 @@ function OnlinePit(props: { view: OnlineView; ctl: OnlineController }) {
         </div>
       }
       rightAside={
-        <div className="space-y-3">
-          {lootRail}
-          <MpStandings view={view} compact />
-        </div>
+        // Ordered blocks, not one wrapper: on mobile the board flattens its rails
+        // (`max-lg:contents`), so loot slots in right after the pitch (order-2)
+        // while the standings drop below the LOCK/tactics stack (order-6).
+        <>
+          <div className="max-lg:order-2">{lootRail}</div>
+          <div className="max-lg:order-6">
+            <MpStandings view={view} compact />
+          </div>
+        </>
       }
     />
   );
