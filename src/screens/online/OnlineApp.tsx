@@ -283,12 +283,16 @@ function LobbyScreen(props: { view: OnlineView; ctl: OnlineController; onExit: (
 
 // ── Simultaneous draft ────────────────────────────────────────────────────────
 
-function Countdown(props: { deadline: number | null; label: string }) {
+function Countdown(props: { deadline: number | null; label: string; hurried?: boolean }) {
   const remaining = props.deadline ? Math.max(0, props.deadline - Date.now()) : 0;
   const secs = Math.ceil(remaining / 1000);
   return (
     <div className="card-gloss flex items-center justify-between rounded-xl px-4 py-2">
-      <span className="headline text-[10px] tracking-[0.25em] text-ink-500">{props.label}</span>
+      <span
+        className={`headline text-[10px] tracking-[0.25em] ${props.hurried ? 'text-gold-300' : 'text-ink-500'}`}
+      >
+        {props.hurried ? 'ALL LOCKED IN' : props.label}
+      </span>
       <span
         className={`headline text-2xl tabular-nums ${secs <= 5 ? 'animate-gold-pulse text-loss' : 'text-gold-300'}`}
       >
@@ -393,7 +397,7 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
               onSettled={() => ctl.reelSettled()}
             />
           )}
-          <Countdown deadline={view.spinDeadline} label="PICK CLOSES" />
+          <Countdown deadline={view.spinDeadline} label="PICK CLOSES" hurried={view.hurried} />
           <div className="card-gloss scrollbar-hide max-h-[24rem] space-y-1 overflow-y-auto rounded-xl p-2">
             {view.myOptions.map((p) => {
               const sel = selPlayer?.id === p.id;
@@ -656,7 +660,7 @@ function OnlinePit(props: { view: OnlineView; ctl: OnlineController }) {
       doneLabel={view.pitReady ? 'LOCKED ✓' : 'LOCK IT IN →'}
       banner={
         <div className="mb-3 space-y-2">
-          <Countdown deadline={view.pitDeadline} label="PIT STOP — STEAL · RE-SLOT · TACTICS" />
+          <Countdown deadline={view.pitDeadline} label="PIT STOP — STEAL · RE-SLOT · TACTICS" hurried={view.hurried} />
         </div>
       }
       extraAside={
@@ -680,7 +684,7 @@ function SpectatorPit(props: { view: OnlineView; ctl: OnlineController }) {
           </p>
           <h1 className="headline mt-1 text-2xl">The survivors are in the pits…</h1>
         </header>
-        <Countdown deadline={view.pitDeadline} label="NEXT ROUND IN" />
+        <Countdown deadline={view.pitDeadline} label="NEXT ROUND IN" hurried={view.hurried} />
         <div className="mt-4">
           <MpStandings view={view} />
         </div>

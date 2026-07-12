@@ -12,6 +12,7 @@ import type { RoomHandlers } from '../net/room';
 import type { HostMsg, Intent, PresenceMeta } from '../net/protocol';
 import {
   MP_DRAFT_SPINS,
+  MP_HURRY_MS,
   MP_PICK_MS,
   MP_PIT_MS,
   MP_REEL_MS,
@@ -176,6 +177,34 @@ describe('online controller — loopback end-to-end', () => {
     }
     const all = slateIds(host).flat();
     expect(new Set(all).size).toBe(all.length); // no player exists twice anywhere
+  });
+
+  it('once every human has locked in, the pick countdown snaps to the short fuse', () => {
+    const { host, guest } = makePair();
+    host.create(SEED + 3);
+    guest.join(host.getView().code);
+    vi.advanceTimersByTime(250);
+    host.fillWithBots();
+    vi.advanceTimersByTime(250);
+    expect(host.getView().spinIndex).toBe(0);
+
+    // both humans pick immediately — long before the reel+pick window runs out
+    const pickNow = (c: OnlineController) => {
+      const v = c.getView();
+      c.pick(v.myOptions[0].id, v.mySlate.findIndex((s) => s === null));
+    };
+    pickNow(host);
+    pickNow(guest);
+    vi.advanceTimersByTime(100);
+    expect(host.getView().hurried).toBe(true);
+    expect(guest.getView().hurried).toBe(true);
+
+    // the spin closes on the short fuse, not the full window
+    vi.advanceTimersByTime(MP_HURRY_MS + 500);
+    expect(host.getView().spinIndex).toBe(1);
+    expect(guest.getView().spinIndex).toBe(1);
+    expect(guest.getView().hurried).toBe(false); // reset for the new spin
+    expect(guest.getView().desynced).toBe(false);
   });
 
   it('a joiner into a full/playing room is refused cleanly', () => {

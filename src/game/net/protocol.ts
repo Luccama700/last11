@@ -95,6 +95,9 @@ export type HostMsgBody =
     }
   /** Lockstep round: everyone resolves round N locally and plays at startAt. */
   | { t: 'roundStart'; round: number; startAt: number }
+  /** Everyone locked in early — the current window's deadline snaps forward.
+   *  `index` is the spinIndex (scope 'spin') or the round (scope 'pit'). */
+  | { t: 'hurry'; scope: 'spin' | 'pit'; index: number; deadlineAt: number }
   /** Combined pit stop opens (steal + re-slot + tactics), closes at deadlineAt. */
   | { t: 'pitStart'; round: number; deadlineAt: number }
   /** Authoritative pit outcome per surviving seat, applied atomically. */

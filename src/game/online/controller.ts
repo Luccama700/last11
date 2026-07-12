@@ -17,6 +17,7 @@ import { movePlaced, openSlots, stealGainV2 } from '../../engine/draft';
 import {
   MP_DRAFT_SPINS,
   MP_ENGINE_VERSION,
+  MP_HURRY_MS,
   MP_LOBBY_SIZE,
   MP_PICK_MS,
   MP_PIT_MS,
@@ -87,6 +88,8 @@ export interface OnlineView {
   // draft
   spinIndex: number; // 0-based; -1 before the first spin
   spinDeadline: number | null;
+  /** True when everyone locked in early and the countdown snapped forward. */
+  hurried: boolean;
   reelSettled: boolean;
   myRoll: SquadRef | null;
   myOptions: PlayerV2[];
@@ -180,6 +183,7 @@ export class OnlineController {
       lobbySize: MP_LOBBY_SIZE,
       spinIndex: -1,
       spinDeadline: null,
+      hurried: false,
       reelSettled: false,
       myRoll: null,
       myOptions: [],
@@ -401,7 +405,10 @@ export class OnlineController {
           roll &&
           mpDraftOptions(moved, roll, this.draftedIds).some((p) => p.id === i.playerId) &&
           openSlots(moved).includes(i.slotIndex);
-        if (legal) this.pendingPicks.set(seat.id, { playerId: i.playerId, slotIndex: i.slotIndex });
+        if (legal) {
+          this.pendingPicks.set(seat.id, { playerId: i.playerId, slotIndex: i.slotIndex });
+          this.maybeHurry();
+        }
         break;
       }
       case 'moveOnBoard': {
@@ -418,6 +425,7 @@ export class OnlineController {
         const seat = this.seatOfClient(i.clientId);
         if (!seat || !this.view.aliveIds.has(seat.id)) return;
         this.pendingPits.set(seat.id, { slate: i.slate, tactics: i.tactics, steal: i.steal });
+        this.maybeHurry();
         break;
       }
       case 'root': {
@@ -495,6 +503,28 @@ export class OnlineController {
     const deadlineAt = now() + MP_REEL_MS + MP_PICK_MS;
     this.hostPhaseDeadline = deadlineAt;
     this.send({ t: 'spinStart', spinIndex, deadlineAt });
+  }
+
+  /** Playtest wave-2 lobby rule: once EVERY human has locked in, nobody sits
+   *  out the rest of the window — the deadline snaps to a short fuse and the
+   *  new deadline is broadcast so every countdown jumps together. */
+  private maybeHurry(): void {
+    // parked deadline ⇒ the window already closed and its result is in flight
+    if (this.hostPhaseDeadline === Number.MAX_SAFE_INTEGER) return;
+    if (now() + MP_HURRY_MS >= this.hostPhaseDeadline) return; // already that close
+    if (this.hostStage === 'spin') {
+      const ready = this.view.seats.every(
+        (s) => !s.isHuman || this.pendingPicks.has(s.id) || !this.assignments[s.seat],
+      );
+      if (!ready) return;
+      this.hostPhaseDeadline = now() + MP_HURRY_MS;
+      this.send({ t: 'hurry', scope: 'spin', index: this.view.spinIndex, deadlineAt: this.hostPhaseDeadline });
+    } else if (this.hostStage === 'pit') {
+      const humans = this.view.seats.filter((s) => s.isHuman && this.view.aliveIds.has(s.id));
+      if (humans.length === 0 || !humans.every((s) => this.pendingPits.has(s.id))) return;
+      this.hostPhaseDeadline = now() + MP_HURRY_MS;
+      this.send({ t: 'hurry', scope: 'pit', index: this.view.round, deadlineAt: this.hostPhaseDeadline });
+    }
   }
 
   private hostCloseSpin(): void {
@@ -756,6 +786,7 @@ export class OnlineController {
         this.emit({
           spinIndex: m.spinIndex,
           spinDeadline: this.toLocal(m.deadlineAt),
+          hurried: false,
           reelSettled: false,
           myRoll,
           myOptions,
@@ -841,6 +872,14 @@ export class OnlineController {
         });
         break;
       }
+      case 'hurry': {
+        if (m.scope === 'spin' && m.index === this.view.spinIndex && this.view.phase === 'draft') {
+          this.emit({ spinDeadline: this.toLocal(m.deadlineAt), hurried: true });
+        } else if (m.scope === 'pit' && m.index === this.view.round && this.view.phase === 'pit') {
+          this.emit({ pitDeadline: this.toLocal(m.deadlineAt), hurried: true });
+        }
+        break;
+      }
       case 'pitStart': {
         const result = this.lastResult!;
         const aliveIds = new Set(
@@ -861,6 +900,7 @@ export class OnlineController {
           phase: 'pit',
           aliveIds,
           pitDeadline: this.toLocal(m.deadlineAt),
+          hurried: false,
           stealPool: this.currentStealPool(),
           eliminated: iFell || this.view.eliminated,
           placement,

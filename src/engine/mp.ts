@@ -51,6 +51,9 @@ export const MP_PICK_MS = 30_000;
 export const MP_REEL_MS = 3_500;
 /** The combined pit stop: loot + re-slot + tactics (playtest wave 2: 45s). */
 export const MP_PIT_MS = 45_000;
+/** When EVERY human has locked in, the countdown snaps to this short fuse
+ *  instead of running out the full window (playtest wave 2 feedback). */
+export const MP_HURRY_MS = 5_000;
 /** startAt lead so every client has the round in hand before elapsed goes +. */
 export const MP_START_LEAD_MS = 3_000;
 /** Breath between lockstep match slots. */
