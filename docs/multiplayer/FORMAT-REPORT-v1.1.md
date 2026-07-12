@@ -258,8 +258,10 @@ New, surfaced by this spec:
 6. **Rooting-for mechanic: IN** — eliminated players pick a survivor to back;
    shown during pit stops and on the end screen.
 7. **Solo keeps respins** (MP has none, per the locked spec).
-8. **Trust vs commit–reveal: pending** — explanation delivered to Lucca;
-   recommendation remains trust for the friends-room MVP.
+8. **Trust vs commit–reveal: RULED (Lucca, 2026-07-11) — TRUST for the MVP,
+   commit–reveal ships as a LATER FEATURE** (additive on the same message
+   schema, per protocol §4.4; flip on for ranked/public rooms). With this,
+   every multiplayer design decision is closed — the format is fully locked.
 
 ## 7. What this means for plan v1.1
 

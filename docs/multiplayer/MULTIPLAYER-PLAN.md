@@ -103,8 +103,13 @@ Expected shape: **MVP** = private rooms 2–8, casual trust, server timelines,
 Supabase or PartyKit transport; **v2** = 32 seats, reconnect hardening,
 certification/ranked; **v3** = matchmaking, persistent accounts.
 
-## 5. Decisions for Lucca — collected here as research lands
-1. MVP seat count (2–8 vs full 32 from day one)?
-2. Casual trust vs commit-reveal in MVP?
-3. Phase timer profiles (Casual/Fast values above — tune)?
-4. Spectator "rooting for" mechanic — in or out?
+## 5. Decisions for Lucca — ALL RESOLVED (see FORMAT-REPORT-v1.1.md §6b)
+1. ~~MVP seat count~~ → **20-manager rooms**, fill-with-bots start.
+2. ~~Trust vs commit-reveal~~ → **trust for MVP; commit–reveal is a planned
+   later feature** (ranked/public rooms).
+3. ~~Phase timers~~ → 10s picks · **30s match slots (lockstep)** · combined 20s
+   pit stop (loot + re-slot + tactics). Cut ladder 20→16→8→4→2→1.
+4. ~~Rooting-for~~ → **IN** — eliminated managers pick a survivor to back.
+
+The format is fully locked as of 2026-07-11; FORMAT-REPORT-v1.1.md §6b is the
+authoritative ruling list. Implementation can start.
