@@ -1,4 +1,4 @@
-# Launch posts — drafts (2026-07-11)
+# Launch posts: drafts (2026-07-11)
 
 Copy-paste bank, one custom post per venue. Voice: honest, humble, first person.
 Nothing here overclaims: it's a free browser game, built in a hackathon weekend,
