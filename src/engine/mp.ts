@@ -62,8 +62,9 @@ export const MP_SLOT_GAP_MS = 1_500;
 /** Engine build handshake — bump on ANY change that alters engine output.
  *  mp-2: goal minute spacing + furniture events (playtest wave 2).
  *  mp-3: player-data positions pass (Messi ST; wingers gain wide-mid altPos).
- *  mp-4: solo-parity squads — bots stop draining the human draft pool. */
-export const MP_ENGINE_VERSION = 'last11-mp-4';
+ *  mp-4: solo-parity squads — bots stop draining the human draft pool.
+ *  mp-5: squad quality pass — new star snapshots + rating calibration. */
+export const MP_ENGINE_VERSION = 'last11-mp-5';
 
 // ── Room codes ────────────────────────────────────────────────────────────────
 

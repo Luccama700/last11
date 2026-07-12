@@ -127,7 +127,12 @@ describe('back-compat adapter (CONTRACT §7)', () => {
   it('dataV2 ON returns the 12 2026 nations as coarse players', () => {
     const coarse = activeCoarseSquads(true, 2026);
     expect(v2Nations(2026).length).toBe(12);
-    expect(coarse.length).toBe(12 * 18); // 2026 squads carry 18 players each
+    // 2026 squads carry 18 players each, except BRA 2026 which now carries a 19th
+    // (Rayan, Lucca's composer add) — assert the true projected count, not a fixed 18×12.
+    const expected = allSquadsV2()
+      .filter((s) => s.year === 2026)
+      .reduce((n, s) => n + s.players.length, 0);
+    expect(coarse.length).toBe(expected);
     for (const p of coarse) expect(['GK', 'DF', 'MF', 'FW']).toContain(p.position);
   });
 });
