@@ -27,11 +27,22 @@ device first (engine `last11-mp-6`).
 4. **3 re-spin tokens** — hate the roll, burn one.
 5. **The tournament** — 32 managers, 3 matches a round, the table's bottom
    goes home: **32 → 24 → 16 → 8 → 4 → 2 → 1**.
-6. **The match engine** (linger here — it's the technical meat):
-   - pure deterministic TypeScript, seeded — same seed, byte-identical
-     tournament, provable by our test suite (353 tests)
-   - xG-calibrated scoring (~3.4 goals/match), tactics matter both ways,
-     morale carries between rounds
+6. **The match engine** (linger here — it's the technical meat; the mathy
+   words are accurate, use them):
+   - **a pure function of a seed** — every match is deterministic TypeScript
+     over a **mulberry32 PRNG**: same seed, **byte-identical tournament**,
+     provable by our 353-test suite
+   - each XI collapses to **zonal strength indices** (defence / midfield /
+     attack as **convex combinations** of affinity-weighted ratings), which
+     set each side's **expected goals λ**; scorelines are drawn from a
+     **Poisson process** (Knuth's sampler) with an **inverted Dixon–Coles
+     correction** trimming the boring low-scoring draws — calibrated to
+     ~3.4 goals a match
+   - off-position players pay an **affinity operator** penalty; morale
+     carries between rounds as a multiplier
+   - goal minutes are **rejection-sampled** so no two goals share a minute;
+     goalscorers are drawn from a **shot-weight distribution** over the XI
+     (your strikers score more, your keeper never does)
    - live pitch with player dots, momentum bar, ticker with **fouls,
      corners, goal kicks, throw-ins** attributed to the right players
    - **team-aware goal banners**: your goals climb gold → lime → cyan →
@@ -40,9 +51,13 @@ device first (engine `last11-mp-6`).
      lineups flank the pitch (stacked below on mobile)
    - "Elsewhere this round" live-score rail — shows ONLY the matches from
      the same slot you're playing (no spoilers)
-   - penalty shootouts: taker-vs-keeper math (**94 CR7 vs an 80 GK ≈ 90%,
-     80 taker vs a 93 wall ≈ 65%**), takers named as they step up,
-     no-spoiler reveal kick by kick
+   - penalty shootouts are a **Markov chain** with an early-decision
+     absorbing state (mathematically impossible comebacks end the shootout
+     early, like real ones); takers step up in **order statistics** of shot
+     weight, and each kick is **taker-vs-keeper**: conversion = 75% + 1.0%
+     per taker point over 75 − 0.8% per keeper point (**94 CR7 vs an 80 GK
+     ≈ 90%, an 80 taker vs a 93 wall ≈ 65%**), revealed kick by kick with
+     no spoilers
 7. **The pit stop** — between rounds, one combined board: **loot one player
    from a fallen squad** (bots are looting too, in seat order), re-slot
    your XI, change formation AND style.
@@ -82,17 +97,25 @@ device first (engine `last11-mp-6`).
 - **No game server, no database.** Host-authoritative over Supabase
   Realtime — the wire carries only seeds, picks and deadlines; every
   client derives bots, pairings, scores and timelines **deterministically**
-  from the room seed. The engine IS the netcode.
-- Real phones have clocks seconds off NTP — every message carries the host
-  clock and clients keep a median offset, so the lockstep never drifts.
-- Every message carries a **mirror checksum**; a dropped broadcast is
-  detected AND **self-heals**: the client requests the host's message log
-  and replays the whole game through the same apply path. A **reloaded
-  phone rejoins mid-game into its own seat**. A phase watchdog rescues
-  even a lost final whistle.
+  from the room seed. **The simulation is a pure function, so the engine IS
+  the netcode** — we ship coordinates of the game, not the game.
+- The draft deals squads by **stride rotation in modular arithmetic** —
+  seat m gets squad (spin·20 + m) mod N, so every spin's 20 squads are
+  **disjoint by construction**, and because the squad count is **coprime
+  with 20**, no seat ever sees the same squad twice.
+- Real phones sit seconds off NTP — every message stamps the host clock and
+  clients keep a **median-of-samples offset estimator** (robust to network
+  jitter), so the lockstep never drifts.
+- Every message carries an **FNV-1a hash of the entire mirror state** — two
+  clients agree on the whole game or the checksum says so instantly. A
+  dropped broadcast **self-heals by event-log replay**: the client rebuilds
+  its state by re-folding the host's message log through the same pure
+  apply path. A **reloaded phone rejoins mid-game into its own seat**. A
+  phase watchdog rescues even a lost final whistle.
 - 353 tests: full host+guest tournaments over an in-memory bus asserting
-  the two mirrors stay **byte-identical**, drafted-XI balance ceilings,
-  affinity invariants over the whole 1,038-player DB.
+  the two mirrors stay **byte-identical**, a **Monte-Carlo balance ceiling**
+  over 1,200 simulated drafts, affinity invariants over the whole
+  1,038-player DB.
 
 ## Close (10s)
 
