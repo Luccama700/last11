@@ -233,49 +233,47 @@ function Scoreboard(props: {
   awayTotal?: number;
 }) {
   const { pb } = props;
-  const homeColor = props.homeYou ? 'text-win' : 'text-loss';
-  const awayColor = props.homeYou ? 'text-loss' : 'text-win';
   const fmt = (id: string) => formationById(id)?.name ?? id;
   return (
-    <div className="card-gloss grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl p-4">
-      <div className="flex flex-col gap-0.5">
+    <div className="chrome-gloss grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-2.5 text-white">
+      <div className="flex flex-col items-start gap-0.5">
         {props.homeYou && <YouChip />}
-        <span className={`headline text-sm ${homeColor}`}>{props.homeName}</span>
-        <span className="text-[10px] text-ink-500">
+        <span className="condensed text-base leading-tight">{props.homeName}</span>
+        <span className="condensed flex items-center gap-1.5 text-[10px] text-white/60">
           {fmt(props.timeline.homeFormationId)}
           {props.homeTotal ? (
-            <>
-              {' · '}
-              <span className="headline text-gold-300">{props.homeTotal}</span>
-            </>
+            <span className="silver-gloss blade tabular px-1.5 text-[10px] text-carbon">
+              {props.homeTotal}
+            </span>
           ) : null}
         </span>
       </div>
       <div className="text-center">
-        <div className="headline flex items-center justify-center gap-2 text-4xl tabular-nums text-ink-100">
+        <div className="condensed tabular flex items-center justify-center gap-2 text-4xl font-bold">
           {/* key = value: digits remount on change and bump (juice pass) */}
           <span key={`h${pb.score.home}`} className="animate-score-bump">
             {pb.score.home}
           </span>
-          <span className="text-night-600">–</span>
+          <span className="text-white/35">–</span>
           <span key={`a${pb.score.away}`} className="animate-score-bump">
             {pb.score.away}
           </span>
         </div>
-        <div className="headline mt-0.5 text-[11px] text-gold-400">{pb.clockLabel}</div>
-        <div className="text-[9px] uppercase tracking-widest text-ink-500">
+        <div className="scarlet-gloss blade condensed tabular mx-auto mt-0.5 w-fit px-3 text-[11px]">
+          {pb.clockLabel}
+        </div>
+        <div className="condensed mt-0.5 text-[9px] tracking-widest text-white/55">
           your match {props.matchNo}/{props.matchTotal}
         </div>
       </div>
       <div className="flex flex-col items-end gap-0.5">
         {!props.homeYou && <YouChip />}
-        <span className={`headline text-sm ${awayColor}`}>{props.awayName}</span>
-        <span className="text-[10px] text-ink-500">
+        <span className="condensed text-base leading-tight">{props.awayName}</span>
+        <span className="condensed flex items-center gap-1.5 text-[10px] text-white/60">
           {props.awayTotal ? (
-            <>
-              <span className="headline text-gold-300">{props.awayTotal}</span>
-              {' · '}
-            </>
+            <span className="silver-gloss blade tabular px-1.5 text-[10px] text-carbon">
+              {props.awayTotal}
+            </span>
           ) : null}
           {fmt(props.timeline.awayFormationId)}
         </span>
@@ -286,7 +284,7 @@ function Scoreboard(props: {
 
 function YouChip() {
   return (
-    <span className="headline w-fit rounded bg-gold-400 px-1.5 py-0.5 text-[9px] text-night-950">
+    <span className="scarlet-gloss blade condensed w-fit px-1.5 py-0.5 text-[9px]">
       YOU
     </span>
   );
@@ -304,20 +302,21 @@ function LineupRail(props: {
   if (props.xi.length === 0) return null;
   const visibility = props.variant === 'stack' ? '' : 'hidden lg:block';
   return (
-    <aside className={`card-gloss rounded-2xl p-2.5 ${visibility} ${props.side === 'away' ? 'text-right' : ''}`}>
-      <h4 className={`headline mb-1.5 truncate text-[10px] tracking-[0.15em] ${props.you ? 'text-win' : 'text-loss'}`}>
+    <aside className={`border border-hairline bg-white p-2.5 ${visibility} ${props.side === 'away' ? 'text-right' : ''}`}>
+      <h4 className={`condensed mb-1.5 flex items-center gap-1.5 truncate text-[11px] tracking-[0.12em] text-carbon ${props.side === 'away' ? 'flex-row-reverse' : ''}`}>
+        {props.you && <YouChip />}
         {props.title}
       </h4>
-      <ul className="space-y-0.5">
+      <ul>
         {props.xi.map((s) => (
           <li
             key={s.player.id}
-            className={`flex items-baseline gap-1.5 text-[11px] leading-tight ${props.side === 'away' ? 'flex-row-reverse' : ''}`}
+            className={`row-band flex items-baseline gap-1.5 px-1 text-[11px] leading-snug ${props.side === 'away' ? 'flex-row-reverse' : ''}`}
           >
-            <span className="headline w-6 shrink-0 text-center text-[10px] text-gold-300">
+            <span className="tabular condensed w-6 shrink-0 text-center text-[10px] font-bold text-royal">
               {s.player.rating}
             </span>
-            <span className="truncate text-ink-300">{s.player.name}</span>
+            <span className="truncate text-carbon">{s.player.name}</span>
           </li>
         ))}
       </ul>
@@ -347,19 +346,19 @@ function Pitch(props: {
 
   return (
     <div
-      className="@container relative w-full overflow-hidden rounded-xl border border-gold-600/25"
+      className="@container relative w-full overflow-hidden rounded-sm border border-hairline"
       style={{
         aspectRatio: '16 / 10',
-        background: 'repeating-linear-gradient(90deg,#0a5c2e 0 8.33%,#0e7a3c 8.33% 16.66%)',
-        boxShadow: 'inset 0 0 70px rgba(0,0,0,.55)',
+        background: 'repeating-linear-gradient(90deg,#46a136 0 8.33%,#4fae3d 8.33% 16.66%)',
+        boxShadow: 'inset 0 0 60px rgba(0,0,0,.28)',
       }}
     >
       {/* pitch markings */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/25" />
-        <div className="absolute left-1/2 top-1/2 aspect-square w-[20%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/25" />
-        <div className="absolute left-0 top-[22%] h-[56%] w-[14%] border-2 border-l-0 border-white/25" />
-        <div className="absolute right-0 top-[22%] h-[56%] w-[14%] border-2 border-r-0 border-white/25" />
+        <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/45" />
+        <div className="absolute left-1/2 top-1/2 aspect-square w-[20%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/45" />
+        <div className="absolute left-0 top-[22%] h-[56%] w-[14%] border-2 border-l-0 border-white/45" />
+        <div className="absolute right-0 top-[22%] h-[56%] w-[14%] border-2 border-r-0 border-white/45" />
       </div>
 
       {[...homeDots.map((d, i) => ({ d, cls: homeDot, key: `h${i}` })), ...awayDots.map((d, i) => ({ d, cls: awayDot, key: `a${i}` }))].map(
@@ -429,9 +428,9 @@ function PhaseBanner(props: { minute: number; shootout: boolean }) {
     <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 overflow-hidden">
       <div
         key={phase}
-        className="animate-banner-sweep mx-auto w-fit rounded-lg border border-gold-500/60 bg-night-950/85 px-8 py-2"
+        className="animate-banner-sweep chrome-gloss blade mx-auto w-fit px-10 py-2"
       >
-        <span className="headline text-2xl tracking-[0.3em] text-gold-300">{phase}</span>
+        <span className="condensed text-2xl tracking-[0.3em] text-white">{phase}</span>
       </div>
     </div>
   );
@@ -461,7 +460,10 @@ function GoalShout(props: { count: number; mine: boolean }) {
   // down — the kick-pop overshoot (×1.18) still stays inside the pitch either way.
   const size = n > 1 ? 'text-[11cqw]' : 'text-[16cqw]';
   return (
-    <span className={`headline animate-kick-pop leading-none whitespace-nowrap ${size} ${heat}`}>
+    <span
+      className={`condensed animate-kick-pop bg-black/40 px-[4cqw] font-bold leading-none whitespace-nowrap ${size} ${heat}`}
+      style={{ clipPath: 'polygon(3cqw 0, 100% 0, calc(100% - 3cqw) 100%, 0 100%)' }}
+    >
       {n > 1 ? `${n}x GOAL` : 'GOAL'}
     </span>
   );
@@ -497,8 +499,8 @@ function MomentumBar(props: { pb: PlaybackState; homeYou: boolean }) {
   const homeColor = props.homeYou ? 'bg-emerald-400' : 'bg-rose-400';
   const awayColor = props.homeYou ? 'bg-rose-400' : 'bg-emerald-400';
   return (
-    <div className="relative h-2.5 overflow-hidden rounded-md border border-night-600 bg-night-950">
-      <div className="absolute inset-y-0 left-1/2 w-px bg-night-600" />
+    <div className="relative h-2.5 overflow-hidden rounded-sm border border-hairline bg-band">
+      <div className="absolute inset-y-0 left-1/2 w-px bg-hairline" />
       <div className={`absolute inset-y-0 left-1/2 ${homeColor} opacity-40`} style={{ width: `${p > 0 ? w : 0}%` }} />
       <div className={`absolute inset-y-0 right-1/2 ${awayColor} opacity-40`} style={{ width: `${p < 0 ? w : 0}%` }} />
     </div>
@@ -508,14 +510,14 @@ function MomentumBar(props: { pb: PlaybackState; homeYou: boolean }) {
 function Ticker(props: { pb: PlaybackState }) {
   const { ticker } = props.pb;
   return (
-    <div className="card-gloss flex min-h-[42px] flex-col justify-center gap-0.5 rounded-lg px-3 py-2">
+    <div className="flex min-h-[42px] flex-col justify-center gap-0.5 border border-hairline bg-white px-3 py-2">
       {ticker.length === 0 ? (
-        <p className="text-xs text-ink-500">…</p>
+        <p className="text-xs text-carbon-600">…</p>
       ) : (
         ticker.map((e, i) => (
-          <p key={i} className={`flex gap-2 text-xs ${i < ticker.length - 1 ? 'opacity-45' : ''}`}>
-            <span className={`w-8 shrink-0 font-black ${e.type === 'goal' ? 'text-gold-400' : 'text-ink-500'}`}>{e.minute}'</span>
-            <span className={e.type === 'goal' ? 'font-bold text-gold-300' : 'text-ink-300'}>{e.text}</span>
+          <p key={i} className={`flex gap-2 text-xs ${i < ticker.length - 1 ? 'opacity-50' : ''}`}>
+            <span className={`tabular w-8 shrink-0 font-bold ${e.type === 'goal' ? 'text-scarlet' : 'text-carbon-600'}`}>{e.minute}'</span>
+            <span className={e.type === 'goal' ? 'font-bold text-scarlet' : 'text-carbon'}>{e.text}</span>
           </p>
         ))
       )}
@@ -530,7 +532,7 @@ function ShootoutOverlay(props: { pb: PlaybackState; homeName: string; awayName:
   const so = props.pb.shootout!;
   const pip = (team: Team) => so.kicks.filter((k) => k.team === team);
   const dotFor = (scored: boolean) =>
-    scored ? 'bg-gold-400 border-gold-300 animate-kick-pop' : 'bg-night-700 border-loss animate-kick-pop';
+    scored ? 'bg-def border-[#2e7527] animate-kick-pop' : 'bg-scarlet border-[#a91824] animate-kick-pop';
   const takerName = (id?: string) => (id ? (playerV2ById(id)?.name ?? 'The taker') : 'The taker');
   const lastKick = so.kicks.length > 0 ? so.kicks[so.kicks.length - 1] : null;
   const line =
@@ -545,37 +547,39 @@ function ShootoutOverlay(props: { pb: PlaybackState; homeName: string; awayName:
             : '';
   const row = (team: Team, label: string, you: boolean) => (
     <div className="flex flex-col items-center gap-1.5">
-      <span className={`headline text-[10px] tracking-wider ${you ? 'text-win' : 'text-loss'}`}>{label}</span>
+      <span className={`condensed text-[10px] tracking-wider ${you ? 'text-royal' : 'text-carbon-600'}`}>{label}</span>
       <div className="flex gap-1.5">
         {pip(team).map((k, i) => (
           <span key={i} className={`h-4 w-4 rounded-full border-2 ${dotFor(k.scored)}`} />
         ))}
-        {pip(team).length === 0 && <span className="h-4 text-[10px] text-ink-500">—</span>}
+        {pip(team).length === 0 && <span className="h-4 text-[10px] text-carbon-600">—</span>}
       </div>
     </div>
   );
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center bg-night-950/70 backdrop-blur-[2px]">
-      <div className="card-gloss animate-gold-pulse mx-4 flex w-full max-w-md flex-col items-center gap-3 rounded-2xl !border-gold-500/60 p-5">
-        <h4 className="headline text-xs tracking-[0.3em] text-gold-400">PENALTY SHOOTOUT</h4>
-        <div className="headline flex items-center gap-6 text-4xl tabular-nums">
-          <span className={props.homeYou ? 'text-win' : 'text-loss'}>{so.home}</span>
-          <span className="text-night-600">–</span>
-          <span className={props.homeYou ? 'text-loss' : 'text-win'}>{so.away}</span>
+    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/55 backdrop-blur-[2px]">
+      <div className="paper-pane mx-4 flex w-full max-w-md flex-col items-center gap-3 border border-hairline p-5 shadow-2xl">
+        <h4 className="scarlet-gloss blade condensed w-fit px-4 py-0.5 text-xs tracking-[0.3em]">
+          PENALTY SHOOTOUT
+        </h4>
+        <div className="condensed tabular flex items-center gap-6 text-4xl font-bold text-carbon">
+          <span>{so.home}</span>
+          <span className="text-hairline">–</span>
+          <span>{so.away}</span>
         </div>
         <div className="flex gap-10">
           {row('home', props.homeName, props.homeYou)}
           {row('away', props.awayName, !props.homeYou)}
         </div>
         <p
-          className={`headline min-h-[24px] text-lg ${
+          className={`condensed min-h-[24px] text-lg ${
             so.winner !== null
-              ? 'text-gold-300'
+              ? 'text-royal'
               : so.lastResult === 'missed'
-                ? 'text-loss'
+                ? 'text-scarlet'
                 : so.lastResult === 'scored'
-                  ? 'text-gold-300'
-                  : 'text-ink-300'
+                  ? 'text-[#2e7527]'
+                  : 'text-carbon-600'
           } ${so.lastResult !== null && so.winner === null ? 'animate-kick-pop' : ''}`}
         >
           {line}
@@ -598,8 +602,8 @@ function Controls(props: {
         <button
           key={s}
           onClick={() => props.setSpeed(s)}
-          className={`cursor-pointer rounded-lg px-3 py-1.5 text-sm font-bold transition ${
-            props.speed === s ? 'btn-gold' : 'border border-night-600 bg-night-800 text-ink-300 hover:bg-night-700'
+          className={`condensed blade cursor-pointer px-3.5 py-1.5 text-sm transition ${
+            props.speed === s ? 'chrome-gloss text-white' : 'silver-gloss text-carbon'
           }`}
         >
           {s}×
@@ -607,14 +611,14 @@ function Controls(props: {
       ))}
       <button
         onClick={props.onSkipMatch}
-        className="cursor-pointer rounded-lg px-3 py-1.5 text-sm font-bold text-ink-500 transition hover:text-ink-100"
+        className="condensed silver-gloss blade cursor-pointer px-3.5 py-1.5 text-sm text-carbon"
       >
         {props.isLast ? 'skip to table ▸▸' : 'skip match ▸'}
       </button>
       {!props.isLast && (
         <button
           onClick={props.onSkipAll}
-          className="cursor-pointer rounded-lg px-3 py-1.5 text-sm font-bold text-ink-500 transition hover:text-ink-100"
+          className="condensed silver-gloss blade cursor-pointer px-3.5 py-1.5 text-sm text-carbon"
         >
           skip all ▸▸
         </button>
@@ -640,14 +644,14 @@ function Rail(props: { md: Matchday; nameOf: (id: string) => string; virtualMinu
   if (rail.length === 0) return null;
   return (
     <div>
-      <h3 className="headline mb-1.5 text-[10px] tracking-[0.18em] text-ink-500">Elsewhere this round</h3>
+      <h3 className="condensed mb-1.5 text-[10px] tracking-[0.18em] text-carbon-600">Elsewhere this round</h3>
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
         {rail.map((m) => (
-          <div key={m.matchId} className="card-gloss flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px]">
-            <span className="truncate text-ink-500">
-              {short(props.nameOf(m.homeId))} <span className="text-night-600">v</span> {short(props.nameOf(m.awayId))}
+          <div key={m.matchId} className="chrome-gloss flex items-center justify-between px-2.5 py-1.5 text-[11px] text-white">
+            <span className="condensed truncate text-white/75">
+              {short(props.nameOf(m.homeId))} <span className="text-white/40">v</span> {short(props.nameOf(m.awayId))}
             </span>
-            <span className="ml-2 shrink-0 font-bold tabular-nums text-gold-400">{scoreAt(m.goals)}</span>
+            <span className="tabular condensed ml-2 shrink-0 font-bold">{scoreAt(m.goals)}</span>
           </div>
         ))}
       </div>
