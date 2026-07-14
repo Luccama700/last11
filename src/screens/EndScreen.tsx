@@ -8,6 +8,28 @@ import { readChampions } from '../game/champions';
 import { aliveOf, humanOf, type GameState } from '../game/state';
 import MatchPlaybackScreen from './MatchPlaybackScreen';
 import { Crest } from './BattleScreen';
+import { ChromeBar } from './ui/kit';
+
+/** Gold trophy — the one screen where gold is the point. */
+function TrophyGlyph(props: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" className={props.className ?? 'h-16 w-16'} aria-hidden>
+      <path
+        d="M12 6h24v4h8v6c0 6-5 10-10 10h-1a12 12 0 0 1-5 4v6h6l2 6H12l2-6h6v-6a12 12 0 0 1-5-4h-1C9 26 4 22 4 16v-6h8V6zm-4 8v2c0 3.5 2.6 6 6 6h.4A16 16 0 0 1 12 14H8zm32 0h-4a16 16 0 0 1-2.4 8h.4c3.4 0 6-2.5 6-6v-2z"
+        fill="url(#tg)"
+        stroke="#8a6a10"
+        strokeWidth="1"
+      />
+      <defs>
+        <linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#f4dfa4" />
+          <stop offset="55%" stopColor="#d4a843" />
+          <stop offset="100%" stopColor="#a16207" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
 
 /** Optional post-elimination extras (architect's night-shift lane); the screen
  *  degrades gracefully until they land in GameState. */
@@ -40,11 +62,9 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
     };
     const done = () => setWatchingFinal(false);
     return (
-      <div className="bg-stadium min-h-screen text-ink-100">
+      <div className="min-h-dvh bg-paper text-carbon">
+        <ChromeBar ribbon title="THE FINAL" />
         <div className="mx-auto max-w-4xl px-6 py-6">
-          <h1 className="headline mb-4 text-center text-sm tracking-[0.3em] text-gold-400">
-            THE FINAL
-          </h1>
           <MatchPlaybackScreen
             state={synthetic}
             animate={props.animate ?? true}
@@ -58,30 +78,41 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
   }
 
   return (
-    <div className="bg-stadium relative min-h-screen text-ink-100">
+    <div className="relative min-h-dvh bg-paper text-carbon">
+      <ChromeBar ribbon title="FULL TIME" />
       {won && <ChampionConfetti />}
-      <div className="mx-auto flex max-w-2xl flex-col items-center gap-6 px-6 py-12 text-center">
+      <div className="mx-auto flex max-w-2xl flex-col items-center gap-6 px-6 py-10 text-center">
         {won ? (
-          <>
-            <p className="animate-gold-pulse rounded-full p-4 text-6xl">🏆</p>
-            <p className="headline text-xs tracking-[0.35em] text-gold-400">
-              LAST MANAGER STANDING
-            </p>
-            <h1 className="headline text-5xl">
-              <span className="headline-gold">You outlasted all 31.</span>
-            </h1>
-          </>
+          <div
+            className="chrome-gloss relative w-full overflow-hidden py-8"
+            style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 14px), 0 100%)' }}
+          >
+            <div
+              className="scarlet-gloss absolute inset-y-0 right-0 w-1/3"
+              style={{ clipPath: 'polygon(40% 0, 100% 0, 100% 100%, 0 100%)' }}
+            />
+            <div className="relative flex flex-col items-center gap-2">
+              <TrophyGlyph className="animate-gold-pulse h-16 w-16 rounded-full" />
+              <p className="condensed text-xs tracking-[0.35em] text-gold-400">
+                LAST MANAGER STANDING
+              </p>
+              <h1 className="condensed text-5xl font-bold">
+                <span className="headline-gold">You outlasted all 31.</span>
+              </h1>
+            </div>
+          </div>
         ) : (
           <>
-            <p className="text-6xl">💀</p>
-            <p className="headline text-xs tracking-[0.35em] text-loss">ELIMINATED</p>
-            <h1 className="headline text-5xl">
-              You finished <span className="text-loss">#{state.humanPlacement}</span> of 32
+            <p className="scarlet-gloss blade condensed px-5 py-1 text-xs tracking-[0.35em]">
+              ELIMINATED
+            </p>
+            <h1 className="condensed text-5xl font-bold text-carbon">
+              You finished <span className="text-scarlet">#{state.humanPlacement}</span> of 32
             </h1>
             {champion && (
-              <p className="flex items-center gap-2 text-ink-500">
+              <p className="flex items-center gap-2 text-carbon-600">
                 Champion: <Crest name={champion.name} id={champion.id} size="sm" />
-                <span className="font-bold text-gold-300">{champion.name}</span>
+                <span className="condensed font-bold text-carbon">{champion.name}</span>
               </p>
             )}
           </>
@@ -103,26 +134,26 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
           <button
             type="button"
             onClick={() => setWatchingFinal(true)}
-            className="btn-gold headline w-full cursor-pointer rounded-2xl px-6 py-3.5 text-lg"
+            className="scarlet-gloss blade condensed w-full cursor-pointer px-6 py-3.5 text-lg"
           >
             ▶ WATCH THE FINAL
           </button>
         )}
 
-        <div className="card-gloss w-full rounded-2xl p-5 text-left">
-          <h2 className="headline mb-2 text-xs tracking-[0.25em] text-ink-500">Your final XI</h2>
-          <div className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2">
+        <div className="w-full border border-hairline bg-white p-5 text-left">
+          <h2 className="condensed mb-2 text-xs tracking-[0.25em] text-carbon-600">Your final XI</h2>
+          <div className="grid grid-cols-1 gap-x-4 gap-y-0.5 sm:grid-cols-2">
             {human.xi.map((s, i) => {
               const detailed = playerV2ById(s.player.id)?.position;
               return (
-                <p key={i} className="flex items-baseline gap-2 text-sm text-ink-300">
+                <p key={i} className="row-band flex items-baseline gap-2 px-1 text-sm text-carbon">
                   {detailed && (
-                    <span className="headline w-9 shrink-0 text-[10px] text-gold-300">{detailed}</span>
+                    <span className="condensed w-9 shrink-0 text-[10px] font-bold text-carbon-600">{detailed}</span>
                   )}
                   <span className="truncate">
                     {flagOf(s.player.nation)} {s.player.name}
                   </span>
-                  <span className="ml-auto text-xs text-ink-500">{s.player.rating}</span>
+                  <span className="tabular ml-auto text-xs font-bold text-royal">{s.player.rating}</span>
                 </p>
               );
             })}
@@ -133,11 +164,11 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
 
         <button
           onClick={props.onReset}
-          className="btn-gold headline mt-1 cursor-pointer rounded-xl px-12 py-4 text-xl"
+          className="scarlet-gloss blade condensed mt-1 cursor-pointer px-12 py-4 text-xl"
         >
           PLAY AGAIN
         </button>
-        <p className="text-xs text-ink-500">Last11 · last11.app</p>
+        <p className="condensed text-xs text-carbon-600">Last11 · last11.app</p>
       </div>
     </div>
   );
@@ -150,24 +181,24 @@ function StatPodiums(props: { state: GameState }) {
   const boots = topScorers(stats, nameOf, 3);
   const makers = topAssists(stats, nameOf, 3);
   if (boots.length === 0 && makers.length === 0) return null;
-  const MEDALS = ['text-gold-300', 'text-ink-300', 'text-[#c9885a]'];
+  const MEDALS = ['text-gold-600', 'text-carbon-600', 'text-[#a4694a]'];
   const podium = (title: string, lines: StatLine[], value: (l: StatLine) => number, unit: string) => (
-    <div className="card-gloss flex-1 rounded-2xl p-4 text-left">
-      <h3 className="headline mb-2.5 text-[10px] tracking-[0.3em] text-gold-400">{title}</h3>
+    <div className="flex-1 border border-hairline bg-white p-4 text-left">
+      <h3 className="condensed mb-2.5 text-[10px] tracking-[0.3em] text-gold-600">{title}</h3>
       {lines.length === 0 ? (
-        <p className="text-xs text-ink-500">Nobody troubled the scorers.</p>
+        <p className="text-xs text-carbon-600">Nobody troubled the scorers.</p>
       ) : (
-        <ol className="space-y-1.5">
+        <ol>
           {lines.map((l, i) => (
-            <li key={l.playerId} className="flex items-baseline gap-2 text-sm">
-              <span className={`headline w-4 shrink-0 text-xs ${MEDALS[i] ?? 'text-ink-500'}`}>
+            <li key={l.playerId} className="row-band flex items-baseline gap-2 px-1 py-0.5 text-sm">
+              <span className={`condensed w-4 shrink-0 text-xs font-bold ${MEDALS[i] ?? 'text-carbon-600'}`}>
                 {i + 1}
               </span>
-              <span className="truncate font-bold text-ink-100">{l.name}</span>
-              <span className={`headline ml-auto shrink-0 text-base ${MEDALS[i] ?? 'text-ink-300'}`}>
+              <span className="condensed truncate font-bold text-carbon">{l.name}</span>
+              <span className={`condensed tabular ml-auto shrink-0 text-base font-bold ${MEDALS[i] ?? 'text-carbon'}`}>
                 {value(l)}
               </span>
-              <span className="shrink-0 text-[10px] text-ink-500">{unit}</span>
+              <span className="shrink-0 text-[10px] text-carbon-600">{unit}</span>
             </li>
           ))}
         </ol>
@@ -191,8 +222,8 @@ function TournamentRecap(props: {
   const { state, names } = props;
   if (state.rounds.length === 0) return null;
   return (
-    <div className="card-gloss w-full rounded-2xl p-5 text-left">
-      <h2 className="headline mb-3 text-xs tracking-[0.25em] text-ink-500">
+    <div className="w-full border border-hairline bg-white p-5 text-left">
+      <h2 className="condensed mb-3 text-xs tracking-[0.25em] text-carbon-600">
         How the tournament ended
       </h2>
       <ol className="space-y-2">
@@ -206,18 +237,18 @@ function TournamentRecap(props: {
           return (
             <li key={r.round} className="flex items-start gap-3 text-sm">
               <span
-                className={`headline mt-0.5 w-14 shrink-0 text-[10px] tracking-wider ${
-                  isFinal ? 'text-gold-400' : 'text-ink-500'
+                className={`condensed mt-0.5 w-14 shrink-0 text-[10px] font-bold tracking-wider ${
+                  isFinal ? 'text-gold-600' : 'text-carbon-600'
                 }`}
               >
                 {isFinal ? 'FINAL' : `ROUND ${r.round}`}
               </span>
-              <span className="text-ink-300">
+              <span className="text-carbon">
                 {isFinal && winner ? (
                   <>
-                    <span className="font-bold text-gold-300">{names.get(winner.managerId)}</span>{' '}
+                    <span className="condensed font-bold text-gold-600">{names.get(winner.managerId)}</span>{' '}
                     beat {names.get(r.eliminatedIds[0])} to take the crown
-                    <span className="text-ink-500">
+                    <span className="text-carbon-600">
                       {' '}
                       ({winner.points} pts · GD {winner.gd > 0 ? `+${winner.gd}` : winner.gd})
                     </span>
@@ -225,9 +256,9 @@ function TournamentRecap(props: {
                 ) : (
                   <>
                     {r.eliminatedIds.length} fell
-                    {youFell && <span className="font-bold text-loss"> — including you</span>}
-                    {!youWereIn && !isFinal && <span className="text-ink-500"> (after your run)</span>}
-                    <span className="text-ink-500">
+                    {youFell && <span className="font-bold text-scarlet"> — including you</span>}
+                    {!youWereIn && !isFinal && <span className="text-carbon-600"> (after your run)</span>}
+                    <span className="text-carbon-600">
                       {' '}
                       · out: {r.eliminatedIds.slice(0, 3).map((id) => names.get(id)).join(', ')}
                       {r.eliminatedIds.length > 3 ? '…' : ''}
@@ -259,26 +290,27 @@ function HallOfChampions() {
     (a, b) => b[1].count - a[1].count || b[1].last.localeCompare(a[1].last),
   );
   return (
-    <div className="card-gloss w-full rounded-2xl p-5 text-left">
-      <h2 className="headline mb-2.5 text-xs tracking-[0.3em] text-gold-400">
+    <div className="w-full border border-hairline bg-white p-5 text-left">
+      <h2 className="condensed mb-2.5 text-xs tracking-[0.3em] text-gold-600">
         HALL OF CHAMPIONS
       </h2>
-      <ul className="space-y-1">
+      <ul>
         {rows.slice(0, 8).map(([name, t], i) => (
-          <li key={name} className="flex items-baseline gap-2 text-sm">
-            <span className="headline w-4 shrink-0 text-xs text-ink-500">{i + 1}</span>
+          <li key={name} className="row-band flex items-center gap-2 px-1 py-0.5 text-sm">
+            <span className="condensed w-4 shrink-0 text-xs text-carbon-600">{i + 1}</span>
             <Crest name={name} id={name} you={t.isHuman} size="sm" />
-            <span className={`truncate font-bold ${t.isHuman ? 'text-gold-300' : 'text-ink-100'}`}>
+            <span className={`condensed truncate font-bold ${t.isHuman ? 'text-gold-600' : 'text-carbon'}`}>
               {name}
               {t.isHuman && ' (you)'}
             </span>
-            <span className="headline ml-auto shrink-0 text-base text-gold-300">
-              {t.count > 1 ? `${t.count}×` : ''}🏆
+            <span className="condensed tabular ml-auto flex shrink-0 items-center gap-1 text-base font-bold text-gold-600">
+              {t.count > 1 ? `${t.count}×` : ''}
+              <TrophyGlyph className="h-4 w-4" />
             </span>
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-[10px] text-ink-500">
+      <p className="mt-2 text-[10px] text-carbon-600">
         {champions.length} tournament{champions.length === 1 ? '' : 's'} decided on this machine.
       </p>
     </div>
@@ -307,9 +339,9 @@ function ChampionConfetti() {
 
 function Stat(props: { label: string; value: string }) {
   return (
-    <div className="card-gloss rounded-xl px-3 py-4">
-      <p className="headline text-2xl text-ink-100">{props.value}</p>
-      <p className="mt-1 text-xs uppercase tracking-wider text-ink-500">{props.label}</p>
+    <div className="silver-gloss px-3 py-4">
+      <p className="condensed tabular text-2xl font-bold text-carbon">{props.value}</p>
+      <p className="condensed mt-1 text-xs uppercase tracking-wider text-carbon-600">{props.label}</p>
     </div>
   );
 }

@@ -25,6 +25,7 @@ import PitchBoard from '../board/PitchBoard';
 import SpinReveal from '../draft/SpinReveal';
 import MatchPlaybackScreen from '../MatchPlaybackScreen';
 import EndScreen from '../EndScreen';
+import { ChromeBar, HexWatermark, Plaque, TickerBar } from '../ui/kit';
 
 /**
  * BATTLE ROYALE ONLINE — the multiplayer shell (Main's design; FORMAT-REPORT
@@ -57,14 +58,14 @@ function OnlineRoom(props: { name: string; onExit: () => void }) {
   // A desync is loud, never silent — and self-healing: the controller already
   // asked the host to replay the game (a dropped broadcast is the usual cause).
   const desyncBanner = view.desynced ? (
-    <div className="fixed inset-x-0 top-0 z-50 flex items-center justify-center gap-3 bg-loss/90 px-4 py-1.5 text-center">
-      <span className="headline text-xs tracking-[0.2em] text-white">
+    <div className="scarlet-gloss fixed inset-x-0 top-0 z-50 flex items-center justify-center gap-3 px-4 py-1.5 text-center">
+      <span className="condensed text-xs tracking-[0.2em] text-white">
         SYNC LOST — resyncing with the room…
       </span>
       <button
         type="button"
         onClick={() => ctl.requestResync()}
-        className="headline cursor-pointer rounded border border-white/60 px-2 py-0.5 text-[10px] tracking-[0.2em] text-white hover:bg-white/10"
+        className="condensed silver-gloss blade cursor-pointer px-2.5 py-0.5 text-[10px] tracking-[0.2em] text-carbon"
       >
         REJOIN NOW
       </button>
@@ -108,36 +109,40 @@ function EntryScreen(props: {
   onExit: () => void;
 }) {
   return (
-    <div className="bg-stadium flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-ink-100">
-      <p className="headline text-xs tracking-[0.35em] text-gold-400">BATTLE ROYALE ONLINE</p>
-      <h1 className="headline text-5xl">
-        <span className="text-ink-100">Last</span>
-        <span className="headline-shine">11</span>
-        <span className="ml-3 text-2xl text-ink-500">·</span>
-        <span className="ml-3 text-2xl text-gold-300">20 managers</span>
-      </h1>
-      <div className="card-gloss w-full max-w-sm rounded-2xl p-5">
-        <label className="headline mb-1.5 block text-[10px] tracking-[0.25em] text-ink-500">
-          YOUR MANAGER NAME
-        </label>
-        <input
-          value={props.name}
-          onChange={(e) => props.setName(e.target.value.slice(0, 18))}
-          placeholder="e.g. Pep Talkiola"
-          className="w-full rounded-lg border border-night-600 bg-night-900 px-3 py-2.5 text-ink-100 outline-none focus:border-gold-500"
-        />
+    <div className="relative flex min-h-dvh flex-col bg-paper text-carbon">
+      <ChromeBar ribbon title="BATTLE ROYALE ONLINE" />
+      <div className="relative flex flex-1 flex-col items-center justify-center gap-6 px-6">
+        <HexWatermark />
+        <h1 className="condensed relative text-5xl font-bold">
+          Last<span className="text-scarlet">11</span>
+          <span className="ml-3 text-2xl text-carbon-600">· 20 managers</span>
+        </h1>
+        <div className="relative w-full max-w-sm border border-hairline bg-white p-5">
+          <label className="condensed mb-1.5 block text-[10px] tracking-[0.25em] text-carbon-600">
+            YOUR MANAGER NAME
+          </label>
+          <input
+            value={props.name}
+            onChange={(e) => props.setName(e.target.value.slice(0, 18))}
+            placeholder="e.g. Pep Talkiola"
+            className="w-full border border-hairline bg-paper px-3 py-2.5 text-carbon outline-none focus:border-royal"
+          />
+          <button
+            type="button"
+            disabled={props.name.trim().length === 0}
+            onClick={props.onReady}
+            className="scarlet-gloss blade condensed mt-4 w-full cursor-pointer px-6 py-3 text-lg disabled:opacity-40"
+          >
+            READY →
+          </button>
+        </div>
         <button
-          type="button"
-          disabled={props.name.trim().length === 0}
-          onClick={props.onReady}
-          className="btn-gold headline mt-4 w-full cursor-pointer rounded-xl px-6 py-3 text-lg disabled:opacity-40"
+          onClick={props.onExit}
+          className="condensed relative cursor-pointer text-xs text-carbon-600 hover:text-royal"
         >
-          READY →
+          ← back to solo
         </button>
       </div>
-      <button onClick={props.onExit} className="cursor-pointer text-xs text-ink-500 hover:text-ink-300">
-        ← back to solo
-      </button>
     </div>
   );
 }
@@ -146,64 +151,70 @@ function RoomGate(props: { view: OnlineView; ctl: OnlineController; onExit: () =
   const { view, ctl } = props;
   const [code, setCode] = useState('');
   return (
-    <div className="bg-stadium flex min-h-screen flex-col items-center justify-center gap-5 px-6 text-ink-100">
-      <p className="headline text-xs tracking-[0.35em] text-gold-400">BATTLE ROYALE ONLINE</p>
-      {view.phase === 'connecting' ? (
-        <p className="headline animate-gold-pulse rounded-xl px-6 py-3 text-xl text-gold-300">
-          {view.code ? `Connecting to ${view.code}…` : 'Finding a public lobby…'}
-        </p>
-      ) : (
-        <>
-          {view.error && (
-            <p className="rounded-lg border border-loss/50 bg-loss/10 px-4 py-2 text-sm text-loss">
-              {view.error}
-            </p>
-          )}
-          <button
-            type="button"
-            onClick={() => ctl.quickPlay()}
-            className="btn-gold headline w-full max-w-lg cursor-pointer rounded-2xl px-6 py-4 text-xl"
-          >
-            QUICK PLAY →
-            <span className="mt-0.5 block text-[11px] font-semibold normal-case tracking-normal opacity-80">
-              drop into a public lobby — or open one if none are up
-            </span>
-          </button>
-          <div className="grid w-full max-w-lg gap-4 sm:grid-cols-2">
+    <div className="relative flex min-h-dvh flex-col bg-paper text-carbon">
+      <ChromeBar ribbon title="BATTLE ROYALE ONLINE" />
+      <div className="relative flex flex-1 flex-col items-center justify-center gap-5 px-6 py-6">
+        <HexWatermark />
+        {view.phase === 'connecting' ? (
+          <p className="silver-gloss blade condensed relative animate-pulse px-8 py-3 text-xl text-carbon">
+            {view.code ? `Connecting to ${view.code}…` : 'Finding a public lobby…'}
+          </p>
+        ) : (
+          <>
+            {view.error && (
+              <p className="relative border border-scarlet/50 bg-white px-4 py-2 text-sm text-scarlet">
+                {view.error}
+              </p>
+            )}
             <button
               type="button"
-              onClick={() => ctl.create()}
-              className="card-gloss cursor-pointer rounded-2xl p-6 text-left transition hover:!border-gold-500"
+              onClick={() => ctl.quickPlay()}
+              className="scarlet-gloss blade condensed relative w-full max-w-lg cursor-pointer px-6 py-4 text-xl"
             >
-              <p className="headline text-lg text-gold-300">CREATE A ROOM</p>
-              <p className="mt-1 text-xs text-ink-500">
-                You host. Share the 5-letter code — the game starts at 20 managers, or fill
-                the rest with bots.
-              </p>
+              QUICK PLAY →
+              <span className="mt-0.5 block text-[11px] font-semibold normal-case tracking-normal opacity-90">
+                drop into a public lobby — or open one if none are up
+              </span>
             </button>
-            <div className="card-gloss rounded-2xl p-6">
-              <p className="headline text-lg text-ink-100">JOIN A ROOM</p>
-              <input
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 5))}
-                placeholder="CODE"
-                className="mt-2 w-full rounded-lg border border-night-600 bg-night-900 px-3 py-2 text-center font-mono text-xl tracking-[0.4em] text-gold-300 outline-none focus:border-gold-500"
-              />
+            <div className="relative grid w-full max-w-lg gap-4 sm:grid-cols-2">
               <button
                 type="button"
-                disabled={code.length !== 5}
-                onClick={() => ctl.join(code)}
-                className="btn-gold headline mt-3 w-full cursor-pointer rounded-lg px-4 py-2 disabled:opacity-40"
+                onClick={() => ctl.create()}
+                className="silver-gloss cursor-pointer p-6 text-left"
               >
-                JOIN →
+                <p className="condensed text-lg font-bold text-royal">CREATE A ROOM</p>
+                <p className="mt-1 text-xs text-carbon-600">
+                  You host. Share the 5-letter code — the game starts at 20 managers, or fill
+                  the rest with bots.
+                </p>
               </button>
+              <div className="border border-hairline bg-white p-6">
+                <p className="condensed text-lg font-bold text-carbon">JOIN A ROOM</p>
+                <input
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 5))}
+                  placeholder="CODE"
+                  className="tabular mt-2 w-full border border-hairline bg-paper px-3 py-2 text-center font-mono text-xl tracking-[0.4em] text-royal outline-none focus:border-royal"
+                />
+                <button
+                  type="button"
+                  disabled={code.length !== 5}
+                  onClick={() => ctl.join(code)}
+                  className="silver-gloss blade condensed mt-3 w-full cursor-pointer px-4 py-2 text-royal disabled:opacity-40"
+                >
+                  JOIN →
+                </button>
+              </div>
             </div>
-          </div>
-        </>
-      )}
-      <button onClick={props.onExit} className="cursor-pointer text-xs text-ink-500 hover:text-ink-300">
-        ← back to solo
-      </button>
+          </>
+        )}
+        <button
+          onClick={props.onExit}
+          className="condensed relative cursor-pointer text-xs text-carbon-600 hover:text-royal"
+        >
+          ← back to solo
+        </button>
+      </div>
     </div>
   );
 }
@@ -215,39 +226,48 @@ const STYLES: PlayingStyle[] = ['defensive', 'balanced', 'attacking'];
 function LobbyScreen(props: { view: OnlineView; ctl: OnlineController; onExit: () => void }) {
   const { view, ctl } = props;
   return (
-    <div className="bg-stadium min-h-screen text-ink-100">
-      <div className="mx-auto max-w-3xl px-6 py-10">
+    <div className="flex min-h-dvh flex-col bg-paper text-carbon">
+      <ChromeBar
+        ribbon
+        title="THE LOBBY"
+        right={
+          <Plaque>
+            {view.present.length}/{view.lobbySize}
+          </Plaque>
+        }
+      />
+      <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:px-6">
         <header className="text-center">
-          <p className="headline text-xs tracking-[0.35em] text-gold-400">ROOM CODE</p>
-          <p className="headline mt-1 font-mono text-6xl tracking-[0.3em] text-gold-300">{view.code}</p>
-          <p className="mt-2 text-sm text-ink-500">
+          <p className="condensed text-xs tracking-[0.35em] text-carbon-600">ROOM CODE</p>
+          <p className="condensed tabular mt-1 font-mono text-6xl font-bold tracking-[0.3em] text-carbon">
+            {view.code}
+          </p>
+          <p className="mt-2 text-sm text-carbon-600">
             {view.present.length}/{view.lobbySize} managers · empty seats become bots at kickoff
           </p>
           {view.isHost ? (
             <button
               type="button"
               onClick={() => ctl.setPublic(!view.isPublic)}
-              className={`mt-3 cursor-pointer rounded-full px-4 py-1.5 text-xs font-bold transition ${
-                view.isPublic
-                  ? 'btn-gold'
-                  : 'border border-night-600 text-ink-300 hover:border-gold-500'
+              className={`condensed blade mt-3 cursor-pointer px-4 py-1.5 text-xs transition ${
+                view.isPublic ? 'scarlet-gloss' : 'silver-gloss text-carbon'
               }`}
             >
               {view.isPublic ? '● PUBLIC — randoms can quick-play in' : '○ PRIVATE — make it public'}
             </button>
           ) : view.isPublic ? (
-            <p className="headline mt-3 text-[10px] tracking-[0.25em] text-gold-400">
+            <p className="condensed mt-3 text-[10px] tracking-[0.25em] text-scarlet">
               PUBLIC LOBBY — open to quick play
             </p>
           ) : null}
         </header>
 
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {view.present.map((p, i) => (
             <span
               key={i}
-              className={`rounded-full px-3 py-1 text-sm font-bold ${
-                p.you ? 'btn-gold' : 'border border-night-600 bg-night-800 text-ink-300'
+              className={`condensed truncate border px-3 py-1.5 text-center text-sm ${
+                p.you ? 'row-selected border-royal font-bold' : 'silver-gloss border-hairline text-carbon'
               }`}
             >
               {p.name}
@@ -257,8 +277,8 @@ function LobbyScreen(props: { view: OnlineView; ctl: OnlineController; onExit: (
         </div>
 
         {/* set your shape while you wait — travels with the start message */}
-        <section className="card-gloss mt-8 rounded-2xl p-5">
-          <h2 className="headline mb-3 text-xs tracking-[0.25em] text-ink-500">
+        <section className="mt-8 border border-hairline bg-white p-4">
+          <h2 className="condensed mb-3 text-xs tracking-[0.25em] text-carbon-600">
             Your shape & style (set it before kickoff)
           </h2>
           <div className="grid grid-cols-5 gap-2 max-sm:grid-cols-2">
@@ -268,8 +288,8 @@ function LobbyScreen(props: { view: OnlineView; ctl: OnlineController; onExit: (
                 type="button"
                 aria-pressed={f.id === view.formation.id}
                 onClick={() => ctl.setSetup(f.id, view.style)}
-                className={`cursor-pointer truncate rounded-lg px-1.5 py-2 text-[11px] font-bold transition max-lg:py-2.5 ${
-                  f.id === view.formation.id ? 'btn-gold' : 'bg-night-700 text-ink-300 hover:bg-night-600'
+                className={`condensed cursor-pointer truncate px-1.5 py-2 text-[11px] transition max-lg:py-2.5 ${
+                  f.id === view.formation.id ? 'chrome-gloss text-white' : 'silver-gloss text-carbon'
                 }`}
               >
                 {f.name}
@@ -283,8 +303,8 @@ function LobbyScreen(props: { view: OnlineView; ctl: OnlineController; onExit: (
                 type="button"
                 aria-pressed={s === view.style}
                 onClick={() => ctl.setSetup(view.formation.id, s)}
-                className={`cursor-pointer rounded-lg px-2 py-2 text-xs font-bold capitalize transition max-lg:py-2.5 ${
-                  s === view.style ? 'btn-gold' : 'bg-night-700 text-ink-300 hover:bg-night-600'
+                className={`condensed cursor-pointer px-2 py-2 text-xs capitalize transition max-lg:py-2.5 ${
+                  s === view.style ? 'chrome-gloss text-white' : 'silver-gloss text-carbon'
                 }`}
               >
                 {s}
@@ -297,22 +317,23 @@ function LobbyScreen(props: { view: OnlineView; ctl: OnlineController; onExit: (
           <button
             type="button"
             onClick={() => ctl.fillWithBots()}
-            className="btn-gold headline mt-6 w-full cursor-pointer rounded-2xl px-6 py-4 text-xl"
+            className="scarlet-gloss blade condensed mt-6 w-full cursor-pointer px-6 py-4 text-xl"
           >
             FILL WITH BOTS & BEGIN →
           </button>
         ) : (
-          <p className="mt-6 text-center text-sm text-ink-500">
+          <p className="mt-6 text-center text-sm text-carbon-600">
             Waiting for the host to start…
           </p>
         )}
         <button
           onClick={props.onExit}
-          className="mx-auto mt-4 block cursor-pointer text-xs text-ink-500 hover:text-ink-300"
+          className="condensed mx-auto mt-4 block cursor-pointer text-xs text-carbon-600 hover:text-royal"
         >
           ← leave room
         </button>
       </div>
+      <TickerBar>Share the code — the draft fires the moment the host begins.</TickerBar>
     </div>
   );
 }
@@ -323,18 +344,18 @@ function Countdown(props: { deadline: number | null; label: string; hurried?: bo
   const remaining = props.deadline ? Math.max(0, props.deadline - Date.now()) : 0;
   const secs = Math.ceil(remaining / 1000);
   return (
-    <div className="card-gloss flex items-center justify-between rounded-xl px-4 py-2">
+    <div className="silver-gloss flex items-center justify-between px-4 py-2">
       <span
-        className={`headline text-[10px] tracking-[0.25em] ${props.hurried ? 'text-gold-300' : 'text-ink-500'}`}
+        className={`condensed text-[10px] tracking-[0.25em] ${props.hurried ? 'font-bold text-gold-600' : 'text-carbon-600'}`}
       >
         {props.hurried ? 'ALL LOCKED IN' : props.label}
       </span>
       <span
-        className={`headline text-2xl tabular-nums ${secs <= 5 ? 'animate-gold-pulse text-loss' : 'text-gold-300'}`}
+        className={`condensed tabular text-2xl font-bold ${secs <= 5 ? 'animate-pulse text-scarlet' : 'text-royal'}`}
       >
         {secs}
         {/* lowercase, small and dim — a full-size S reads as a 5 (playtest) */}
-        <span className="ml-0.5 text-xs font-normal text-ink-500">s</span>
+        <span className="ml-0.5 text-xs font-normal text-carbon-600">s</span>
       </span>
     </div>
   );
@@ -402,15 +423,15 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
     // remaining height (mobile: a 42dvh cap) and the options list scrolls
     // internally. Nothing on this screen scrolls the page (Lucca: everything
     // fits one page). Mobile keeps the countdown pinned above the pitch.
-    <div className="bg-stadium h-dvh min-h-0 overflow-hidden text-ink-100">
+    <div className="h-dvh min-h-0 overflow-hidden bg-paper text-carbon">
       <div className="mx-auto grid h-full max-w-6xl grid-rows-[auto_minmax(0,1fr)] gap-3 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:grid-cols-[minmax(0,1fr)_21rem] lg:grid-rows-none lg:gap-4 lg:py-4">
         <main className="flex min-h-0 flex-col">
           <header className="mb-2 flex items-baseline justify-between">
-            <h1 className="headline text-xl">
-              <span className="text-ink-100">Draft</span>{' '}
-              <span className="headline-gold">spin {Math.max(1, view.spinIndex + 1)}/{MP_DRAFT_SPINS}</span>
+            <h1 className="condensed text-xl font-bold">
+              Draft{' '}
+              <span className="tabular text-scarlet">spin {Math.max(1, view.spinIndex + 1)}/{MP_DRAFT_SPINS}</span>
             </h1>
-            <p className="text-xs font-semibold text-ink-500">
+            <p className="text-xs font-semibold text-carbon-600">
               {locked
                 ? 'locked in — waiting for the room'
                 : selPlayer
@@ -438,8 +459,8 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
               />
             </div>
           </div>
-          <p className="mt-1.5 text-right text-xs text-ink-500">
-            Squad strength <span className="headline text-base text-gold-300">{strength}</span>
+          <p className="mt-1.5 text-right text-xs text-carbon-600">
+            Squad strength <span className="condensed tabular text-base font-bold text-royal">{strength}</span>
           </p>
         </main>
 
@@ -460,7 +481,7 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
           <div className="shrink-0 max-lg:hidden">
             <Countdown deadline={view.spinDeadline} label="PICK CLOSES" hurried={view.hurried} />
           </div>
-          <div className="card-gloss scrollbar-hide min-h-0 space-y-1 overflow-y-auto rounded-xl p-2 max-lg:shrink-0 lg:max-h-none lg:flex-1">
+          <div className="scrollbar-hide min-h-0 space-y-0.5 overflow-y-auto border border-hairline bg-white p-1.5 max-lg:shrink-0 lg:max-h-none lg:flex-1">
             {ranked.map((o, rank) => {
               const p = o.player;
               const sel = selPlayer?.id === p.id;
@@ -477,44 +498,44 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
                     setSelPlayer(sel ? null : p);
                     setMoveFrom(null);
                   }}
-                  className={`w-full cursor-pointer rounded-lg border px-2.5 py-1.5 text-left text-sm transition max-lg:py-2.5 ${
+                  className={`row-band w-full cursor-pointer border-b border-hairline px-2.5 py-1.5 text-left text-sm transition max-lg:py-2.5 ${
                     picked
-                      ? 'btn-gold border-transparent'
+                      ? 'row-selected font-bold'
                       : sel
-                        ? 'border-gold-500 bg-night-800'
+                        ? 'row-selected'
                         : best
-                          ? 'border-gold-600/50 hover:bg-night-800'
-                          : 'border-transparent hover:bg-night-800'
+                          ? 'outline outline-1 -outline-offset-1 outline-gold-500'
+                          : ''
                   } ${locked && !picked ? 'opacity-40' : ''}`}
                 >
                   <span className="flex w-full items-baseline gap-2">
-                    <span className="headline w-9 shrink-0 text-[10px] text-gold-300">
+                    <span className="condensed w-9 shrink-0 text-[10px] font-bold text-carbon-600">
                       {p.position}
                     </span>
-                    <span className="truncate font-bold text-ink-100">
+                    <span className={`condensed truncate font-bold ${picked || sel ? '' : 'text-carbon'}`}>
                       {flagOf(p.nation)} {p.name}
                     </span>
                     {(p.secondary?.length ?? 0) > 0 && (
-                      <span className="shrink-0 text-[10px] text-ink-500">
+                      <span className="shrink-0 text-[10px] text-carbon-600">
                         also {p.secondary!.join(' · ')}
                       </span>
                     )}
-                    <span className="headline ml-auto shrink-0 text-base text-gold-300">
+                    <span className="condensed tabular ml-auto shrink-0 text-base font-bold text-royal">
                       {p.rating}
                     </span>
                   </span>
                   <span className="mt-0.5 flex w-full items-baseline justify-between text-[11px]">
                     {fit ? (
                       fit.natural ? (
-                        <span className="text-win">→ {fit.position} natural</span>
+                        <span className="text-[#2e7527]">→ {fit.position} natural</span>
                       ) : (
-                        <span className="text-orange-400">→ {fit.position}</span>
+                        <span className="text-[#a05a00]">→ {fit.position}</span>
                       )
                     ) : (
-                      <span className="text-ink-500">no open slot</span>
+                      <span className="text-carbon-600">no open slot</span>
                     )}
                     {fit && (
-                      <span className={`font-black ${best ? 'text-gold-300' : 'text-ink-500'}`}>
+                      <span className={`tabular font-black ${best ? 'text-gold-600' : 'text-royal'}`}>
                         +{o.boost.toFixed(1)}
                       </span>
                     )}
@@ -523,7 +544,7 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
               );
             })}
             {ranked.length === 0 && (
-              <p className="px-2 py-3 text-xs text-ink-500">Reels rolling…</p>
+              <p className="px-2 py-3 text-xs text-carbon-600">Reels rolling…</p>
             )}
           </div>
         </aside>
@@ -583,20 +604,19 @@ function OnlineWatch(props: { view: OnlineView; ctl: OnlineController }) {
     !preKick && !!mine && contentElapsed > contentEndMs(mine) + 3_500; // a beat to see FT
 
   return (
-    <div className="bg-stadium min-h-screen text-ink-100">
+    <div className="min-h-dvh bg-paper text-carbon">
       <div className="mx-auto max-w-6xl px-4 py-5">
         <header className="mb-3 flex items-baseline justify-between">
-          <h1 className="headline text-lg">
-            <span className="text-ink-100">Round</span>{' '}
-            <span className="headline-gold">{view.round}</span>
-            <span className="ml-3 text-xs tracking-[0.25em] text-ink-500">
+          <h1 className="condensed text-lg font-bold">
+            Round <span className="tabular text-scarlet">{view.round}</span>
+            <span className="condensed ml-3 text-xs tracking-[0.25em] text-carbon-600">
               LOCKSTEP · MATCH {Math.min(view.featuredIndex + 1, 3)}/3
             </span>
           </h1>
-          <span className="text-xs text-ink-500">everyone watches together · no skips</span>
+          <span className="text-xs text-carbon-600">everyone watches together · no skips</span>
         </header>
         {preKick ? (
-          <p className="headline animate-gold-pulse mx-auto w-fit rounded-xl px-8 py-16 text-3xl text-gold-300">
+          <p className="silver-gloss blade condensed mx-auto w-fit animate-pulse px-10 py-16 text-3xl text-carbon">
             KICK-OFF…
           </p>
         ) : waiting ? (
@@ -636,28 +656,31 @@ function WaitingRoom(props: {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="card-gloss rounded-2xl p-6 text-center">
-        <p className="headline text-[10px] tracking-[0.35em] text-ink-500">FULL TIME</p>
-        <p className="headline mt-2 text-3xl text-ink-100">
+      <div className="relative border border-hairline bg-white p-6 text-center">
+        <HexWatermark />
+        <p className="scarlet-gloss blade condensed relative mx-auto w-fit px-4 py-0.5 text-[10px] tracking-[0.35em]">
+          FULL TIME
+        </p>
+        <p className="condensed relative mt-3 text-3xl font-bold text-carbon">
           {nameOf(mine.homeId)}{' '}
-          <span className="headline-gold">
+          <span className="tabular text-royal">
             {mine.finalScore.home}–{mine.finalScore.away}
           </span>{' '}
           {nameOf(mine.awayId)}
         </p>
         {myPens && (
-          <p className="mt-1 text-sm font-bold text-gold-300">
+          <p className="tabular relative mt-1 text-sm font-bold text-carbon-600">
             {myPens.home}–{myPens.away} on pens · {nameOf(myPens.winner === 'home' ? mine.homeId : mine.awayId)} through
           </p>
         )}
-        <p className="headline animate-gold-pulse mt-4 text-xs tracking-[0.25em] text-gold-400">
+        <p className="condensed relative mt-4 animate-pulse text-xs tracking-[0.25em] text-scarlet">
           WAITING FOR THE OTHER MATCHES TO FINISH…
         </p>
       </div>
 
       {others.length > 0 && (
-        <div className="card-gloss mt-4 rounded-2xl p-4">
-          <h3 className="headline mb-2 text-[10px] tracking-[0.3em] text-ink-500">
+        <div className="mt-4 border border-hairline bg-white p-4">
+          <h3 className="condensed mb-2 text-[10px] tracking-[0.3em] text-carbon-600">
             STILL PLAYING · MATCH {(props.slot?.set ?? 0) + 1} EVERYWHERE
           </h3>
           <div className="space-y-1">
@@ -674,25 +697,25 @@ function WaitingRoom(props: {
               return (
                 <div
                   key={m.matchId}
-                  className="flex items-baseline justify-between rounded-lg bg-night-800/60 px-3 py-1.5 text-sm"
+                  className="chrome-gloss flex items-baseline justify-between px-3 py-1.5 text-sm text-white"
                 >
-                  <span className="truncate text-ink-300">
-                    {nameOf(m.homeId)} <span className="text-night-600">v</span> {nameOf(m.awayId)}
+                  <span className="condensed truncate text-white/80">
+                    {nameOf(m.homeId)} <span className="text-white/40">v</span> {nameOf(m.awayId)}
                   </span>
                   <span className="ml-3 flex shrink-0 items-baseline gap-2 tabular-nums">
-                    <span className="font-bold text-gold-400">
+                    <span className="condensed font-bold">
                       {h}–{a}
                     </span>
                     {inPens && (
                       <span
-                        className={`headline text-[10px] tracking-[0.15em] ${
-                          pensDone ? 'text-ink-500' : 'animate-gold-pulse text-loss'
+                        className={`condensed text-[10px] tracking-[0.15em] ${
+                          pensDone ? 'text-white/50' : 'animate-pulse text-scarlet'
                         }`}
                       >
                         PENS {ph}–{pa}
                       </span>
                     )}
-                    {(over || pensDone) && <span className="text-[10px] text-ink-500">FT</span>}
+                    {(over || pensDone) && <span className="text-[10px] text-white/50">FT</span>}
                   </span>
                 </div>
               );
@@ -785,10 +808,10 @@ function LiveRoundTable(props: { view: OnlineView; contentElapsed: number; curre
     (x, y) => y[1].pts - x[1].pts || y[1].gd - x[1].gd || (nameOf(x[0]) < nameOf(y[0]) ? -1 : 1),
   );
   return (
-    <div className="card-gloss mt-4 rounded-2xl p-4">
-      <h3 className="headline mb-2 text-[10px] tracking-[0.3em] text-gold-400">
+    <div className="mt-4 border border-hairline bg-white p-4">
+      <h3 className="condensed mb-2 text-[10px] tracking-[0.3em] text-carbon-600">
         LIVE TABLE · top {target} survive
-        <span className="ml-2 font-normal normal-case tracking-normal text-ink-500">
+        <span className="ml-2 font-normal normal-case tracking-normal text-carbon-600">
           fills in as matches finish
         </span>
       </h3>
@@ -799,14 +822,14 @@ function LiveRoundTable(props: { view: OnlineView; contentElapsed: number; curre
           return (
             <li
               key={id}
-              className={`flex items-baseline gap-2 rounded px-1.5 py-0.5 text-xs ${
-                you ? 'bg-gold-400/10 font-bold text-gold-300' : 'text-ink-300'
-              } ${cut ? 'animate-cutline-pulse border-b border-loss/60' : ''}`}
+              className={`row-band flex items-baseline gap-2 px-1.5 py-0.5 text-xs ${
+                you ? 'row-selected font-bold' : 'text-carbon'
+              } ${cut ? 'animate-cutline-pulse border-b-2 border-scarlet' : ''}`}
             >
-              <span className="headline w-5 shrink-0 text-[10px] text-ink-500">{i + 1}</span>
+              <span className="condensed w-5 shrink-0 text-[10px] text-carbon-600">{i + 1}</span>
               <span className="truncate">{nameOf(id)}</span>
               <span className="ml-auto shrink-0 tabular-nums">
-                <span className="mr-2 text-[10px] text-ink-500">P{r.played}</span>
+                <span className="mr-2 text-[10px] text-carbon-600">P{r.played}</span>
                 {r.pts} pts · {r.gd > 0 ? `+${r.gd}` : r.gd}
               </span>
             </li>
@@ -826,8 +849,8 @@ function MpStandings(props: { view: OnlineView; compact?: boolean }) {
   const nameOf = (id: string) => view.seats.find((s) => s.id === id)?.name ?? id;
   const target = MP_SURVIVORS_PER_ROUND[result.round - 1];
   return (
-    <div className="card-gloss rounded-2xl p-4">
-      <h3 className="headline mb-2 text-[10px] tracking-[0.3em] text-gold-400">
+    <div className="border border-hairline bg-white p-4">
+      <h3 className="condensed mb-2 text-[10px] tracking-[0.3em] text-carbon-600">
         ROUND {result.round} TABLE · top {target} survive
       </h3>
       <ol className="space-y-0.5">
@@ -837,11 +860,11 @@ function MpStandings(props: { view: OnlineView; compact?: boolean }) {
           return (
             <li
               key={row.managerId}
-              className={`flex items-baseline gap-2 rounded px-1.5 py-0.5 text-xs ${
-                you ? 'bg-gold-400/10 font-bold text-gold-300' : 'text-ink-300'
-              } ${cut ? 'animate-cutline-pulse border-b border-loss/60' : ''}`}
+              className={`row-band flex items-baseline gap-2 px-1.5 py-0.5 text-xs ${
+                you ? 'row-selected font-bold' : 'text-carbon'
+              } ${cut ? 'animate-cutline-pulse border-b-2 border-scarlet' : ''}`}
             >
-              <span className="headline w-5 shrink-0 text-[10px] text-ink-500">{i + 1}</span>
+              <span className="condensed w-5 shrink-0 text-[10px] text-carbon-600">{i + 1}</span>
               <span className="truncate">{nameOf(row.managerId)}</span>
               <span className="ml-auto shrink-0 tabular-nums">
                 {row.points} pts · {row.gd > 0 ? `+${row.gd}` : row.gd}
@@ -858,32 +881,33 @@ function SpectatorView(props: { view: OnlineView; ctl: OnlineController }) {
   const { view, ctl } = props;
   const aliveSeats = view.seats.filter((s) => view.aliveIds.has(s.id));
   return (
-    <div className="bg-stadium min-h-screen text-ink-100">
+    <div className="min-h-dvh bg-paper text-carbon">
+      <ChromeBar ribbon title="SPECTATING" />
       <div className="mx-auto max-w-3xl px-6 py-8">
         <header className="mb-4 text-center">
-          <p className="headline text-xs tracking-[0.35em] text-loss">ELIMINATED — SPECTATING</p>
-          <h1 className="headline mt-1 text-2xl text-ink-100">
-            Round <span className="headline-gold">{view.round}</span> is playing out…
+          <p className="condensed text-xs tracking-[0.35em] text-scarlet">ELIMINATED — SPECTATING</p>
+          <h1 className="condensed mt-1 text-2xl font-bold text-carbon">
+            Round <span className="tabular text-scarlet">{view.round}</span> is playing out…
           </h1>
         </header>
         <MpStandings view={view} />
-        <div className="card-gloss mt-4 rounded-2xl p-4">
-          <h3 className="headline mb-2 text-[10px] tracking-[0.3em] text-gold-400">ROOTING FOR</h3>
+        <div className="silver-gloss mt-4 p-4">
+          <h3 className="condensed mb-2 text-[10px] tracking-[0.3em] text-carbon-600">ROOTING FOR</h3>
           <div className="flex flex-wrap gap-1.5">
             {aliveSeats.map((s) => (
               <button
                 key={s.id}
                 type="button"
                 onClick={() => ctl.rootFor(s.id)}
-                className={`cursor-pointer rounded-full px-2.5 py-1 text-xs font-bold transition ${
-                  view.myRoot === s.id ? 'btn-gold' : 'border border-night-600 text-ink-300 hover:border-gold-500'
+                className={`condensed blade cursor-pointer px-2.5 py-1 text-xs transition ${
+                  view.myRoot === s.id ? 'chrome-gloss text-white' : 'silver-gloss text-carbon'
                 }`}
               >
                 {s.name}
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[10px] text-ink-500">
+          <p className="mt-2 text-[10px] text-carbon-600">
             Pick a survivor to back — it shows on the end screen.
           </p>
         </div>
@@ -918,8 +942,8 @@ function OnlinePit(props: { view: OnlineView; ctl: OnlineController }) {
   }
 
   const lootRail = (
-    <div className="card-gloss rounded-2xl p-3">
-      <h3 className="headline mb-1.5 text-[10px] tracking-[0.3em] text-loss">
+    <div className="border border-hairline bg-white p-3">
+      <h3 className="condensed mb-1.5 text-[10px] tracking-[0.3em] text-scarlet">
         LOOT THE FALLEN · pick one
       </h3>
       <div className="scrollbar-hide max-h-48 space-y-1 overflow-y-auto lg:max-h-[38vh]">
@@ -930,11 +954,11 @@ function OnlinePit(props: { view: OnlineView; ctl: OnlineController }) {
             return (
               <div
                 key={p.id}
-                className="flex w-full items-baseline gap-1.5 rounded-lg px-2 py-1 text-left text-xs opacity-40 max-lg:py-2"
+                className="row-band flex w-full items-baseline gap-1.5 px-2 py-1 text-left text-xs opacity-45 max-lg:py-2"
               >
-                <span className="headline w-8 shrink-0 text-[9px] text-gold-300">{p.position}</span>
-                <span className="truncate font-bold">{flagOf(p.nation)} {p.name}</span>
-                <span className="headline ml-auto shrink-0 text-[9px] tracking-[0.15em] text-ink-500">
+                <span className="condensed w-8 shrink-0 text-[9px] font-bold text-carbon-600">{p.position}</span>
+                <span className="truncate font-bold text-carbon">{flagOf(p.nation)} {p.name}</span>
+                <span className="condensed ml-auto shrink-0 text-[9px] tracking-[0.15em] text-carbon-600">
                   OWNED
                 </span>
               </div>
@@ -947,15 +971,15 @@ function OnlinePit(props: { view: OnlineView; ctl: OnlineController }) {
               onClick={() =>
                 ctl.setSteal(chosen ? null : { playerId: p.id, slotIndex: best.slotIndex })
               }
-              className={`flex w-full cursor-pointer items-baseline gap-1.5 rounded-lg px-2 py-1 text-left text-xs transition max-lg:py-2 ${
-                chosen ? 'btn-gold' : 'hover:bg-night-800'
+              className={`row-band flex w-full cursor-pointer items-baseline gap-1.5 px-2 py-1 text-left text-xs transition max-lg:py-2 ${
+                chosen ? 'row-selected font-bold' : 'hover:bg-band'
               }`}
             >
-              <span className="headline w-8 shrink-0 text-[9px] text-gold-300">{p.position}</span>
-              <span className="truncate font-bold">{flagOf(p.nation)} {p.name}</span>
-              <span className="ml-auto shrink-0 tabular-nums">
+              <span className="condensed w-8 shrink-0 text-[9px] font-bold text-carbon-600">{p.position}</span>
+              <span className={`truncate font-bold ${chosen ? '' : 'text-carbon'}`}>{flagOf(p.nation)} {p.name}</span>
+              <span className="ml-auto shrink-0 tabular-nums text-carbon">
                 {p.rating}
-                <span className={best.gain > 0 ? 'text-win' : 'text-loss'}>
+                <span className={best.gain > 0 ? 'text-[#2e7527]' : 'text-scarlet'}>
                   {' '}
                   {best.gain > 0 ? `+${best.gain.toFixed(1)}` : best.gain.toFixed(1)}
                 </span>
@@ -963,7 +987,7 @@ function OnlinePit(props: { view: OnlineView; ctl: OnlineController }) {
             </button>
           );
         })}
-        {stealTargets.length === 0 && <p className="px-2 py-2 text-xs text-ink-500">No loot this round.</p>}
+        {stealTargets.length === 0 && <p className="px-2 py-2 text-xs text-carbon-600">No loot this round.</p>}
       </div>
     </div>
   );
@@ -1006,13 +1030,14 @@ function OnlinePit(props: { view: OnlineView; ctl: OnlineController }) {
 function SpectatorPit(props: { view: OnlineView; ctl: OnlineController }) {
   const { view, ctl } = props;
   return (
-    <div className="bg-stadium min-h-screen text-ink-100">
+    <div className="min-h-dvh bg-paper text-carbon">
+      <ChromeBar ribbon title="THE PIT STOP" />
       <div className="mx-auto max-w-3xl px-6 py-8">
         <header className="mb-4 text-center">
-          <p className="headline text-xs tracking-[0.35em] text-loss">
+          <p className="condensed text-xs tracking-[0.35em] text-scarlet">
             {view.placement ? `YOU FINISHED #${view.placement}` : 'ELIMINATED'}
           </p>
-          <h1 className="headline mt-1 text-2xl">The survivors are in the pits…</h1>
+          <h1 className="condensed mt-1 text-2xl font-bold">The survivors are in the pits…</h1>
         </header>
         <Countdown deadline={view.pitDeadline} label="NEXT ROUND IN" hurried={view.hurried} />
         <div className="mt-4">
@@ -1031,16 +1056,16 @@ function SpectatorRoots(props: { view: OnlineView; ctl: OnlineController }) {
     (s) => view.aliveIds.has(s.id) && !(result?.eliminatedIds ?? []).includes(s.id),
   );
   return (
-    <div className="card-gloss mt-4 rounded-2xl p-4">
-      <h3 className="headline mb-2 text-[10px] tracking-[0.3em] text-gold-400">ROOTING FOR</h3>
+    <div className="silver-gloss mt-4 p-4">
+      <h3 className="condensed mb-2 text-[10px] tracking-[0.3em] text-carbon-600">ROOTING FOR</h3>
       <div className="flex flex-wrap gap-1.5">
         {aliveSeats.map((s) => (
           <button
             key={s.id}
             type="button"
             onClick={() => ctl.rootFor(s.id)}
-            className={`cursor-pointer rounded-full px-2.5 py-1 text-xs font-bold transition ${
-              view.myRoot === s.id ? 'btn-gold' : 'border border-night-600 text-ink-300 hover:border-gold-500'
+            className={`condensed blade cursor-pointer px-2.5 py-1 text-xs transition ${
+              view.myRoot === s.id ? 'chrome-gloss text-white' : 'silver-gloss text-carbon'
             }`}
           >
             {s.name}
@@ -1099,9 +1124,8 @@ function OnlineEnd(props: { view: OnlineView; onExit: () => void }) {
   return (
     <div>
       {rootEntries.length > 0 && (
-        <div className="bg-night-950 px-6 pt-6 text-center">
-          <p className="text-xs text-ink-500">
-            🫶{' '}
+        <div className="chrome-gloss px-6 py-2 text-center">
+          <p className="condensed text-xs text-white/80">
             {rootEntries
               .map(([who, forWhom]) => `${nameOf(who)} rooted for ${nameOf(forWhom)}`)
               .join(' · ')}
