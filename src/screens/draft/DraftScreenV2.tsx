@@ -218,7 +218,8 @@ export default function DraftScreenV2(props: {
               ) : (
                 <div className="relative flex min-h-[9rem] items-center justify-center glass overflow-hidden p-4 text-center text-xs leading-relaxed text-carbon-600">
                   <HexWatermark />
-                  <span className="relative">
+                  <span className="relative flex items-center gap-2">
+                    {props.spunRoll !== null && <span className="loader-ring" aria-hidden />}
                     {props.spunRoll !== null
                       ? 'Drawing…'
                       : 'Spin to draw a national team and a World Cup — the squad lands here.'}

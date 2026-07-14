@@ -74,7 +74,7 @@ function OnlineRoom(props: { name: string; onExit: () => void; quickPlay?: boole
       <button
         type="button"
         onClick={() => ctl.requestResync()}
-        className="condensed silver-gloss blade cursor-pointer px-2.5 py-0.5 text-[10px] tracking-[0.2em] text-carbon"
+        className="condensed silver-gloss cursor-pointer rounded-full px-2.5 py-0.5 text-[10px] tracking-[0.2em] text-carbon"
       >
         REJOIN NOW
       </button>
@@ -165,7 +165,8 @@ function RoomGate(props: { view: OnlineView; ctl: OnlineController; onExit: () =
       <div className="relative flex flex-1 flex-col items-center justify-center gap-5 px-6 py-6">
         <HexWatermark />
         {view.phase === 'connecting' ? (
-          <p className="silver-gloss blade condensed relative animate-pulse px-8 py-3 text-xl text-carbon">
+          <p className="silver-gloss condensed relative flex items-center gap-3 rounded-full px-8 py-3 text-xl text-carbon">
+            <span className="loader-ring" aria-hidden />
             {view.code ? `Connecting to ${view.code}…` : 'Finding a public lobby…'}
           </p>
         ) : (
@@ -258,7 +259,7 @@ function LobbyScreen(props: { view: OnlineView; ctl: OnlineController; onExit: (
             <button
               type="button"
               onClick={() => ctl.setPublic(!view.isPublic)}
-              className={`condensed blade mt-3 cursor-pointer px-4 py-1.5 text-xs transition ${
+              className={`condensed mt-3 cursor-pointer rounded-full px-4 py-1.5 text-xs transition ${
                 view.isPublic ? 'scarlet-gloss' : 'silver-gloss text-carbon'
               }`}
             >

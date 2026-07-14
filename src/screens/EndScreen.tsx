@@ -83,10 +83,7 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
       {won && <ChampionConfetti />}
       <div className="mx-auto flex max-w-2xl flex-col items-center gap-6 px-6 py-10 text-center">
         {won ? (
-          <div
-            className="chrome-gloss glint animate-fade-up relative w-full overflow-hidden rounded-2xl py-8"
-            style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 14px), 0 100%)' }}
-          >
+          <div className="chrome-gloss glint animate-fade-up relative w-full overflow-hidden rounded-2xl py-8">
             <div
               className="scarlet-gloss absolute inset-y-0 right-0 w-1/3"
               style={{ clipPath: 'polygon(40% 0, 100% 0, 100% 100%, 0 100%)' }}
@@ -103,7 +100,7 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
           </div>
         ) : (
           <>
-            <p className="scarlet-gloss blade condensed px-5 py-1 text-xs tracking-[0.35em]">
+            <p className="scarlet-gloss condensed rounded-full px-5 py-1 text-xs tracking-[0.35em]">
               ELIMINATED
             </p>
             <h1 className="condensed text-5xl font-bold text-carbon">

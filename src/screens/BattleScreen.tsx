@@ -162,7 +162,7 @@ function RoundIntro(props: { state: GameState; onPlayRound: () => void; onAdjust
   return (
     <div className="animate-fade-up relative flex flex-col items-center gap-5 glass overflow-hidden p-8 text-center sm:p-10">
       <HexWatermark />
-      <p className="scarlet-gloss blade condensed relative px-4 py-0.5 text-xs tracking-[0.35em]">
+      <p className="scarlet-gloss condensed relative rounded-full px-4 py-0.5 text-xs tracking-[0.35em]">
         {isFinal ? 'THE FINAL' : `ROUND ${state.roundIndex + 1}`}
       </p>
       <h2 className="condensed relative text-4xl font-bold text-carbon">
@@ -274,14 +274,14 @@ function RoundResults(props: { state: GameState; onContinue: () => void; humanAl
       {(boot || playmaker) && (
         <div className="flex flex-wrap gap-2">
           {boot && (
-            <span className="silver-gloss blade flex items-center gap-2 px-3.5 py-1.5 text-xs">
+            <span className="silver-gloss flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs">
               <span className="condensed text-[9px] tracking-[0.2em] text-gold-600">GOLDEN BOOT</span>
               <span className="condensed font-bold text-carbon">{boot.name}</span>
               <span className="condensed tabular font-bold text-royal">{boot.goals}</span>
             </span>
           )}
           {playmaker && (
-            <span className="silver-gloss blade flex items-center gap-2 px-3.5 py-1.5 text-xs">
+            <span className="silver-gloss flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs">
               <span className="condensed text-[9px] tracking-[0.2em] text-carbon-600">PLAYMAKER</span>
               <span className="condensed font-bold text-carbon">{playmaker.name}</span>
               <span className="condensed tabular font-bold text-royal">{playmaker.assists}</span>

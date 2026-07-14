@@ -83,7 +83,7 @@ export default function SpinReveal(props: {
   return (
     // Rail-sized machine: fills the right rail (~17rem) without ever touching the
     // pitch column's layout. Compact reels, same drama.
-    <div className="chrome-gloss relative flex w-full flex-col items-center gap-2.5 border border-chrome-600 p-3.5">
+    <div className="chrome-gloss relative flex w-full flex-col items-center gap-2.5 rounded-2xl border border-white/10 p-3.5">
       <p className="condensed text-[10px] tracking-[0.4em] text-white/85">THE DRAW</p>
 
       <div className="flex items-stretch gap-2">
@@ -114,7 +114,7 @@ export default function SpinReveal(props: {
       {bothLocked ? (
         <p className="animate-kick-pop condensed flex items-center gap-1.5 text-lg text-white">
           {flagOf(props.target.nation)} {props.target.nation}{' '}
-          <span className="scarlet-gloss blade tabular px-2 text-base">{props.target.year}</span>
+          <span className="scarlet-gloss tabular rounded-full px-2.5 text-base">{props.target.year}</span>
         </p>
       ) : (
         <p className="condensed animate-pulse text-xs tracking-widest text-white/60">
@@ -160,7 +160,7 @@ function Reel(props: {
   return (
     <div
       ref={frameRef}
-      className={`relative overflow-hidden rounded-sm border bg-chrome-950 ${
+      className={`relative overflow-hidden rounded-xl border bg-chrome-950 ${
         props.locked ? 'border-silver-100 animate-slot-shake' : 'border-chrome-600'
       } ${props.wide ? 'w-[6.6rem]' : 'w-[4.4rem]'}`}
       style={{ height: ROW_H * 3 }}
@@ -185,14 +185,14 @@ function Reel(props: {
         <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-chrome-950 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-chrome-950 to-transparent" />
         <div
-          className={`absolute inset-x-1 top-1/2 -translate-y-1/2 rounded-sm border ${
+          className={`absolute inset-x-1 top-1/2 -translate-y-1/2 rounded-lg border ${
             props.locked ? 'border-scarlet' : 'border-white/20'
           }`}
           style={{ height: ROW_H - 6 }}
         />
         {props.locked && (
           <div
-            className="payline-flash absolute inset-x-1 top-1/2 -translate-y-1/2 rounded-sm bg-white/25"
+            className="payline-flash absolute inset-x-1 top-1/2 -translate-y-1/2 rounded-lg bg-white/25"
             style={{ height: ROW_H - 6 }}
           />
         )}

@@ -702,6 +702,40 @@ button.scarlet-gloss::after {
   animation: float-bob 5s ease-in-out infinite;
 }
 
+/* Scarlet shine sweep for the wordmark's "11". */
+.text-shine-scarlet {
+  background: linear-gradient(110deg, var(--color-scarlet) 35%, #ff8d96 50%, var(--color-scarlet) 65%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: title-shine 4s ease-in-out infinite;
+}
+
+/* Apple-grade keyboard focus. */
+:focus-visible {
+  outline: 2px solid var(--color-royal);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Glass loader ring. */
+.loader-ring {
+  width: 1.1em;
+  height: 1.1em;
+  border-radius: 999px;
+  border: 2.5px solid rgba(43, 47, 51, 0.18);
+  border-top-color: var(--color-royal);
+  animation: spin-ring 0.9s linear infinite;
+  display: inline-block;
+  vertical-align: -0.2em;
+}
+@keyframes spin-ring {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Live data breathes. */
 @keyframes pulse-live {
   0%,
@@ -744,6 +778,8 @@ button.scarlet-gloss::after {
   .bg-arena::after,
   .turf-grass::after,
   .glint::after,
+  .text-shine-scarlet,
+  .loader-ring,
   button.scarlet-gloss::after,
   .animate-fade-up,
   .animate-float,
@@ -767,6 +803,10 @@ button.scarlet-gloss::after {
   }
   .headline-shine {
     color: var(--color-gold-400);
+    background: none;
+  }
+  .text-shine-scarlet {
+    color: var(--color-scarlet);
     background: none;
   }
 }

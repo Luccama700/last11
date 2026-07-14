@@ -57,7 +57,7 @@ export default function HomeScreen(props: {
               96 YEARS OF WORLD CUP HISTORY
             </p>
             <h1 className="condensed text-7xl font-bold leading-none text-carbon lg:text-8xl">
-              Last<span className="text-scarlet">11</span>
+              Last<span className="text-shine-scarlet">11</span>
             </h1>
           </div>
 
@@ -165,8 +165,8 @@ function CrownGlyph() {
 function HallOverlay(props: { onClose: () => void }) {
   const champions = readChampions();
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-black/55">
-      <div className="mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col p-4 sm:p-8">
+    <div className="fixed inset-0 z-40 flex flex-col bg-black/55 backdrop-blur-[3px]">
+      <div className="animate-pop mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col p-4 sm:p-8">
         <ChromeBar ribbon title="HALL OF CHAMPIONS" />
         <div className="paper-pane relative min-h-0 flex-1 overflow-y-auto">
           <HexWatermark />

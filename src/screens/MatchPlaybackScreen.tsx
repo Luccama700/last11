@@ -242,7 +242,7 @@ function Scoreboard(props: {
         <span className="condensed flex items-center gap-1.5 text-[10px] text-white/60">
           {fmt(props.timeline.homeFormationId)}
           {props.homeTotal ? (
-            <span className="silver-gloss blade tabular px-1.5 text-[10px] text-carbon">
+            <span className="silver-gloss tabular rounded-full px-2 text-[10px] text-carbon">
               {props.homeTotal}
             </span>
           ) : null}
@@ -259,7 +259,7 @@ function Scoreboard(props: {
             {pb.score.away}
           </span>
         </div>
-        <div className="scarlet-gloss blade condensed tabular mx-auto mt-0.5 w-fit px-3 text-[11px]">
+        <div className="scarlet-gloss condensed tabular mx-auto mt-0.5 w-fit rounded-full px-3 text-[11px]">
           {pb.clockLabel}
         </div>
         <div className="condensed mt-0.5 text-[9px] tracking-widest text-white/55">
@@ -271,7 +271,7 @@ function Scoreboard(props: {
         <span className="condensed text-base leading-tight">{props.awayName}</span>
         <span className="condensed flex items-center gap-1.5 text-[10px] text-white/60">
           {props.awayTotal ? (
-            <span className="silver-gloss blade tabular px-1.5 text-[10px] text-carbon">
+            <span className="silver-gloss tabular rounded-full px-2 text-[10px] text-carbon">
               {props.awayTotal}
             </span>
           ) : null}
@@ -284,7 +284,7 @@ function Scoreboard(props: {
 
 function YouChip() {
   return (
-    <span className="scarlet-gloss blade condensed w-fit px-1.5 py-0.5 text-[9px]">
+    <span className="scarlet-gloss condensed w-fit rounded-full px-2 py-0.5 text-[9px]">
       YOU
     </span>
   );
@@ -567,8 +567,8 @@ function ShootoutOverlay(props: { pb: PlaybackState; homeName: string; awayName:
   );
   return (
     <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/55 backdrop-blur-[2px]">
-      <div className="paper-pane mx-4 flex w-full max-w-md flex-col items-center gap-3 border border-hairline p-5 shadow-2xl">
-        <h4 className="scarlet-gloss blade condensed w-fit px-4 py-0.5 text-xs tracking-[0.3em]">
+      <div className="paper-pane animate-pop mx-4 flex w-full max-w-md flex-col items-center gap-3 border border-hairline p-5 shadow-2xl">
+        <h4 className="scarlet-gloss condensed w-fit rounded-full px-4 py-0.5 text-xs tracking-[0.3em]">
           PENALTY SHOOTOUT
         </h4>
         <div className="condensed tabular flex items-center gap-6 text-4xl font-bold text-carbon">

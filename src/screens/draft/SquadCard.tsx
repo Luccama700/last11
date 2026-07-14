@@ -28,7 +28,7 @@ export default function SquadCard(props: {
           <span className="condensed truncate text-[15px] font-bold text-carbon">
             {props.squadName}
           </span>
-          <span className="scarlet-gloss blade condensed tabular px-2 py-0.5 text-xs">
+          <span className="scarlet-gloss condensed tabular rounded-full px-2.5 py-0.5 text-xs">
             {props.roll.year}
           </span>
         </p>
@@ -36,7 +36,7 @@ export default function SquadCard(props: {
           <button
             type="button"
             onClick={props.onRespin}
-            className="condensed tabular silver-gloss blade cursor-pointer px-2.5 py-1 text-xs text-royal"
+            className="condensed tabular silver-gloss cursor-pointer rounded-full px-2.5 py-1 text-xs text-royal"
           >
             re-spin ({props.respinTokens})
           </button>
