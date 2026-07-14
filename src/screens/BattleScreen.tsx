@@ -114,7 +114,7 @@ export function Crest(props: { name: string; id: string; you?: boolean; size?: '
   return (
     <span
       aria-hidden="true"
-      className={`headline inline-flex shrink-0 items-center justify-center rounded-full border ${sz} ${
+      className={`condensed inline-flex shrink-0 items-center justify-center rounded-full border ${sz} ${
         props.you ? 'border-gold-400' : 'border-white/20'
       }`}
       style={{ background: `linear-gradient(135deg, hsl(${hue} 45% 32%), hsl(${(hue + 40) % 360} 45% 22%))`, color: '#f3f5f9' }}

@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Russo+One&display=swap');
 @import 'tailwindcss';
 
 /* ── Last11 "Gold & Stadium Night" theme (2026-07-11 redesign) ─────────────────
@@ -6,8 +5,10 @@
    with a retro-FIFA-2012 gloss: shiny cards, diagonal sheen, sporty type.
    Semantic tokens only — components never hardcode raw hex. */
 @theme {
-  --font-display: 'Russo One', 'Arial Black', sans-serif;
-  --font-sans: 'Inter', 'Chakra Petch', ui-sans-serif, system-ui, sans-serif;
+  /* Legacy display font now aliases the condensed stack (Google Fonts CDN import
+     removed — everything is self-hosted via @fontsource). */
+  --font-display: 'Barlow Condensed', 'Arial Black', sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
   /* Surfaces */
   --color-night-950: #05080f; /* page backdrop */
