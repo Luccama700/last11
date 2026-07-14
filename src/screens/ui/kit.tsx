@@ -30,7 +30,7 @@ export function ChromeBar(props: {
 export function Plaque(props: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`silver-gloss blade tabular condensed flex h-7 items-center gap-1 px-4 text-sm ${props.className ?? ''}`}
+      className={`silver-gloss tabular condensed flex h-7 items-center gap-1 rounded-full px-4 text-sm ${props.className ?? ''}`}
     >
       {props.children}
     </div>
@@ -192,7 +192,7 @@ export function NamePlate(props: {
   const fit = props.fit ?? 1;
   return (
     <div
-      className={`chrome-gloss rounded-[3px] px-1.5 pt-0.5 pb-1 text-white ${props.className ?? ''}`}
+      className={`chrome-gloss rounded-md px-1.5 pt-0.5 pb-1 text-white ${props.className ?? ''}`}
     >
       <div className="flex items-baseline justify-between gap-1 leading-none">
         <span className="condensed text-[9px] text-white/75">{props.pos}</span>
@@ -237,7 +237,7 @@ export function RosterRow(props: {
       onClick={props.onClick}
       className={[
         'flex w-full items-center gap-2 border-b border-hairline px-2 py-1.5 text-left',
-        props.onClick ? 'row-band cursor-pointer' : 'row-band',
+        props.onClick ? 'row-band cursor-pointer hover:bg-white/70' : 'row-band',
         props.selected ? 'row-selected' : '',
         props.dimmed ? 'opacity-45' : '',
         props.gold ? 'outline outline-1 -outline-offset-1 outline-gold-500' : '',

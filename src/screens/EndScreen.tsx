@@ -62,7 +62,7 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
     };
     const done = () => setWatchingFinal(false);
     return (
-      <div className="min-h-dvh bg-paper text-carbon">
+      <div className="min-h-dvh bg-arena text-carbon">
         <ChromeBar ribbon title="THE FINAL" />
         <div className="mx-auto max-w-4xl px-6 py-6">
           <MatchPlaybackScreen
@@ -78,13 +78,13 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
   }
 
   return (
-    <div className="relative min-h-dvh bg-paper text-carbon">
+    <div className="relative min-h-dvh bg-arena text-carbon">
       <ChromeBar ribbon title="FULL TIME" />
       {won && <ChampionConfetti />}
       <div className="mx-auto flex max-w-2xl flex-col items-center gap-6 px-6 py-10 text-center">
         {won ? (
           <div
-            className="chrome-gloss relative w-full overflow-hidden py-8"
+            className="chrome-gloss glint animate-fade-up relative w-full overflow-hidden rounded-2xl py-8"
             style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 14px), 0 100%)' }}
           >
             <div
@@ -92,7 +92,7 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
               style={{ clipPath: 'polygon(40% 0, 100% 0, 100% 100%, 0 100%)' }}
             />
             <div className="relative flex flex-col items-center gap-2">
-              <TrophyGlyph className="animate-gold-pulse h-16 w-16 rounded-full" />
+              <TrophyGlyph className="animate-gold-pulse animate-float h-16 w-16 rounded-full" />
               <p className="condensed text-xs tracking-[0.35em] text-gold-400">
                 LAST MANAGER STANDING
               </p>
@@ -118,7 +118,7 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
           </>
         )}
 
-        <div className="mt-1 grid w-full grid-cols-3 gap-3 text-center">
+        <div className="animate-fade-up mt-1 grid w-full grid-cols-3 gap-3 text-center" style={{ animationDelay: '120ms' }}>
           <Stat label="Rounds survived" value={`${roundsSurvived}/6`} />
           <Stat label="Final strength" value={String(strength)} />
           <Stat label="Placement" value={`#${state.humanPlacement ?? '—'}`} />
@@ -140,7 +140,7 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
           </button>
         )}
 
-        <div className="w-full border border-hairline bg-white p-5 text-left">
+        <div className="w-full glass overflow-hidden p-5 text-left">
           <h2 className="condensed mb-2 text-xs tracking-[0.25em] text-carbon-600">Your final XI</h2>
           <div className="grid grid-cols-1 gap-x-4 gap-y-0.5 sm:grid-cols-2">
             {human.xi.map((s, i) => {
@@ -164,7 +164,7 @@ export default function EndScreen(props: { state: GameState; onReset: () => void
 
         <button
           onClick={props.onReset}
-          className="scarlet-gloss blade condensed mt-1 cursor-pointer px-12 py-4 text-xl"
+          className="scarlet-gloss blade condensed glint hover-lift mt-1 cursor-pointer px-12 py-4 text-xl"
         >
           PLAY AGAIN
         </button>
@@ -183,7 +183,7 @@ function StatPodiums(props: { state: GameState }) {
   if (boots.length === 0 && makers.length === 0) return null;
   const MEDALS = ['text-gold-600', 'text-carbon-600', 'text-[#a4694a]'];
   const podium = (title: string, lines: StatLine[], value: (l: StatLine) => number, unit: string) => (
-    <div className="flex-1 border border-hairline bg-white p-4 text-left">
+    <div className="flex-1 glass overflow-hidden p-4 text-left">
       <h3 className="condensed mb-2.5 text-[10px] tracking-[0.3em] text-gold-600">{title}</h3>
       {lines.length === 0 ? (
         <p className="text-xs text-carbon-600">Nobody troubled the scorers.</p>
@@ -222,7 +222,7 @@ function TournamentRecap(props: {
   const { state, names } = props;
   if (state.rounds.length === 0) return null;
   return (
-    <div className="w-full border border-hairline bg-white p-5 text-left">
+    <div className="w-full glass overflow-hidden p-5 text-left">
       <h2 className="condensed mb-3 text-xs tracking-[0.25em] text-carbon-600">
         How the tournament ended
       </h2>
@@ -290,7 +290,7 @@ function HallOfChampions() {
     (a, b) => b[1].count - a[1].count || b[1].last.localeCompare(a[1].last),
   );
   return (
-    <div className="w-full border border-hairline bg-white p-5 text-left">
+    <div className="w-full glass overflow-hidden p-5 text-left">
       <h2 className="condensed mb-2.5 text-xs tracking-[0.3em] text-gold-600">
         HALL OF CHAMPIONS
       </h2>
@@ -339,7 +339,7 @@ function ChampionConfetti() {
 
 function Stat(props: { label: string; value: string }) {
   return (
-    <div className="silver-gloss px-3 py-4">
+    <div className="silver-gloss hover-lift rounded-2xl px-3 py-4">
       <p className="condensed tabular text-2xl font-bold text-carbon">{props.value}</p>
       <p className="condensed mt-1 text-xs uppercase tracking-wider text-carbon-600">{props.label}</p>
     </div>

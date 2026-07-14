@@ -46,7 +46,7 @@ export default function BoxScorePanel(props: { slate: readonly (XiSlotV2 | null)
   const maxZone = Math.max(1, ...ZONES.map((z) => perZone.get(z)!.att + perZone.get(z)!.def));
 
   return (
-    <div className="border border-hairline bg-white p-3.5">
+    <div className="glass overflow-hidden p-3.5">
       <h2 className="condensed mb-3 border-b border-hairline pb-1 text-[11px] tracking-[0.2em] text-carbon-600">
         Box score
       </h2>

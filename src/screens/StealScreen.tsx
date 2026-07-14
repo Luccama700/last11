@@ -39,7 +39,7 @@ export default function StealScreen(props: {
   const pool = [...state.pool].sort((a, b) => b.rating - a.rating);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-paper text-carbon">
+    <div className="flex min-h-dvh flex-col bg-arena text-carbon">
       <ChromeBar ribbon title="THE PIT STOP" />
       <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-5 sm:px-6">
         <header className="mb-5">
@@ -65,7 +65,7 @@ export default function StealScreen(props: {
             <h2 className="condensed mb-2 text-xs tracking-[0.25em] text-carbon-600">
               Available loot · {pool.length} players
             </h2>
-            <div className="grid max-h-[28rem] grid-cols-2 gap-2 overflow-y-auto border border-hairline bg-white p-2 pr-1 md:grid-cols-3">
+            <div className="grid max-h-[28rem] grid-cols-2 gap-2 overflow-y-auto glass overflow-hidden p-2 pr-1 md:grid-cols-3">
               {pool.map((p) => {
                 const owned = onTeam.has(p.id);
                 const isSelected = selected?.id === p.id;
@@ -77,12 +77,12 @@ export default function StealScreen(props: {
                     disabled={owned}
                     onClick={() => setSelected(p)}
                     style={{ animationDelay: `${Math.min(pool.indexOf(p), 14) * 25}ms` }}
-                    className={`animate-flip-in cursor-pointer border p-2.5 text-left text-sm transition ${
+                    className={`animate-flip-in hover-lift cursor-pointer rounded-xl border p-2.5 text-left text-sm ${
                       isSelected
                         ? 'row-selected border-royal'
                         : owned
                           ? 'cursor-not-allowed border-hairline bg-band opacity-50'
-                          : 'silver-gloss border-hairline'
+                          : 'silver-gloss border-transparent'
                     }`}
                   >
                     <p className={`condensed truncate font-bold leading-tight ${isSelected ? '' : 'text-carbon'}`}>
@@ -105,7 +105,7 @@ export default function StealScreen(props: {
             <h2 className="condensed mb-2 text-xs tracking-[0.25em] text-carbon-600">
               {selected ? `Where does ${selected.name} play?` : 'Your XI'}
             </h2>
-            <ul className="border border-hairline bg-white">
+            <ul className="glass overflow-hidden">
               {human.xi.map((slot, i) => {
                 const gain = selected ? gainAt(selected, i) : null;
                 const slotLabel = detailedReady

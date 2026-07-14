@@ -24,7 +24,7 @@ export default function TacticsRail(props: {
   onChangeFormation?: () => void;
 }) {
   return (
-    <div className="space-y-3 border border-hairline bg-white p-3.5">
+    <div className="space-y-3 glass overflow-hidden p-3.5">
       <div>
         <div className="flex items-center justify-between border-b border-hairline pb-1">
           <h2 className="condensed text-[11px] tracking-[0.2em] text-carbon-600">Formation</h2>

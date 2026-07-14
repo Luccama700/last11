@@ -428,59 +428,111 @@ html {
   font-variant-numeric: tabular-nums;
 }
 
-/* Glossy near-black chrome: two stops + a 1px top highlight. */
+/* Near-black chrome, now frosted dark glass with a specular top edge. */
 .chrome-gloss {
-  background: linear-gradient(
-    180deg,
-    var(--color-chrome-600) 0%,
-    var(--color-chrome-800) 48%,
-    var(--color-chrome-950) 100%
-  );
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  background: linear-gradient(180deg, rgba(51, 56, 62, 0.88) 0%, rgba(24, 27, 31, 0.9) 48%, rgba(11, 13, 15, 0.94) 100%);
+  backdrop-filter: blur(18px) saturate(1.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 6px 22px rgba(0, 0, 0, 0.22);
 }
 
-/* Brushed-silver slab: etched border, white top bevel, graphite bottom bevel. */
+/* Silver, now liquid: frosted translucent slab with a specular top edge and a
+   soft ambient shadow. Press = sink + darken (spring transition below). */
 .silver-gloss {
-  background: linear-gradient(180deg, var(--color-silver-100), var(--color-silver-400));
-  border: 1px solid #a8aeb5;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(233, 237, 241, 0.55));
+  backdrop-filter: blur(14px) saturate(1.6);
+  -webkit-backdrop-filter: blur(14px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.75);
   box-shadow:
-    inset 0 1px 0 #ffffff,
-    inset 0 -1px 0 var(--color-silver-600);
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 4px 16px rgba(16, 18, 20, 0.08),
+    0 1px 2px rgba(16, 18, 20, 0.06);
   color: var(--color-carbon);
+  transition:
+    transform 220ms var(--spring),
+    box-shadow 220ms ease-out,
+    filter 160ms ease-out;
+}
+button.silver-gloss:hover {
+  filter: brightness(1.03);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 8px 24px rgba(16, 18, 20, 0.12),
+    0 1px 2px rgba(16, 18, 20, 0.06);
 }
 .silver-gloss:active,
 .silver-pressed {
-  background: linear-gradient(180deg, var(--color-silver-300), var(--color-silver-600));
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.18);
+  transform: scale(0.97);
+  background: linear-gradient(180deg, rgba(221, 226, 231, 0.8), rgba(199, 204, 210, 0.7));
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.14);
 }
 
-/* Scarlet ribbon (accent strips, THE DROP cut line, clock plaque). */
+/* Scarlet, now liquid: deep red glass with an inner glow, a specular edge and
+   a slow ambient sheen that drifts across (the hero-CTA "pzazz"). */
 .scarlet-gloss {
-  background: linear-gradient(180deg, #e04351 0%, var(--color-scarlet) 55%, #a91824 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  position: relative;
+  background:
+    radial-gradient(120% 140% at 20% 0%, rgba(255, 120, 130, 0.35), transparent 50%),
+    linear-gradient(180deg, #e04351 0%, var(--color-scarlet) 55%, #a91824 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 6px 20px rgba(208, 32, 46, 0.35);
   color: #ffffff;
+  transition:
+    transform 220ms var(--spring),
+    box-shadow 220ms ease-out,
+    filter 160ms ease-out;
+}
+button.scarlet-gloss:hover {
+  filter: brightness(1.06) saturate(1.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 10px 30px rgba(208, 32, 46, 0.5);
+}
+button.scarlet-gloss:active {
+  transform: scale(0.97);
+}
+.scarlet-gloss.glint::after,
+button.scarlet-gloss::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.28) 46%, transparent 60%);
+  background-size: 260% 100%;
+  animation: sheen-drift 5.5s ease-in-out infinite;
+  pointer-events: none;
 }
 
-/* The blade: parallelogram sheared ~14° (12px run). -l/-r shear one edge only —
-   for tabs notched into a bar corner; .blade shears both. */
+/* The blade, modernized (Lucca 2026-07-14: "I really dislike how slanted these
+   are"). No more clip-path shears anywhere — continuous Apple-style rounding.
+   The class names stay so every call site inherits the new geometry. */
 .blade {
-  clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  border-radius: 12px;
 }
 .blade-l {
-  clip-path: polygon(12px 0, 100% 0, 100% 100%, 0 100%);
+  border-radius: 0 12px 12px 0;
 }
 .blade-r {
-  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  border-radius: 12px 0 0 12px;
 }
 
-/* Paper world. Content panes are light — always. */
+/* Paper world. Content panes are light — always. Frosted since the liquid pass. */
 .paper-pane {
-  background: var(--color-paper);
+  background: rgba(238, 240, 242, 0.86);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border-radius: 16px;
   color: var(--color-carbon);
 }
 /* Banded list rows (sponsorship/contracts template). */
 .row-band:nth-child(even) {
-  background: var(--color-band);
+  background: rgba(227, 234, 241, 0.55);
+}
+.row-band {
+  transition: background 160ms ease-out, transform 200ms var(--spring);
 }
 .row-selected {
   background: #ffffff;
@@ -505,6 +557,166 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
+/* ── Liquid-glass layer (2026-07-14, Lucca: "modern take on FIFA 13 — Apple
+   level of design, liquid glass, pzazz"). Materials + a motion system. ─────── */
+
+:root {
+  --spring: cubic-bezier(0.22, 1.4, 0.36, 1); /* playful overshoot */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The living backdrop: paper with slow-drifting tinted light blobs. Panels are
+   frosted, so the drift reads THROUGH them — that's the liquid. Tints stay
+   pastel so carbon text keeps AA everywhere. */
+.bg-arena {
+  position: relative;
+  isolation: isolate;
+  background: var(--color-paper);
+}
+.bg-arena::before,
+.bg-arena::after {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 42% at 18% 22%, rgba(47, 111, 208, 0.11), transparent 70%),
+    radial-gradient(34% 38% at 82% 12%, rgba(208, 32, 46, 0.08), transparent 70%),
+    radial-gradient(40% 44% at 70% 85%, rgba(79, 174, 61, 0.09), transparent 70%);
+  animation: blob-drift 26s ease-in-out infinite alternate;
+}
+.bg-arena::after {
+  background:
+    radial-gradient(30% 34% at 78% 40%, rgba(242, 167, 27, 0.07), transparent 70%),
+    radial-gradient(36% 40% at 10% 80%, rgba(47, 111, 208, 0.09), transparent 70%);
+  animation: blob-drift 34s ease-in-out infinite alternate-reverse;
+}
+@keyframes blob-drift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(3%, 2%, 0) scale(1.08);
+  }
+}
+
+/* Frosted panel: the workhorse card. */
+.glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.48));
+  backdrop-filter: blur(18px) saturate(1.7);
+  -webkit-backdrop-filter: blur(18px) saturate(1.7);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 8px 32px rgba(16, 18, 20, 0.1);
+}
+
+/* Dark glass (chrome bars, name plates, live tickers). */
+.glass-chrome {
+  background: linear-gradient(180deg, rgba(35, 39, 43, 0.86), rgba(11, 13, 15, 0.92));
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 8px 28px rgba(0, 0, 0, 0.28);
+}
+
+/* Hover lift: cards and rows breathe toward the finger. */
+.hover-lift {
+  transition:
+    transform 260ms var(--spring),
+    box-shadow 260ms ease-out;
+}
+.hover-lift:hover {
+  transform: translateY(-2px) scale(1.008);
+  box-shadow: 0 14px 36px rgba(16, 18, 20, 0.14);
+}
+
+/* Specular sweep on demand (hero plaques, champion banner). */
+@keyframes sheen-drift {
+  0%,
+  55% {
+    background-position: 130% 0;
+  }
+  100% {
+    background-position: -130% 0;
+  }
+}
+.glint {
+  position: relative;
+  overflow: hidden;
+}
+.glint::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.35) 48%, transparent 62%);
+  background-size: 260% 100%;
+  animation: sheen-drift 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Entrance: fade-up with the spring. Stagger via inline animation-delay. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-fade-up {
+  animation: fade-up 480ms var(--ease-out) both;
+}
+
+/* Slow float for hero ornaments. */
+@keyframes float-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+.animate-float {
+  animation: float-bob 5s ease-in-out infinite;
+}
+
+/* Live data breathes. */
+@keyframes pulse-live {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+.pulse-live {
+  animation: pulse-live 1.8s ease-in-out infinite;
+}
+
+/* Urgent countdown: last seconds thump. */
+@keyframes count-thump {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  12% {
+    transform: scale(1.18);
+  }
+}
+.animate-count-thump {
+  animation: count-thump 1s var(--spring) infinite;
+}
+
 /* Invisible scrollbars for rails that scroll internally (content still scrolls). */
 .scrollbar-hide {
   scrollbar-width: none;
@@ -515,6 +727,14 @@ html {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .bg-arena::before,
+  .bg-arena::after,
+  .glint::after,
+  button.scarlet-gloss::after,
+  .animate-fade-up,
+  .animate-float,
+  .pulse-live,
+  .animate-count-thump,
   .animate-pop,
   .animate-row-in,
   .animate-gold-pulse,

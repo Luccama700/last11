@@ -26,7 +26,7 @@ export default function PreDraftSetup(props: {
   const [style, setStyle] = useState<PlayingStyle>('balanced');
 
   return (
-    <div className="flex min-h-dvh flex-col bg-paper text-carbon">
+    <div className="flex min-h-dvh flex-col bg-arena text-carbon">
       <ChromeBar ribbon title="MATCHDAY PROGRAMME" />
       <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-5 sm:px-6">
         <header className="text-center">
@@ -45,7 +45,7 @@ export default function PreDraftSetup(props: {
         <section className="mt-5">
           <h2 className="condensed mb-2 text-xs tracking-[0.25em] text-carbon-600">Formation</h2>
           <div className="grid grid-cols-5 gap-2.5 max-sm:grid-cols-2" data-tour="formation-picker">
-            {FORMATIONS.map((f) => {
+            {FORMATIONS.map((f, fi) => {
               const active = f.id === formation.id;
               return (
                 <button
@@ -53,8 +53,9 @@ export default function PreDraftSetup(props: {
                   type="button"
                   onClick={() => setFormation(f)}
                   aria-pressed={active}
-                  className={`group cursor-pointer border p-2 text-center transition-all duration-200 ${
-                    active ? 'row-selected border-royal' : 'silver-gloss border-hairline hover:-translate-y-0.5'
+                  style={{ animationDelay: `${fi * 45}ms` }}
+                  className={`group animate-fade-up hover-lift cursor-pointer rounded-xl border p-2 text-center ${
+                    active ? 'row-selected border-royal' : 'silver-gloss border-transparent'
                   }`}
                 >
                   <div className="pointer-events-none mx-auto h-20 w-[3.8rem]">
@@ -122,7 +123,7 @@ export default function PreDraftSetup(props: {
         <button
           type="button"
           onClick={() => props.onStart(formation, mode, style)}
-          className="scarlet-gloss blade condensed mt-6 w-full cursor-pointer px-6 py-4 text-xl"
+          className="scarlet-gloss blade condensed glint hover-lift mt-6 w-full cursor-pointer px-6 py-4 text-xl"
         >
           START DRAFT — {formation.name} · {style} →
         </button>

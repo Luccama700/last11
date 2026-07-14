@@ -167,7 +167,7 @@ export default function DraftScreenV2(props: {
   );
 
   return (
-    <div className="flex min-h-dvh flex-col bg-paper text-carbon">
+    <div className="flex min-h-dvh flex-col bg-arena text-carbon">
       <ChromeBar
         ribbon
         title="THE DRAFT"
@@ -216,7 +216,7 @@ export default function DraftScreenV2(props: {
                   onRespin={props.respinTokens > 0 ? props.onRespin : undefined}
                 />
               ) : (
-                <div className="relative flex min-h-[9rem] items-center justify-center border border-hairline bg-white p-4 text-center text-xs leading-relaxed text-carbon-600">
+                <div className="relative flex min-h-[9rem] items-center justify-center glass overflow-hidden p-4 text-center text-xs leading-relaxed text-carbon-600">
                   <HexWatermark />
                   <span className="relative">
                     {props.spunRoll !== null
@@ -249,12 +249,12 @@ export default function DraftScreenV2(props: {
 
           <div className="mt-3 shrink-0">
             {draftDone ? (
-              <div className="silver-gloss flex flex-col items-center gap-3 p-4 text-center">
+              <div className="silver-gloss animate-fade-up flex flex-col items-center gap-3 rounded-2xl p-4 text-center">
                 <p className="condensed text-2xl text-carbon">Your XI is locked in</p>
                 <button
                   type="button"
                   onClick={props.onEnterBattle}
-                  className="scarlet-gloss blade condensed cursor-pointer px-10 py-3.5 text-lg"
+                  className="scarlet-gloss blade condensed glint hover-lift cursor-pointer px-10 py-3.5 text-lg"
                 >
                   ENTER THE ARENA →
                 </button>
@@ -270,7 +270,7 @@ export default function DraftScreenV2(props: {
                   data-tour="spin-button"
                   className={`condensed blade px-16 py-4 text-2xl transition ${
                     props.spunRoll === null
-                      ? 'scarlet-gloss cursor-pointer'
+                      ? 'scarlet-gloss glint hover-lift cursor-pointer'
                       : 'silver-gloss cursor-default opacity-50'
                   }`}
                 >

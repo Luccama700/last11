@@ -20,7 +20,7 @@ export default function SquadCard(props: {
 }) {
   const memory = props.mode === 'memory';
   return (
-    <div className="animate-pop border border-hairline bg-white">
+    <div className="animate-pop glass overflow-hidden">
       {/* header plaque: flag + squad + year ribbon (+ re-spin) */}
       <div className="silver-gloss flex items-center justify-between px-3 py-2">
         <p className="flex min-w-0 items-center gap-2">

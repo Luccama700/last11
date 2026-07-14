@@ -51,7 +51,7 @@ export default function BattleScreen(props: {
   }
 
   return (
-    <div className="min-h-dvh bg-paper text-carbon">
+    <div className="min-h-dvh bg-arena text-carbon">
       <ChromeBar
         ribbon
         title="THE ARENA"
@@ -160,7 +160,7 @@ function RoundIntro(props: { state: GameState; onPlayRound: () => void; onAdjust
   const yourStrength = strengths.find((s) => s.id === human.id)!.total;
 
   return (
-    <div className="relative flex flex-col items-center gap-5 border border-hairline bg-white p-8 text-center sm:p-10">
+    <div className="animate-fade-up relative flex flex-col items-center gap-5 glass overflow-hidden p-8 text-center sm:p-10">
       <HexWatermark />
       <p className="scarlet-gloss blade condensed relative px-4 py-0.5 text-xs tracking-[0.35em]">
         {isFinal ? 'THE FINAL' : `ROUND ${state.roundIndex + 1}`}
@@ -185,7 +185,7 @@ function RoundIntro(props: { state: GameState; onPlayRound: () => void; onAdjust
       </p>
       <button
         onClick={props.onPlayRound}
-        className="scarlet-gloss blade condensed relative cursor-pointer px-12 py-4 text-xl"
+        className="scarlet-gloss blade condensed glint hover-lift relative cursor-pointer px-12 py-4 text-xl"
       >
         PLAY ROUND {state.roundIndex + 1} ▶
       </button>
@@ -252,7 +252,7 @@ function RoundResults(props: { state: GameState; onContinue: () => void; humanAl
   return (
     <div className="space-y-5">
       {yourMatches.length > 0 && (
-        <div className="border border-hairline bg-white p-4">
+        <div className="animate-fade-up glass overflow-hidden p-4">
           <h3 className="condensed mb-3 text-xs tracking-[0.25em] text-carbon-600">Your matches</h3>
           <div className="grid gap-2 md:grid-cols-3">
             {yourMatches.map((m, i) => {
@@ -290,7 +290,7 @@ function RoundResults(props: { state: GameState; onContinue: () => void; humanAl
         </div>
       )}
 
-      <div className="border border-hairline bg-white p-4">
+      <div className="animate-fade-up glass overflow-hidden p-4" style={{ animationDelay: '140ms' }}>
         <h3 className="condensed mb-3 text-xs tracking-[0.25em] text-carbon-600">
           Round {result.round} table · bottom {result.eliminatedIds.length} eliminated
         </h3>

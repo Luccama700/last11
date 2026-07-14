@@ -16,7 +16,7 @@ export default function HomeScreen(props: {
   const crowns = champions.filter((c) => c.isHuman).length;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-paper">
+    <div className="flex min-h-dvh flex-col bg-arena">
       <ChromeBar
         ribbon
         title="FOOTBALL DRAFT BATTLE ROYALE"
@@ -29,11 +29,11 @@ export default function HomeScreen(props: {
         <HexWatermark />
         {/* red slash */}
         <div
-          className="scarlet-gloss absolute inset-y-0 right-0 hidden w-[46%] sm:block"
+          className="scarlet-gloss glint absolute inset-y-0 right-0 hidden w-[46%] sm:block"
           style={{ clipPath: 'polygon(34% 0, 100% 0, 100% 100%, 0 100%)' }}
         >
           <div className="flex h-full flex-col items-center justify-center gap-3 pl-[22%] pr-6 text-center">
-            <p className="condensed text-2xl leading-tight lg:text-3xl">
+            <p className="condensed animate-fade-up text-2xl leading-tight lg:text-3xl" style={{ animationDelay: '250ms' }}>
               {LOBBY_SIZE} managers walk in.
               <br />
               One walks out.
@@ -52,7 +52,7 @@ export default function HomeScreen(props: {
 
         {/* wordmark + steps */}
         <div className="relative flex h-full flex-col justify-center gap-5 px-6 py-8 sm:max-w-[58%] lg:px-12">
-          <div>
+          <div className="animate-fade-up">
             <p className="condensed text-xs tracking-[0.3em] text-carbon-600">
               96 YEARS OF WORLD CUP HISTORY
             </p>
@@ -67,9 +67,9 @@ export default function HomeScreen(props: {
           </p>
 
           <div className="grid max-w-xl grid-cols-1 gap-2 sm:grid-cols-3">
-            <Step n="1" title="Draft" text="Spin for a nation and a World Cup year — 1930 to 2026. Build your XI from history." />
-            <Step n="2" title="Survive" text="3 matches a round. The bottom of the table is eliminated: 32 → 24 → 16 → 8 → 4 → 2 → 1." />
-            <Step n="3" title="Loot" text="Between rounds, steal one player from a fallen squad. The bots are looting too." />
+            <Step i={0} n="1" title="Draft" text="Spin for a nation and a World Cup year — 1930 to 2026. Build your XI from history." />
+            <Step i={1} n="2" title="Survive" text="3 matches a round. The bottom of the table is eliminated: 32 → 24 → 16 → 8 → 4 → 2 → 1." />
+            <Step i={2} n="3" title="Loot" text="Between rounds, steal one player from a fallen squad. The bots are looting too." />
           </div>
         </div>
       </div>
@@ -124,16 +124,19 @@ function NavItem(props: { children: React.ReactNode; onClick?: () => void }) {
   return (
     <button
       onClick={props.onClick}
-      className="condensed cursor-pointer border-r border-white/10 px-2 py-3.5 text-center text-base text-white transition-colors last:border-r-0 hover:bg-white/10 active:bg-black/30 lg:text-lg"
+      className="condensed animate-fade-up cursor-pointer border-r border-white/10 px-2 py-3.5 text-center text-base text-white transition-[background,transform] duration-200 last:border-r-0 hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0 active:bg-black/30 lg:text-lg"
     >
       {props.children}
     </button>
   );
 }
 
-function Step(props: { n: string; title: string; text: string }) {
+function Step(props: { i: number; n: string; title: string; text: string }) {
   return (
-    <div className="silver-gloss blade p-3 text-left">
+    <div
+      className="silver-gloss blade hover-lift animate-fade-up p-3 text-left"
+      style={{ animationDelay: `${120 + props.i * 90}ms` }}
+    >
       <p className="condensed text-sm text-carbon">
         <span className="text-scarlet">{props.n}</span> · {props.title}
       </p>
@@ -144,7 +147,7 @@ function Step(props: { n: string; title: string; text: string }) {
 
 function Crest() {
   return (
-    <span className="condensed flex h-7 w-7 items-center justify-center rounded-full bg-white text-sm font-bold text-carbon shadow-inner">
+    <span className="condensed animate-float flex h-7 w-7 items-center justify-center rounded-full bg-white text-sm font-bold text-carbon shadow-inner">
       11
     </span>
   );

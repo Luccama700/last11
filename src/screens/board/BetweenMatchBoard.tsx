@@ -52,7 +52,7 @@ export default function BetweenMatchBoard(props: {
   return (
     // lg: the board IS the viewport — the pitch takes the remaining height and
     // the side rails scroll internally if they must. No page scroll.
-    <div className="bg-paper text-carbon min-h-screen lg:h-dvh lg:min-h-0 lg:overflow-hidden">
+    <div className="bg-arena text-carbon min-h-screen lg:h-dvh lg:min-h-0 lg:overflow-hidden">
       <div
         className={`mx-auto grid gap-5 px-4 py-4 lg:h-full ${
           props.rightAside
@@ -78,7 +78,7 @@ export default function BetweenMatchBoard(props: {
           </div>
 
           {props.onFormationChange && (
-            <div className="border border-hairline bg-white p-3.5 max-lg:order-5">
+            <div className="glass overflow-hidden p-3.5 max-lg:order-5">
               <h2 className="condensed mb-2 text-[11px] tracking-[0.2em] text-carbon-600">
                 Change shape
               </h2>

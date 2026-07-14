@@ -302,7 +302,7 @@ function LineupRail(props: {
   if (props.xi.length === 0) return null;
   const visibility = props.variant === 'stack' ? '' : 'hidden lg:block';
   return (
-    <aside className={`border border-hairline bg-white p-2.5 ${visibility} ${props.side === 'away' ? 'text-right' : ''}`}>
+    <aside className={`glass overflow-hidden p-2.5 ${visibility} ${props.side === 'away' ? 'text-right' : ''}`}>
       <h4 className={`condensed mb-1.5 flex items-center gap-1.5 truncate text-[11px] tracking-[0.12em] text-carbon ${props.side === 'away' ? 'flex-row-reverse' : ''}`}>
         {props.you && <YouChip />}
         {props.title}
@@ -510,7 +510,7 @@ function MomentumBar(props: { pb: PlaybackState; homeYou: boolean }) {
 function Ticker(props: { pb: PlaybackState }) {
   const { ticker } = props.pb;
   return (
-    <div className="flex min-h-[42px] flex-col justify-center gap-0.5 border border-hairline bg-white px-3 py-2">
+    <div className="flex min-h-[42px] flex-col justify-center gap-0.5 glass overflow-hidden px-3 py-2">
       {ticker.length === 0 ? (
         <p className="text-xs text-carbon-600">…</p>
       ) : (
