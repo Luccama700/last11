@@ -8,10 +8,10 @@ import type { Formation } from '../../engine/types';
  */
 export default function FormationPreview(props: { formation: Formation; active?: boolean }) {
   const coords = layoutFormation(props.formation.slots);
-  const dot = props.active ? 'var(--color-gold-400)' : '#9fd6b4';
+  const dot = props.active ? '#ffffff' : 'rgba(255,255,255,0.75)';
   return (
     <svg viewBox="0 0 60 84" className="h-full w-full" role="img" aria-label={`${props.formation.name} formation`}>
-      <rect x="1" y="1" width="58" height="82" rx="4" fill="var(--color-pitch-700)" stroke="rgba(255,255,255,0.22)" />
+      <rect x="1" y="1" width="58" height="82" rx="6" fill="var(--color-turf-500)" stroke="rgba(255,255,255,0.45)" />
       <line x1="1" y1="42" x2="59" y2="42" stroke="rgba(255,255,255,0.18)" />
       <circle cx="30" cy="42" r="6" fill="none" stroke="rgba(255,255,255,0.18)" />
       <rect x="19" y="1" width="22" height="8" fill="none" stroke="rgba(255,255,255,0.18)" />

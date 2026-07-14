@@ -434,24 +434,18 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
     // remaining height (mobile: a 42dvh cap) and the options list scrolls
     // internally. Nothing on this screen scrolls the page (Lucca: everything
     // fits one page). Mobile keeps the countdown pinned above the pitch.
-    <div className="h-dvh min-h-0 overflow-hidden bg-arena text-carbon">
-      <div className="animate-fade-up mx-auto grid h-full max-w-6xl grid-rows-[auto_minmax(0,1fr)] gap-3 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:grid-cols-[minmax(0,1fr)_21rem] lg:grid-rows-none lg:gap-4 lg:py-4">
+    <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-arena text-carbon">
+      <ChromeBar
+        ribbon
+        title="THE DRAFT"
+        right={
+          <Plaque>
+            SPIN {Math.max(1, view.spinIndex + 1)}/{MP_DRAFT_SPINS}
+          </Plaque>
+        }
+      />
+      <div className="animate-fade-up mx-auto grid min-h-0 w-full max-w-6xl flex-1 grid-rows-[auto_minmax(0,1fr)] gap-3 px-4 pt-3 pb-2 lg:grid-cols-[minmax(0,1fr)_21rem] lg:grid-rows-none lg:gap-4">
         <main className="flex min-h-0 flex-col">
-          <header className="mb-2 flex items-baseline justify-between">
-            <h1 className="condensed text-xl font-bold">
-              Draft{' '}
-              <span className="tabular text-scarlet">spin {Math.max(1, view.spinIndex + 1)}/{MP_DRAFT_SPINS}</span>
-            </h1>
-            <p className="text-xs font-semibold text-carbon-600">
-              {locked
-                ? 'locked in — waiting for the room'
-                : selPlayer
-                  ? 'tap a slot to place'
-                  : moveFrom !== null
-                    ? 'tap an open slot to move him'
-                    : 'pick from your squad →'}
-            </p>
-          </header>
           {/* mobile: the pick clock must be visible while picking — the aside
               copy of it lives below the pitch fold, so it hides on small tiers */}
           <div className="mb-2 lg:hidden">
@@ -560,6 +554,15 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
           </div>
         </aside>
       </div>
+      <TickerBar>
+        {locked
+          ? 'Locked in — waiting for the room.'
+          : selPlayer
+            ? 'Tap a slot to place him.'
+            : moveFrom !== null
+              ? 'Tap an open slot to move him.'
+              : 'Pick from your squad — best boosts first.'}
+      </TickerBar>
     </div>
   );
 }
