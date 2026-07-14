@@ -167,7 +167,7 @@ export default function DraftScreenV2(props: {
   );
 
   return (
-    <div className="flex min-h-dvh flex-col bg-arena text-carbon">
+    <div className="flex min-h-dvh flex-col bg-arena text-carbon lg:h-dvh lg:min-h-0 lg:overflow-hidden">
       <ChromeBar
         ribbon
         title="THE DRAFT"

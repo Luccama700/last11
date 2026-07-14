@@ -15,8 +15,11 @@ import './index.css';
 inject();
 injectSpeedInsights();
 
+// Dev affordance: ?fast skips reels/playback (the tests' animate={false} path).
+const fast = new URLSearchParams(window.location.search).has('fast');
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <App animate={!fast} />
   </StrictMode>,
 );

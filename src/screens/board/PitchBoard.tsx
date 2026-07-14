@@ -53,7 +53,7 @@ function BoardSlot(props: BoardSlotProps) {
             />
             {!compact && (
               <NamePlate
-                className="mt-[-4px] w-[5.2rem]"
+                className="mt-[-4px] w-[5.7rem]"
                 name={`${flagOf(slot.player.nation)} ${slot.player.name}`}
                 pos={slot.position}
                 rating={props.mode !== 'memory' ? slot.player.rating : undefined}
