@@ -656,7 +656,7 @@ function Rail(props: { md: Matchday; nameOf: (id: string) => string; virtualMinu
       <h3 className="condensed mb-1.5 text-[10px] tracking-[0.18em] text-carbon-600">Elsewhere this round</h3>
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
         {rail.map((m) => (
-          <div key={m.matchId} className="chrome-gloss flex items-center justify-between px-2.5 py-1.5 text-[11px] text-white">
+          <div key={m.matchId} className="plate-dark flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px] text-white">
             <span className="condensed truncate text-white/75">
               {short(props.nameOf(m.homeId))} <span className="text-white/40">v</span> {short(props.nameOf(m.awayId))}
             </span>

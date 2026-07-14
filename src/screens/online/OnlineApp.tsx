@@ -708,7 +708,7 @@ function WaitingRoom(props: {
               return (
                 <div
                   key={m.matchId}
-                  className="chrome-gloss flex items-baseline justify-between px-3 py-1.5 text-sm text-white"
+                  className="plate-dark flex items-baseline justify-between rounded-lg px-3 py-1.5 text-sm text-white"
                 >
                   <span className="condensed truncate text-white/80">
                     {nameOf(m.homeId)} <span className="text-white/40">v</span> {nameOf(m.awayId)}

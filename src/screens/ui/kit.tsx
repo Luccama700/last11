@@ -192,7 +192,7 @@ export function NamePlate(props: {
   const fit = props.fit ?? 1;
   return (
     <div
-      className={`chrome-gloss rounded-md px-1.5 pt-0.5 pb-1 text-white ${props.className ?? ''}`}
+      className={`plate-dark rounded-md px-1.5 pt-0.5 pb-1 text-white ${props.className ?? ''}`}
     >
       <div className="flex items-baseline justify-between gap-1 leading-none">
         <span className="condensed text-[9px] text-white/75">{props.pos}</span>
