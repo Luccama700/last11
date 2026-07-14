@@ -47,6 +47,14 @@ rendering with a 2026 material and motion system.
    public-lobby dive the moment the manager is named (it previously just
    opened the online entry).
 
+## Type (updated 2026-07-14, "find better fonts")
+
+Display/condensed: **Khand** 500/600/700 (self-hosted via @fontsource) replaces
+Barlow Condensed — chosen by live side-by-side against Saira Condensed, Teko
+and Oswald on the running app; it carries real scoreboard/broadcast DNA while
+staying crisp at plate/chip sizes. Body stays **Inter** (tabular numerals,
+unbeatable at small UI sizes). Legacy `--font-display` aliases Khand.
+
 ## Guardrail updates (supersede the base vision's list on this branch)
 
 - Corners are continuous-rounded: pills for chips, 12px for buttons, 16px

@@ -7,7 +7,7 @@
 @theme {
   /* Legacy display font now aliases the condensed stack (Google Fonts CDN import
      removed — everything is self-hosted via @fontsource). */
-  --font-display: 'Barlow Condensed', 'Arial Black', sans-serif;
+  --font-display: 'Khand', 'Arial Black', sans-serif;
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
   /* Surfaces */
@@ -45,7 +45,7 @@
      Legacy night/gold tokens above stay until every screen is refit, then purge. */
 
   /* Type */
-  --font-condensed: 'Barlow Condensed', Oswald, 'Arial Narrow', sans-serif;
+  --font-condensed: 'Khand', 'Barlow Condensed', 'Arial Narrow', sans-serif;
 
   /* Chrome (glossy near-black bars — nav, headers, tickers) */
   --color-chrome-950: #0b0d0f;
