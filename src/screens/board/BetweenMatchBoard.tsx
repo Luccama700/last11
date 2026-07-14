@@ -52,7 +52,7 @@ export default function BetweenMatchBoard(props: {
   return (
     // lg: the board IS the viewport — the pitch takes the remaining height and
     // the side rails scroll internally if they must. No page scroll.
-    <div className="bg-stadium min-h-screen text-ink-100 lg:h-dvh lg:min-h-0 lg:overflow-hidden">
+    <div className="bg-paper text-carbon min-h-screen lg:h-dvh lg:min-h-0 lg:overflow-hidden">
       <div
         className={`mx-auto grid gap-5 px-4 py-4 lg:h-full ${
           props.rightAside
@@ -78,8 +78,8 @@ export default function BetweenMatchBoard(props: {
           </div>
 
           {props.onFormationChange && (
-            <div className="card-gloss rounded-2xl p-4 max-lg:order-5">
-              <h2 className="headline mb-2 text-[11px] tracking-[0.25em] text-ink-500">
+            <div className="border border-hairline bg-white p-3.5 max-lg:order-5">
+              <h2 className="condensed mb-2 text-[11px] tracking-[0.2em] text-carbon-600">
                 Change shape
               </h2>
               <div className="grid grid-cols-2 gap-1">
@@ -91,8 +91,8 @@ export default function BetweenMatchBoard(props: {
                       type="button"
                       aria-pressed={active}
                       onClick={() => !active && props.onFormationChange!(f)}
-                      className={`cursor-pointer truncate rounded-lg px-1.5 py-1.5 text-[11px] font-bold transition max-lg:py-2.5 ${
-                        active ? 'btn-gold' : 'bg-night-700 text-ink-300 hover:bg-night-600'
+                      className={`condensed cursor-pointer truncate px-1.5 py-1.5 text-[11px] transition max-lg:py-2.5 ${
+                        active ? 'chrome-gloss text-white' : 'silver-gloss text-carbon'
                       }`}
                       title={f.name}
                     >
@@ -101,7 +101,7 @@ export default function BetweenMatchBoard(props: {
                   );
                 })}
               </div>
-              <p className="mt-2 text-[10px] leading-snug text-ink-500">
+              <p className="mt-2 text-[10px] leading-snug text-carbon-600">
                 A new shape re-slots your XI automatically — fine-tune with swaps.
               </p>
             </div>
@@ -110,7 +110,7 @@ export default function BetweenMatchBoard(props: {
           <button
             type="button"
             onClick={props.onDone}
-            className="btn-gold headline w-full cursor-pointer rounded-xl px-6 py-3 text-lg max-lg:order-3"
+            className="scarlet-gloss blade condensed w-full cursor-pointer px-6 py-3 text-lg max-lg:order-3"
           >
             {props.doneLabel ?? 'READY →'}
           </button>
@@ -118,8 +118,8 @@ export default function BetweenMatchBoard(props: {
         <main className="order-1 flex min-h-0 flex-col lg:order-2">
           {props.banner}
           <header className="mb-2 flex items-baseline justify-between">
-            <h1 className="headline text-xl text-ink-100">Adjust your side</h1>
-            <p className="text-xs font-semibold text-ink-500">
+            <h1 className="condensed text-xl font-bold text-carbon">Adjust your side</h1>
+            <p className="text-xs font-semibold text-carbon-600">
               {selected === null
                 ? 'tap a player, then another to swap'
                 : 'tap a second player to swap · tap again to cancel'}

@@ -6,6 +6,7 @@ import { applySteal } from '../engine/tournament';
 import type { Player, XiSlotV2 } from '../engine/types';
 import { flagOf } from '../game/flags';
 import { humanOf, type GameState } from '../game/state';
+import { ChromeBar, TickerBar } from './ui/kit';
 
 export default function StealScreen(props: {
   state: GameState;
@@ -38,17 +39,20 @@ export default function StealScreen(props: {
   const pool = [...state.pool].sort((a, b) => b.rating - a.rating);
 
   return (
-    <div className="bg-stadium min-h-screen text-ink-100">
-      <div className="mx-auto max-w-5xl px-6 py-8">
-        <header className="mb-6">
-          <p className="headline text-xs tracking-[0.35em] text-loss">
+    <div className="flex min-h-dvh flex-col bg-paper text-carbon">
+      <ChromeBar ribbon title="THE PIT STOP" />
+      <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-5 sm:px-6">
+        <header className="mb-5">
+          <p className="condensed text-xs tracking-[0.35em] text-scarlet">
             THE FALLEN DROPPED THEIR SQUADS
           </p>
           <div className="mt-1 flex items-baseline justify-between gap-4">
-            <h1 className="headline text-3xl text-ink-100">Steal one player — or walk away</h1>
+            <h1 className="condensed text-3xl font-bold text-carbon">
+              Steal one player — or walk away
+            </h1>
             <button
               onClick={() => props.onDone(null)}
-              className="cursor-pointer rounded-lg border border-night-600 px-5 py-2 font-bold text-ink-300 transition hover:border-gold-500 hover:text-gold-300"
+              className="silver-gloss blade condensed cursor-pointer px-5 py-2 text-carbon"
             >
               SKIP — KEEP MY XI
             </button>
@@ -58,10 +62,10 @@ export default function StealScreen(props: {
         <div className="flex flex-col gap-6 lg:flex-row">
           {/* Loot pool */}
           <div className="flex-1">
-            <h2 className="headline mb-2 text-xs tracking-[0.25em] text-ink-500">
+            <h2 className="condensed mb-2 text-xs tracking-[0.25em] text-carbon-600">
               Available loot · {pool.length} players
             </h2>
-            <div className="grid max-h-[28rem] grid-cols-2 gap-2 overflow-y-auto pr-1 md:grid-cols-3">
+            <div className="grid max-h-[28rem] grid-cols-2 gap-2 overflow-y-auto border border-hairline bg-white p-2 pr-1 md:grid-cols-3">
               {pool.map((p) => {
                 const owned = onTeam.has(p.id);
                 const isSelected = selected?.id === p.id;
@@ -73,22 +77,22 @@ export default function StealScreen(props: {
                     disabled={owned}
                     onClick={() => setSelected(p)}
                     style={{ animationDelay: `${Math.min(pool.indexOf(p), 14) * 25}ms` }}
-                    className={`card-gloss animate-flip-in cursor-pointer rounded-lg p-3 text-left text-sm transition ${
+                    className={`animate-flip-in cursor-pointer border p-2.5 text-left text-sm transition ${
                       isSelected
-                        ? '!border-gold-500'
+                        ? 'row-selected border-royal'
                         : owned
-                          ? 'cursor-not-allowed opacity-40'
-                          : 'hover:!border-night-700'
+                          ? 'cursor-not-allowed border-hairline bg-band opacity-50'
+                          : 'silver-gloss border-hairline'
                     }`}
                   >
-                    <p className="font-bold leading-tight text-ink-100">
+                    <p className={`condensed truncate font-bold leading-tight ${isSelected ? '' : 'text-carbon'}`}>
                       {flagOf(p.nation)} {p.name}
                     </p>
-                    <p className="mt-1 text-xs text-ink-500">
-                      {detailed && <span className="headline mr-1 text-[10px] text-gold-300">{detailed}</span>}
-                      {p.rating}
-                      {p.rating >= STAR_THRESHOLD && ' ⭐'}
-                      {owned && ' · on your team'}
+                    <p className="tabular mt-1 text-xs text-carbon-600">
+                      {detailed && <span className="condensed mr-1 text-[10px] font-bold">{detailed}</span>}
+                      <span className="font-bold text-royal">{p.rating}</span>
+                      {p.rating >= STAR_THRESHOLD && ' ★'}
+                      {owned && ' · OWNED'}
                     </p>
                   </button>
                 );
@@ -98,10 +102,10 @@ export default function StealScreen(props: {
 
           {/* Your XI: pick the slot to sacrifice */}
           <aside className="w-full shrink-0 lg:w-80">
-            <h2 className="headline mb-2 text-xs tracking-[0.25em] text-ink-500">
+            <h2 className="condensed mb-2 text-xs tracking-[0.25em] text-carbon-600">
               {selected ? `Where does ${selected.name} play?` : 'Your XI'}
             </h2>
-            <ul className="space-y-1.5">
+            <ul className="border border-hairline bg-white">
               {human.xi.map((slot, i) => {
                 const gain = selected ? gainAt(selected, i) : null;
                 const slotLabel = detailedReady
@@ -126,19 +130,19 @@ export default function StealScreen(props: {
                       data-testid="xi-slot"
                       disabled={!selected}
                       onClick={() => props.onDone({ slotIndex: i, player: selected! })}
-                      className={`card-gloss flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-sm transition ${
-                        selected ? 'cursor-pointer hover:!border-gold-500' : 'opacity-70'
+                      className={`row-band flex w-full items-center justify-between border-b border-hairline bg-white px-3 py-1.5 text-left text-sm transition ${
+                        selected ? 'cursor-pointer hover:bg-band' : 'opacity-70'
                       }`}
                     >
-                      <span className="truncate">
+                      <span className="truncate text-carbon">
                         {slotLabel && (
-                          <span className="headline mr-1.5 text-[10px] text-gold-300">{slotLabel}</span>
+                          <span className="condensed mr-1.5 text-[10px] font-bold text-carbon-600">{slotLabel}</span>
                         )}
                         {flagOf(slot.player.nation)} {slot.player.name}{' '}
-                        <span className="text-xs text-ink-500">{eff}</span>
+                        <span className="tabular text-xs font-bold text-royal">{eff}</span>
                         {offPos && occ && (
                           <span
-                            className="ml-1.5 rounded bg-night-700 px-1 py-0.5 text-[9px] font-bold text-orange-300"
+                            className="condensed ml-1.5 rounded-sm bg-gk/20 px-1 py-0.5 text-[9px] font-bold text-[#8a5f00]"
                             title={`Natural ${occ.player.position} (${occ.player.rating}) playing ${slotLabel} — worth ${eff} here`}
                           >
                             {occ.player.position} {occ.player.rating}
@@ -147,8 +151,8 @@ export default function StealScreen(props: {
                       </span>
                       {gain !== null && (
                         <span
-                          className={`ml-2 shrink-0 text-xs font-black ${
-                            gain > 0 ? 'text-win' : 'text-loss'
+                          className={`tabular ml-2 shrink-0 text-xs font-black ${
+                            gain > 0 ? 'text-[#2e7527]' : 'text-scarlet'
                           }`}
                         >
                           {gain > 0 ? `+${gain.toFixed(1)}` : gain.toFixed(1)}
@@ -159,12 +163,17 @@ export default function StealScreen(props: {
                 );
               })}
             </ul>
-            <p className="mt-3 text-xs text-ink-500">
+            <p className="mt-3 text-xs text-carbon-600">
               Swapping drops your current player. The other survivors are stealing too.
             </p>
           </aside>
         </div>
       </div>
+      <TickerBar>
+        {selected
+          ? 'Tap one of your slots to make the swap.'
+          : 'Tap a fallen player to see where he fits.'}
+      </TickerBar>
     </div>
   );
 }
