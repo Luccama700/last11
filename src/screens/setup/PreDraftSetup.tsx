@@ -28,7 +28,7 @@ export default function PreDraftSetup(props: {
   return (
     <div className="flex min-h-dvh flex-col bg-arena text-carbon">
       <ChromeBar ribbon title="MATCHDAY PROGRAMME" />
-      <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-5 sm:px-6">
+      <div className="animate-fade-up mx-auto w-full max-w-4xl flex-1 px-4 py-5 sm:px-6">
         <header className="text-center">
           <h1 className="condensed mt-1 text-3xl font-bold">
             <span className="sr-only">SET UP YOUR SIDE</span>

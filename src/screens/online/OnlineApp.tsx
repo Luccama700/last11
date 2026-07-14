@@ -246,7 +246,7 @@ function LobbyScreen(props: { view: OnlineView; ctl: OnlineController; onExit: (
           </Plaque>
         }
       />
-      <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:px-6">
+      <div className="animate-fade-up mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:px-6">
         <header className="text-center">
           <p className="condensed text-xs tracking-[0.35em] text-carbon-600">ROOM CODE</p>
           <p className="condensed tabular mt-1 font-mono text-6xl font-bold tracking-[0.3em] text-carbon">
@@ -435,7 +435,7 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
     // internally. Nothing on this screen scrolls the page (Lucca: everything
     // fits one page). Mobile keeps the countdown pinned above the pitch.
     <div className="h-dvh min-h-0 overflow-hidden bg-arena text-carbon">
-      <div className="mx-auto grid h-full max-w-6xl grid-rows-[auto_minmax(0,1fr)] gap-3 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:grid-cols-[minmax(0,1fr)_21rem] lg:grid-rows-none lg:gap-4 lg:py-4">
+      <div className="animate-fade-up mx-auto grid h-full max-w-6xl grid-rows-[auto_minmax(0,1fr)] gap-3 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:grid-cols-[minmax(0,1fr)_21rem] lg:grid-rows-none lg:gap-4 lg:py-4">
         <main className="flex min-h-0 flex-col">
           <header className="mb-2 flex items-baseline justify-between">
             <h1 className="condensed text-xl font-bold">

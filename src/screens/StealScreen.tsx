@@ -41,7 +41,7 @@ export default function StealScreen(props: {
   return (
     <div className="flex min-h-dvh flex-col bg-arena text-carbon">
       <ChromeBar ribbon title="THE PIT STOP" />
-      <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-5 sm:px-6">
+      <div className="animate-fade-up mx-auto w-full max-w-5xl flex-1 px-4 py-5 sm:px-6">
         <header className="mb-5">
           <p className="condensed text-xs tracking-[0.35em] text-scarlet">
             THE FALLEN DROPPED THEIR SQUADS

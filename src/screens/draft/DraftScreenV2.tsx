@@ -182,7 +182,7 @@ export default function DraftScreenV2(props: {
           beneath it, RIGHT = the slot machine (while drawing) over the box score.
           The machine lives in the RIGHT RAIL so the pitch column NEVER reflows
           mid-draft (Lucca's rule); rails scroll internally. */}
-      <div className="mx-auto grid w-full max-w-7xl flex-1 gap-4 px-4 py-4 lg:min-h-0 lg:grid-cols-[21rem_1fr_17rem]">
+      <div className="animate-fade-up mx-auto grid w-full max-w-7xl flex-1 gap-4 px-4 py-4 lg:min-h-0 lg:grid-cols-[21rem_1fr_17rem]">
         {/* Left: tactics rail + squad flow. On mobile the rail dissolves
             (`max-lg:contents`) and its blocks join the single column with
             explicit orders: pitch+SPIN(1) → squad card(2) → the draw(3) →
