@@ -53,7 +53,7 @@ export default function TacticsRail(props: {
                 title={s.hint}
                 aria-pressed={active}
                 onClick={() => props.onStyleChange(s.id)}
-                className={`condensed cursor-pointer px-1.5 py-2 text-[12px] transition max-lg:py-2.5 ${
+                className={`condensed cursor-pointer rounded-lg px-1.5 py-2 text-[12px] transition max-lg:py-2.5 ${
                   active ? 'chrome-gloss text-white' : 'silver-gloss text-carbon'
                 }`}
               >
@@ -65,11 +65,11 @@ export default function TacticsRail(props: {
       </div>
 
       <div className="flex items-center gap-2 text-[11px]">
-        <span className="silver-gloss blade condensed px-2.5 py-1 text-carbon">
+        <span className="silver-gloss condensed rounded-full px-2.5 py-1 text-carbon">
           {props.mode === 'memory' ? 'Memory' : 'Classic'}
         </span>
         {props.respinTokens !== undefined && (
-          <span className="silver-gloss blade condensed tabular px-2.5 py-1 text-carbon">
+          <span className="silver-gloss condensed tabular rounded-full px-2.5 py-1 text-carbon">
             {props.respinTokens} re-spins
           </span>
         )}

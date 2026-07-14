@@ -17,7 +17,7 @@ export function zoneStyle(position: Position): string {
 export function PositionBadge(props: { position: Position; className?: string }) {
   return (
     <span
-      className={`condensed inline-block min-w-9 rounded-sm px-1.5 py-0.5 text-center text-[11px] font-bold ${zoneStyle(
+      className={`condensed inline-block min-w-9 rounded-md px-1.5 py-0.5 text-center text-[11px] font-bold ${zoneStyle(
         props.position,
       )} ${props.className ?? ''}`}
     >

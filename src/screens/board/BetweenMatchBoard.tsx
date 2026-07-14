@@ -91,7 +91,7 @@ export default function BetweenMatchBoard(props: {
                       type="button"
                       aria-pressed={active}
                       onClick={() => !active && props.onFormationChange!(f)}
-                      className={`condensed cursor-pointer truncate px-1.5 py-1.5 text-[11px] transition max-lg:py-2.5 ${
+                      className={`condensed cursor-pointer truncate rounded-lg px-1.5 py-1.5 text-[11px] transition max-lg:py-2.5 ${
                         active ? 'chrome-gloss text-white' : 'silver-gloss text-carbon'
                       }`}
                       title={f.name}

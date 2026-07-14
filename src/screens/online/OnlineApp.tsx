@@ -32,7 +32,7 @@ import { ChromeBar, HexWatermark, Plaque, TickerBar } from '../ui/kit';
  * §6b). Entry → lobby (setup while you wait) → simultaneous slot-machine draft
  * (10s picks) → lockstep rounds at 1.5× → 20s combined pit stops → the crown.
  */
-export default function OnlineApp(props: { onExit: () => void }) {
+export default function OnlineApp(props: { onExit: () => void; quickPlay?: boolean }) {
   const [name, setName] = useState(() => localStorage.getItem('last11.mp.name') ?? '');
   const [entered, setEntered] = useState(false);
   if (!entered) {
@@ -48,12 +48,21 @@ export default function OnlineApp(props: { onExit: () => void }) {
       />
     );
   }
-  return <OnlineRoom name={name || 'Manager'} onExit={props.onExit} />;
+  return <OnlineRoom name={name || 'Manager'} onExit={props.onExit} quickPlay={props.quickPlay} />;
 }
 
-function OnlineRoom(props: { name: string; onExit: () => void }) {
+function OnlineRoom(props: { name: string; onExit: () => void; quickPlay?: boolean }) {
   const { view, ctl } = useOnlineRoom(props.name);
   useEffect(() => () => ctl.leave(), [ctl]);
+
+  // Home's QUICK PLAY blade: skip the gate and dive straight for a public lobby.
+  const dove = useRef(false);
+  useEffect(() => {
+    if (props.quickPlay && !dove.current && view.phase === 'idle') {
+      dove.current = true;
+      ctl.quickPlay();
+    }
+  }, [props.quickPlay, view.phase, ctl]);
 
   // A desync is loud, never silent — and self-healing: the controller already
   // asked the host to replay the game (a dropped broadcast is the usual cause).
@@ -289,7 +298,7 @@ function LobbyScreen(props: { view: OnlineView; ctl: OnlineController; onExit: (
                 type="button"
                 aria-pressed={f.id === view.formation.id}
                 onClick={() => ctl.setSetup(f.id, view.style)}
-                className={`condensed cursor-pointer truncate px-1.5 py-2 text-[11px] transition max-lg:py-2.5 ${
+                className={`condensed cursor-pointer truncate rounded-lg px-1.5 py-2 text-[11px] transition max-lg:py-2.5 ${
                   f.id === view.formation.id ? 'chrome-gloss text-white' : 'silver-gloss text-carbon'
                 }`}
               >
@@ -304,7 +313,7 @@ function LobbyScreen(props: { view: OnlineView; ctl: OnlineController; onExit: (
                 type="button"
                 aria-pressed={s === view.style}
                 onClick={() => ctl.setSetup(view.formation.id, s)}
-                className={`condensed cursor-pointer px-2 py-2 text-xs capitalize transition max-lg:py-2.5 ${
+                className={`condensed cursor-pointer rounded-lg px-2 py-2 text-xs capitalize transition max-lg:py-2.5 ${
                   s === view.style ? 'chrome-gloss text-white' : 'silver-gloss text-carbon'
                 }`}
               >
@@ -499,7 +508,7 @@ function OnlineDraft(props: { view: OnlineView; ctl: OnlineController }) {
                     setSelPlayer(sel ? null : p);
                     setMoveFrom(null);
                   }}
-                  className={`row-band w-full cursor-pointer border-b border-hairline px-2.5 py-1.5 text-left text-sm transition max-lg:py-2.5 ${
+                  className={`row-band w-full cursor-pointer border-b border-hairline px-2.5 py-1.5 text-left text-sm transition hover:bg-white/70 max-lg:py-2.5 ${
                     picked
                       ? 'row-selected font-bold'
                       : sel

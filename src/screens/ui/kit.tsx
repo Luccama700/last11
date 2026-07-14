@@ -145,7 +145,7 @@ export function JerseyChip(props: {
       height={size}
       className={props.className}
       aria-hidden
-      style={{ flex: 'none' }}
+      style={{ flex: 'none', filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.28))' }}
     >
       {/* body + sleeves */}
       <path

@@ -501,8 +501,14 @@ function MomentumBar(props: { pb: PlaybackState; homeYou: boolean }) {
   return (
     <div className="relative h-2.5 overflow-hidden rounded-sm border border-hairline bg-band">
       <div className="absolute inset-y-0 left-1/2 w-px bg-hairline" />
-      <div className={`absolute inset-y-0 left-1/2 ${homeColor} opacity-40`} style={{ width: `${p > 0 ? w : 0}%` }} />
-      <div className={`absolute inset-y-0 right-1/2 ${awayColor} opacity-40`} style={{ width: `${p < 0 ? w : 0}%` }} />
+      <div
+        className={`absolute inset-y-0 left-1/2 ${homeColor} opacity-40 transition-[width] duration-500 ease-out`}
+        style={{ width: `${p > 0 ? w : 0}%` }}
+      />
+      <div
+        className={`absolute inset-y-0 right-1/2 ${awayColor} opacity-40 transition-[width] duration-500 ease-out`}
+        style={{ width: `${p < 0 ? w : 0}%` }}
+      />
     </div>
   );
 }
@@ -515,7 +521,10 @@ function Ticker(props: { pb: PlaybackState }) {
         <p className="text-xs text-carbon-600">…</p>
       ) : (
         ticker.map((e, i) => (
-          <p key={i} className={`flex gap-2 text-xs ${i < ticker.length - 1 ? 'opacity-50' : ''}`}>
+          <p
+            key={`${e.minute}-${e.text}`}
+            className={`flex gap-2 text-xs ${i < ticker.length - 1 ? 'opacity-50' : 'animate-row-in'}`}
+          >
             <span className={`tabular w-8 shrink-0 font-bold ${e.type === 'goal' ? 'text-scarlet' : 'text-carbon-600'}`}>{e.minute}'</span>
             <span className={e.type === 'goal' ? 'font-bold text-scarlet' : 'text-carbon'}>{e.text}</span>
           </p>

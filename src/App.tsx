@@ -102,7 +102,7 @@ export default function App(props: { animate?: boolean }) {
   const [style, setStyle] = useState<PlayingStyle>('balanced');
   // BATTLE ROYALE ONLINE — a separate shell over the same engine + screens; solo
   // state below is untouched while online (and vice versa).
-  const [online, setOnline] = useState(false);
+  const [online, setOnline] = useState<false | 'entry' | 'quick'>(false);
   // engineV2 plumbing: bot tactics fixed at lobby creation; match counter + morale
   // threaded round-to-round via RoundResult.engineNext (refs, never in the reducer).
   const botTacticsRef = useRef<Record<string, Tactics>>({});
@@ -402,8 +402,15 @@ export default function App(props: { animate?: boolean }) {
 
   switch (state.screen) {
     case 'home':
-      if (online) return <OnlineApp onExit={() => setOnline(false)} />;
-      return <HomeScreen onStart={handleStart} onOnline={() => setOnline(true)} />;
+      if (online)
+        return <OnlineApp onExit={() => setOnline(false)} quickPlay={online === 'quick'} />;
+      return (
+        <HomeScreen
+          onStart={handleStart}
+          onOnline={() => setOnline('entry')}
+          onQuickPlay={() => setOnline('quick')}
+        />
+      );
     case 'setup':
     case 'draft':
       if (FEATURES.draftV2) {

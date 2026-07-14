@@ -95,13 +95,13 @@ export default function HomeScreen(props: {
         <NavItem onClick={() => setHallOpen(true)}>HALL OF CHAMPIONS</NavItem>
       </nav>
 
-      {/* Silver strip with notched tabs */}
-      <div className="silver-gloss relative flex h-9 items-center justify-between overflow-hidden">
-        <span className="chrome-gloss blade condensed ml-[-6px] flex h-full items-center px-5 text-xs text-white">
+      {/* Glass strip with pill chips */}
+      <div className="silver-gloss relative flex h-10 items-center justify-between gap-2 rounded-none border-x-0 px-2">
+        <span className="glass-chrome condensed flex h-6 items-center rounded-full px-4 text-[11px] text-white">
           UNITED HACKS V7
         </span>
         <span className="condensed truncate px-2 text-sm text-carbon">Welcome back, manager.</span>
-        <span className="chrome-gloss blade condensed mr-[-6px] flex h-full items-center px-5 text-xs text-white">
+        <span className="glass-chrome condensed flex h-6 items-center rounded-full px-4 text-[11px] text-white">
           LAST11.APP
         </span>
       </div>

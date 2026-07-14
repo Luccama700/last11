@@ -83,8 +83,8 @@ export default function PreDraftSetup(props: {
                   type="button"
                   onClick={() => setMode(m.id)}
                   aria-pressed={mode === m.id}
-                  className={`cursor-pointer border px-3.5 py-3 text-left transition ${
-                    mode === m.id ? 'row-selected border-royal' : 'silver-gloss border-hairline'
+                  className={`hover-lift cursor-pointer rounded-xl border px-3.5 py-3 text-left ${
+                    mode === m.id ? 'row-selected border-royal' : 'silver-gloss border-transparent'
                   }`}
                 >
                   <p className={`condensed text-sm font-bold ${mode === m.id ? 'text-royal' : 'text-carbon'}`}>
@@ -106,8 +106,8 @@ export default function PreDraftSetup(props: {
                   title={s.hint}
                   onClick={() => setStyle(s.id)}
                   aria-pressed={style === s.id}
-                  className={`cursor-pointer border px-2 py-3.5 text-center transition ${
-                    style === s.id ? 'row-selected border-royal' : 'silver-gloss border-hairline'
+                  className={`hover-lift cursor-pointer rounded-xl border px-2 py-3.5 text-center ${
+                    style === s.id ? 'row-selected border-royal' : 'silver-gloss border-transparent'
                   }`}
                 >
                   <p className={`condensed text-xs font-bold ${style === s.id ? 'text-royal' : 'text-carbon'}`}>
