@@ -1,11 +1,13 @@
 // Shared position styling for the v2 tactics board (12 detailed positions, zoned).
+// FIFA 13 re-skin: chips carry the position-line color code (GK amber · DEF green ·
+// MID blue · ATT red) on the paper world — text variants darkened for AA contrast.
 import { POSITION_ZONE, type Position, type Zone } from '../../engine/data/schema';
 
 const ZONE_STYLES: Record<Zone, string> = {
-  GK: 'bg-amber-500/20 text-amber-300 ring-amber-400/40',
-  DEF: 'bg-sky-500/20 text-sky-300 ring-sky-400/40',
-  MID: 'bg-emerald-500/20 text-emerald-300 ring-emerald-400/40',
-  ATT: 'bg-rose-500/20 text-rose-300 ring-rose-400/40',
+  GK: 'bg-gk/15 text-[#8a5f00]',
+  DEF: 'bg-def/15 text-[#2e7527]',
+  MID: 'bg-mid/15 text-[#24549e]',
+  ATT: 'bg-att/15 text-[#a91824]',
 };
 
 export function zoneStyle(position: Position): string {
@@ -15,7 +17,7 @@ export function zoneStyle(position: Position): string {
 export function PositionBadge(props: { position: Position; className?: string }) {
   return (
     <span
-      className={`inline-block min-w-9 rounded px-1.5 py-0.5 text-center text-[11px] font-bold tracking-wide ${zoneStyle(
+      className={`condensed inline-block min-w-9 rounded-sm px-1.5 py-0.5 text-center text-[11px] font-bold ${zoneStyle(
         props.position,
       )} ${props.className ?? ''}`}
     >

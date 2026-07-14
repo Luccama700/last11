@@ -1,13 +1,13 @@
 import { flagOf } from '../../game/flags';
 import type { RankedOption } from '../../engine/draft';
 import type { DraftMode, RolledTeam } from '../../engine/types';
-import { PositionBadge } from '../board/position-ui';
+import { RosterRow } from '../ui/kit';
 
 /**
- * The revealed rolled (nation, year) squad — lives in the LEFT rail of the draft
- * board. Options arrive pre-ranked by the points they add to the squad right now
- * (sortByBoost); the top option wears the gold "best boost" trim. Ratings and
- * boosts hide in Memory mode.
+ * The revealed rolled (nation, year) squad — the FIFA transfer-search list.
+ * Options arrive pre-ranked by the points they add to the squad right now
+ * (sortByBoost); the top option wears the gold "best boost" trim, the +points
+ * column is the royal-blue value. Ratings and boosts hide in Memory mode.
  */
 export default function SquadCard(props: {
   roll: RolledTeam;
@@ -20,12 +20,15 @@ export default function SquadCard(props: {
 }) {
   const memory = props.mode === 'memory';
   return (
-    <div className="animate-pop">
-      <div className="card-gloss mb-2.5 flex items-center justify-between rounded-xl px-3.5 py-2.5">
-        <p className="flex items-center gap-2 font-bold text-ink-100">
+    <div className="animate-pop border border-hairline bg-white">
+      {/* header plaque: flag + squad + year ribbon (+ re-spin) */}
+      <div className="silver-gloss flex items-center justify-between px-3 py-2">
+        <p className="flex min-w-0 items-center gap-2">
           <span className="text-xl">{flagOf(props.roll.nation)}</span>
-          <span className="leading-tight">{props.squadName}</span>
-          <span className="headline rounded bg-gold-400/15 px-1.5 py-0.5 text-xs text-gold-300">
+          <span className="condensed truncate text-[15px] font-bold text-carbon">
+            {props.squadName}
+          </span>
+          <span className="scarlet-gloss blade condensed tabular px-2 py-0.5 text-xs">
             {props.roll.year}
           </span>
         </p>
@@ -33,57 +36,62 @@ export default function SquadCard(props: {
           <button
             type="button"
             onClick={props.onRespin}
-            className="cursor-pointer rounded-lg border border-night-600 px-2.5 py-1.5 text-xs font-bold text-ink-300 transition hover:border-gold-500 hover:text-gold-300"
+            className="condensed tabular silver-gloss blade cursor-pointer px-2.5 py-1 text-xs text-royal"
           >
             re-spin ({props.respinTokens})
           </button>
         )}
       </div>
+      {/* sort header, transfer-search style */}
+      <div className="flex items-center justify-between bg-chrome-700 px-3 py-1">
+        <span className="condensed text-[10px] tracking-wider text-white/85">
+          Player details <span className="text-scarlet">▼ best boost</span>
+        </span>
+        {!memory && (
+          <span className="condensed text-[10px] tracking-wider text-white/85">+Points</span>
+        )}
+      </div>
 
-      {/* keyed by roll so every fresh squad replays the staggered flip-in */}
-      <div key={`${props.roll.nation}-${props.roll.year}`} className="grid grid-cols-2 gap-2">
+      {/* keyed by roll so every fresh squad replays the staggered row entrance */}
+      <div
+        key={`${props.roll.nation}-${props.roll.year}`}
+        className="scrollbar-hide max-h-[38dvh] overflow-y-auto lg:max-h-none"
+      >
         {props.options.map((o, rank) => {
           const p = o.player;
           const fit = o.bestSlot;
           const offPosition = fit ? !fit.natural : false;
           const best = rank === 0 && fit !== null;
           return (
-            <button
+            <div
               key={p.id}
-              type="button"
-              data-testid="squad-player"
-              onClick={() => props.onPick(p)}
-              style={{ animationDelay: `${Math.min(rank, 11) * 35}ms` }}
-              className={`card-gloss animate-flip-in group cursor-pointer rounded-xl p-2.5 text-left transition hover:-translate-y-0.5 ${
-                best ? '!border-gold-500/70' : 'hover:!border-night-700'
-              }`}
+              className="animate-row-in"
+              style={{ animationDelay: `${Math.min(rank, 11) * 30}ms` }}
             >
-              <div className="flex items-center justify-between">
-                <PositionBadge position={p.position} />
-                {!memory && (
-                  <span className="headline text-lg text-ink-100">{p.rating}</span>
-                )}
-              </div>
-              <p className="mt-1 truncate text-sm font-bold leading-tight text-ink-100 group-hover:text-gold-300">
-                {p.name}
-              </p>
-              <p className="mt-0.5 flex items-center justify-between text-[11px]">
-                {fit ? (
-                  offPosition ? (
-                    <span className="text-orange-400">→ {fit.position}</span>
+              <RosterRow
+                testid="squad-player"
+                pos={p.position}
+                number={memory ? undefined : p.rating}
+                name={p.name}
+                stats={[
+                  <span key="pos">{p.position}</span>,
+                  ...(memory ? [] : [<span key="ovr">OVR {p.rating}</span>]),
+                  fit ? (
+                    offPosition ? (
+                      <span key="fit" className="text-[#a05a00]">→ {fit.position}</span>
+                    ) : (
+                      <span key="fit" className="text-[#2e7527]">→ {fit.position} natural</span>
+                    )
                   ) : (
-                    <span className="text-win">→ {fit.position} natural</span>
-                  )
-                ) : (
-                  <span className="text-ink-500">no open slot</span>
-                )}
-                {!memory && fit && (
-                  <span className={`font-black ${best ? 'text-gold-300' : 'text-ink-500'}`}>
-                    +{o.boost.toFixed(1)}
-                  </span>
-                )}
-              </p>
-            </button>
+                    <span key="fit">no open slot</span>
+                  ),
+                ]}
+                value={!memory && fit ? `+${o.boost.toFixed(1)}` : undefined}
+                gold={best}
+                dimmed={fit === null}
+                onClick={() => props.onPick(p)}
+              />
+            </div>
           );
         })}
       </div>

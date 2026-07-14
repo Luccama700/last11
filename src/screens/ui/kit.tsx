@@ -184,7 +184,7 @@ export function JerseyChip(props: {
 export function NamePlate(props: {
   name: string;
   pos: string;
-  rating: number | string;
+  rating?: number | string; // omit to hide (Memory mode)
   fit?: number; // 0..1, default 1
   offPos?: boolean;
   className?: string;
@@ -196,7 +196,9 @@ export function NamePlate(props: {
     >
       <div className="flex items-baseline justify-between gap-1 leading-none">
         <span className="condensed text-[9px] text-white/75">{props.pos}</span>
-        <span className="tabular condensed text-[11px]">{props.rating}</span>
+        {props.rating !== undefined && (
+          <span className="tabular condensed text-[11px]">{props.rating}</span>
+        )}
       </div>
       <div className="condensed truncate text-center text-[11px] leading-tight">{props.name}</div>
       <div className="mt-0.5 h-[3px] w-full rounded-sm bg-black/50">
@@ -226,10 +228,12 @@ export function RosterRow(props: {
   gold?: boolean; // best-pick trim
   onClick?: () => void;
   className?: string;
+  testid?: string;
 }) {
   const Tag = props.onClick ? 'button' : 'div';
   return (
     <Tag
+      data-testid={props.testid}
       onClick={props.onClick}
       className={[
         'flex w-full items-center gap-2 border-b border-hairline px-2 py-1.5 text-left',

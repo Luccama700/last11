@@ -20,6 +20,7 @@ import TacticsRail from '../board/TacticsRail';
 import BoxScorePanel from '../board/BoxScorePanel';
 import SquadCard from './SquadCard';
 import SpinReveal from './SpinReveal';
+import { ChromeBar, HexWatermark, Plaque, TickerBar } from '../ui/kit';
 
 function strengthOf(slate: readonly (XiSlotV2 | null)[], aff: AffinityFn): number {
   let total = 0;
@@ -141,14 +142,47 @@ export default function DraftScreenV2(props: {
     return filledSlotSet; // any placed player is tappable to start a move
   }, [pending, moveFrom, openSlotSet, filledSlotSet]);
 
+  const tickerText = pending ? (
+    <button
+      type="button"
+      onClick={() => setPending(null)}
+      className="condensed cursor-pointer text-sm text-white hover:underline"
+    >
+      placing {pending.player.name} — tap a slot · cancel
+    </button>
+  ) : moveFrom !== null ? (
+    <button
+      type="button"
+      onClick={() => setMoveFrom(null)}
+      className="condensed cursor-pointer text-sm text-white hover:underline"
+    >
+      moving {humanSlate[moveFrom]?.player.name} — tap an open slot · cancel
+    </button>
+  ) : draftDone ? (
+    'Your XI is complete — enter the arena.'
+  ) : props.spunRoll !== null && revealed ? (
+    'Pick from the squad list — best boosts first.'
+  ) : (
+    'Spin the draw, then place your pick on the board.'
+  );
+
   return (
-    <div className="bg-stadium min-h-screen text-ink-100">
+    <div className="flex min-h-dvh flex-col bg-paper text-carbon">
+      <ChromeBar
+        ribbon
+        title="THE DRAFT"
+        right={
+          <Plaque>
+            PICK {Math.min(filled + 1, slotCount)}/{slotCount}
+          </Plaque>
+        }
+      />
       {/* One-viewport desktop layout (Lucca's Image-#4 direction): LEFT rail =
-          tactics + the rolled squad card, CENTER = pitch with the big gold SPIN
+          tactics + the rolled squad card, CENTER = pitch with the big SPIN
           beneath it, RIGHT = the slot machine (while drawing) over the box score.
           The machine lives in the RIGHT RAIL so the pitch column NEVER reflows
           mid-draft (Lucca's rule); rails scroll internally. */}
-      <div className="mx-auto grid max-w-7xl gap-5 px-4 py-4 lg:h-screen lg:grid-cols-[21rem_1fr_17rem]">
+      <div className="mx-auto grid w-full max-w-7xl flex-1 gap-4 px-4 py-4 lg:min-h-0 lg:grid-cols-[21rem_1fr_17rem]">
         {/* Left: tactics rail + squad flow. On mobile the rail dissolves
             (`max-lg:contents`) and its blocks join the single column with
             explicit orders: pitch+SPIN(1) → squad card(2) → the draw(3) →
@@ -182,10 +216,13 @@ export default function DraftScreenV2(props: {
                   onRespin={props.respinTokens > 0 ? props.onRespin : undefined}
                 />
               ) : (
-                <div className="card-gloss flex min-h-[9rem] items-center justify-center rounded-2xl p-4 text-center text-xs leading-relaxed text-ink-500">
-                  {props.spunRoll !== null
-                    ? 'Drawing…'
-                    : 'Spin to draw a national team and a World Cup — the squad lands here.'}
+                <div className="relative flex min-h-[9rem] items-center justify-center border border-hairline bg-white p-4 text-center text-xs leading-relaxed text-carbon-600">
+                  <HexWatermark />
+                  <span className="relative">
+                    {props.spunRoll !== null
+                      ? 'Drawing…'
+                      : 'Spin to draw a national team and a World Cup — the squad lands here.'}
+                  </span>
                 </div>
               )}
             </div>
@@ -194,31 +231,6 @@ export default function DraftScreenV2(props: {
 
         {/* Center: pitch + spin flow */}
         <main className="order-1 lg:order-2 lg:flex lg:min-h-0 lg:flex-col">
-          <header className="mb-3 flex shrink-0 items-baseline justify-between">
-            <h1 className="headline text-xl">
-              <span className="text-ink-100">Last</span>
-              <span className="headline-gold">11</span>
-              <span className="ml-3 text-xs tracking-[0.3em] text-ink-500">THE DRAFT</span>
-            </h1>
-            {pending ? (
-              <button
-                type="button"
-                onClick={() => setPending(null)}
-                className="cursor-pointer text-xs font-semibold text-gold-300 hover:text-gold-400"
-              >
-                placing {pending.player.name} — tap a slot · cancel
-              </button>
-            ) : moveFrom !== null ? (
-              <button
-                type="button"
-                onClick={() => setMoveFrom(null)}
-                className="cursor-pointer text-xs font-semibold text-gold-300 hover:text-gold-400"
-              >
-                moving {humanSlate[moveFrom]?.player.name} — tap an open slot · cancel
-              </button>
-            ) : null}
-          </header>
-
           <div className="lg:flex lg:min-h-0 lg:flex-1 lg:justify-center">
             {/* mobile: cap the pitch (48dvh) so SPIN + the squad card stay near
                 the fold; lg: the pitch keeps sizing itself from the viewport */}
@@ -237,12 +249,12 @@ export default function DraftScreenV2(props: {
 
           <div className="mt-3 shrink-0">
             {draftDone ? (
-              <div className="card-gloss animate-gold-pulse flex flex-col items-center gap-3 rounded-2xl !border-gold-500/60 p-5 text-center">
-                <p className="headline text-2xl text-ink-100">Your XI is locked in 🔒</p>
+              <div className="silver-gloss flex flex-col items-center gap-3 p-4 text-center">
+                <p className="condensed text-2xl text-carbon">Your XI is locked in</p>
                 <button
                   type="button"
                   onClick={props.onEnterBattle}
-                  className="btn-gold headline cursor-pointer rounded-xl px-10 py-3.5 text-lg"
+                  className="scarlet-gloss blade condensed cursor-pointer px-10 py-3.5 text-lg"
                 >
                   ENTER THE ARENA →
                 </button>
@@ -256,18 +268,18 @@ export default function DraftScreenV2(props: {
                   onClick={props.onSpin}
                   disabled={props.spunRoll !== null}
                   data-tour="spin-button"
-                  className={`headline rounded-full px-16 py-4 text-2xl transition ${
+                  className={`condensed blade px-16 py-4 text-2xl transition ${
                     props.spunRoll === null
-                      ? 'btn-gold cursor-pointer'
-                      : 'cursor-default border border-night-600 bg-night-800 text-ink-500 opacity-60'
+                      ? 'scarlet-gloss cursor-pointer'
+                      : 'silver-gloss cursor-default opacity-50'
                   }`}
                 >
-                  SPIN 🎡
+                  SPIN
                 </button>
                 {props.spunRoll !== null && revealed && (
-                  <p className="max-w-[14rem] text-xs text-ink-500">
-                    Pick from the <span className="font-bold text-gold-300">squad card</span> —
-                    best boosts first{props.respinTokens > 0 ? ' · or re-spin' : ''}.
+                  <p className="max-w-[14rem] text-xs text-carbon-600">
+                    Pick from the <span className="font-bold text-royal">squad list</span> — best
+                    boosts first{props.respinTokens > 0 ? ' · or re-spin' : ''}.
                   </p>
                 )}
               </div>
@@ -290,9 +302,9 @@ export default function DraftScreenV2(props: {
                 active={props.spunRoll !== null && !revealed}
               />
             ) : (
-              <div className="card-gloss flex min-h-[12rem] flex-col items-center justify-center gap-2 rounded-2xl !border-gold-600/40 p-3.5">
-                <p className="headline text-[10px] tracking-[0.4em] text-gold-400">THE DRAW</p>
-                <p className="text-center text-xs text-ink-500">Hit SPIN to fire the reels.</p>
+              <div className="chrome-gloss flex min-h-[12rem] flex-col items-center justify-center gap-2 border border-chrome-600 p-3.5">
+                <p className="condensed text-[10px] tracking-[0.4em] text-white/85">THE DRAW</p>
+                <p className="text-center text-xs text-white/60">Hit SPIN to fire the reels.</p>
               </div>
             )}
           </div>
@@ -301,6 +313,7 @@ export default function DraftScreenV2(props: {
           </div>
         </aside>
       </div>
+      <TickerBar>{tickerText}</TickerBar>
     </div>
   );
 }

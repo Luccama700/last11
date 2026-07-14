@@ -2,7 +2,7 @@ import { flagOf } from '../../game/flags';
 import type { DraftMode } from '../../engine/types';
 import type { Formation, XiSlotV2 } from '../../engine/types';
 import { layoutFormation } from './board-layout';
-import { zoneStyle } from './position-ui';
+import { JerseyChip, NamePlate } from '../ui/kit';
 
 interface BoardSlotProps {
   x: number;
@@ -19,16 +19,16 @@ interface BoardSlotProps {
 function BoardSlot(props: BoardSlotProps) {
   const { slot, glow, selected, compact } = props;
   const clickable = !!props.onClick;
-  const size = compact ? 'h-7 w-7 text-[9px]' : 'h-14 w-14 text-xs';
-  const base =
-    'flex flex-col items-center justify-center rounded-full border-2 transition';
-  const look = slot
-    ? `${zoneStyle(props.position as never)} border-transparent ring-1`
-    : 'border-dashed border-slate-600 bg-slate-900/60 text-slate-500';
+  // FIFA lineup treatment: glossy jersey colored by the slot's line, rating on
+  // the chest (hidden in Memory), dark name plate with the fit bar beneath.
+  const natural =
+    slot !== null &&
+    (slot.player.position === slot.position ||
+      (slot.player.secondary ?? []).includes(slot.position));
   const accent = glow
-    ? ' ring-2 ring-emerald-400 border-emerald-400 animate-pulse'
+    ? 'rounded-md ring-2 ring-white animate-pulse bg-white/10'
     : selected
-      ? ' ring-2 ring-amber-400 border-amber-400'
+      ? 'rounded-md ring-2 ring-gold-400 bg-black/10'
       : '';
   return (
     <button
@@ -39,36 +39,63 @@ function BoardSlot(props: BoardSlotProps) {
       className={`absolute -translate-x-1/2 -translate-y-1/2 ${clickable ? 'cursor-pointer' : 'cursor-default'}`}
       data-slot-position={props.position}
     >
-      {/* key = player id: a NEW occupant remounts the circle, replaying the
-          drop-pop + gold ring ripple (juice pass). */}
+      {/* key = player id: a NEW occupant remounts, replaying the drop-pop. */}
       <span
         key={slot?.player.id ?? 'empty'}
-        className={`${base} ${size} ${look}${accent}${slot ? ' animate-slot-drop animate-ring-ripple' : ''}`}
+        className={`flex flex-col items-center ${accent}${slot ? ' animate-slot-drop' : ''}`}
       >
         {slot ? (
           <>
-            <span className="text-base leading-none">{flagOf(slot.player.nation)}</span>
-            {!compact && props.mode !== 'memory' && (
-              <span className="font-black leading-none">{slot.player.rating}</span>
+            <JerseyChip
+              pos={slot.position}
+              number={!compact && props.mode !== 'memory' ? slot.player.rating : undefined}
+              size={compact ? 22 : 40}
+            />
+            {!compact && (
+              <NamePlate
+                className="mt-[-4px] w-[5.2rem]"
+                name={`${flagOf(slot.player.nation)} ${slot.player.name}`}
+                pos={slot.position}
+                rating={props.mode !== 'memory' ? slot.player.rating : undefined}
+                offPos={!natural}
+              />
             )}
           </>
         ) : (
-          <span className="font-bold">{props.position}</span>
+          <>
+            <GhostJersey size={compact ? 22 : 40} />
+            {!compact && (
+              <span className="condensed mt-0.5 rounded-sm bg-black/35 px-1.5 text-[10px] text-white">
+                {props.position}
+              </span>
+            )}
+          </>
         )}
       </span>
-      {!compact && slot && (
-        <span className="mt-0.5 block max-w-[5.5rem] truncate text-center text-[10px] font-semibold text-slate-200">
-          {slot.player.name}
-        </span>
-      )}
     </button>
   );
 }
 
+/** Empty slot: ghosted white jersey outline (the FIFA empty-lineup look). */
+function GhostJersey(props: { size: number }) {
+  return (
+    <svg viewBox="0 0 40 40" width={props.size} height={props.size} aria-hidden>
+      <path
+        d="M13 4 L20 7 L27 4 L36 9 L32 17 L28 14 L28 36 L12 36 L12 14 L8 17 L4 9 Z"
+        fill="rgba(255,255,255,0.14)"
+        stroke="rgba(255,255,255,0.65)"
+        strokeWidth="1.6"
+        strokeDasharray="3 2.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /**
- * The tactics-board pitch: dashed circles laid out per formation, filled slots
- * showing flag + rating + name. `glowSlots` highlights compatible open targets
- * during place-mode; `selectedSlot` marks a between-match selection.
+ * The tactics-board pitch: FIFA-green turf with mow stripes, jersey chips per
+ * slot, dark name plates. `glowSlots` highlights compatible open targets during
+ * place-mode; `selectedSlot` marks a between-match selection.
  */
 export default function PitchBoard(props: {
   formation: Formation;
@@ -86,19 +113,18 @@ export default function PitchBoard(props: {
   const compact = props.compact ?? false;
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border border-emerald-900/40 ${compact ? 'aspect-[3/4] w-full' : 'aspect-[3/4] w-full lg:h-full lg:w-auto lg:max-w-full'}`}
-      style={{
-        background:
-          'linear-gradient(0deg, #0b3d1f 0%, #0d4a26 50%, #0b3d1f 100%)',
-      }}
+      className={`turf-grass relative overflow-hidden rounded-sm ${compact ? 'aspect-[3/4] w-full' : 'aspect-[3/4] w-full lg:h-full lg:w-auto lg:max-w-full'}`}
       data-tour="tactics-pitch"
     >
       {/* pitch markings */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-0 right-0 top-1/2 h-px bg-white/15" />
-        <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/15" />
-        <div className="absolute left-1/2 top-0 h-14 w-28 -translate-x-1/2 border border-t-0 border-white/15" />
-        <div className="absolute bottom-0 left-1/2 h-14 w-28 -translate-x-1/2 border border-b-0 border-white/15" />
+        <div className="absolute inset-2 border border-white/45" />
+        <div className="absolute left-2 right-2 top-1/2 h-px bg-white/45" />
+        <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/45" />
+        <div className="absolute left-1/2 top-2 h-14 w-28 -translate-x-1/2 border border-t-0 border-white/45" />
+        <div className="absolute bottom-2 left-1/2 h-14 w-28 -translate-x-1/2 border border-b-0 border-white/45" />
+        <div className="absolute left-1/2 top-2 h-6 w-14 -translate-x-1/2 border border-t-0 border-white/45" />
+        <div className="absolute bottom-2 left-1/2 h-6 w-14 -translate-x-1/2 border border-b-0 border-white/45" />
       </div>
       {coords.map((c) => {
         const slot = props.slate[c.slotIndex] ?? null;

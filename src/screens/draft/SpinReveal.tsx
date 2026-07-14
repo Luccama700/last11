@@ -83,12 +83,8 @@ export default function SpinReveal(props: {
   return (
     // Rail-sized machine: fills the right rail (~17rem) without ever touching the
     // pitch column's layout. Compact reels, same drama.
-    <div
-      className={`card-gloss relative flex w-full flex-col items-center gap-2.5 rounded-2xl !border-gold-600/60 p-3.5 ${
-        bothLocked ? 'animate-gold-pulse' : ''
-      }`}
-    >
-      <p className="headline text-[10px] tracking-[0.4em] text-gold-400">THE DRAW</p>
+    <div className="chrome-gloss relative flex w-full flex-col items-center gap-2.5 border border-chrome-600 p-3.5">
+      <p className="condensed text-[10px] tracking-[0.4em] text-white/85">THE DRAW</p>
 
       <div className="flex items-stretch gap-2">
         <LampRail locked={bothLocked} />
@@ -96,7 +92,7 @@ export default function SpinReveal(props: {
           items={nationSeq.items.map((code) => (
             <span className="flex items-center gap-1.5">
               <span className="text-2xl">{flagOf(code)}</span>
-              <span className="headline text-base text-ink-100">{code}</span>
+              <span className="condensed text-base text-white">{code}</span>
             </span>
           ))}
           targetIndex={nationSeq.targetIndex}
@@ -106,7 +102,7 @@ export default function SpinReveal(props: {
         />
         <Reel
           items={yearSeq.items.map((y) => (
-            <span className="headline text-xl tabular-nums text-ink-100">{y}</span>
+            <span className="condensed tabular text-xl text-white">{y}</span>
           ))}
           targetIndex={yearSeq.targetIndex}
           landMs={active ? YEAR_LAND_MS : 0}
@@ -116,12 +112,12 @@ export default function SpinReveal(props: {
       </div>
 
       {bothLocked ? (
-        <p className="animate-kick-pop headline text-lg text-ink-100">
+        <p className="animate-kick-pop condensed flex items-center gap-1.5 text-lg text-white">
           {flagOf(props.target.nation)} {props.target.nation}{' '}
-          <span className="headline-gold">{props.target.year}</span>
+          <span className="scarlet-gloss blade tabular px-2 text-base">{props.target.year}</span>
         </p>
       ) : (
-        <p className="animate-pulse text-xs font-bold tracking-widest text-ink-500">
+        <p className="condensed animate-pulse text-xs tracking-widest text-white/60">
           {nationLocked ? 'WHICH YEAR…' : 'SPINNING…'}
         </p>
       )}
@@ -164,8 +160,8 @@ function Reel(props: {
   return (
     <div
       ref={frameRef}
-      className={`relative overflow-hidden rounded-xl border bg-night-950 ${
-        props.locked ? 'border-gold-400 animate-slot-shake' : 'border-night-600'
+      className={`relative overflow-hidden rounded-sm border bg-chrome-950 ${
+        props.locked ? 'border-silver-100 animate-slot-shake' : 'border-chrome-600'
       } ${props.wide ? 'w-[6.6rem]' : 'w-[4.4rem]'}`}
       style={{ height: ROW_H * 3 }}
     >
@@ -186,17 +182,17 @@ function Reel(props: {
 
       {/* window shading + payline */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-night-950 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-night-950 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-chrome-950 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-chrome-950 to-transparent" />
         <div
-          className={`absolute inset-x-1 top-1/2 -translate-y-1/2 rounded-lg border ${
-            props.locked ? 'border-gold-400/90' : 'border-gold-600/30'
+          className={`absolute inset-x-1 top-1/2 -translate-y-1/2 rounded-sm border ${
+            props.locked ? 'border-scarlet' : 'border-white/20'
           }`}
           style={{ height: ROW_H - 6 }}
         />
         {props.locked && (
           <div
-            className="payline-flash absolute inset-x-1 top-1/2 -translate-y-1/2 rounded-lg bg-gold-300/25"
+            className="payline-flash absolute inset-x-1 top-1/2 -translate-y-1/2 rounded-sm bg-white/25"
             style={{ height: ROW_H - 6 }}
           />
         )}
@@ -211,7 +207,7 @@ function LampRail(props: { locked: boolean }) {
       {Array.from({ length: 5 }, (_, i) => (
         <span
           key={i}
-          className={`h-1.5 w-1.5 rounded-full bg-gold-400 ${props.locked ? 'lamp-locked' : 'lamp'}`}
+          className={`h-1.5 w-1.5 rounded-full ${props.locked ? 'lamp-locked bg-scarlet' : 'lamp bg-white/80'}`}
           style={{ animationDelay: `${i * 90}ms` }}
         />
       ))}
