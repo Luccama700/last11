@@ -21,6 +21,7 @@ import {
   MP_SURVIVORS_PER_ROUND,
   seatId,
 } from '../../engine/mp';
+import { squadByRef } from '../../engine/data/loader';
 
 /** In-memory bus: ordered, self-receiving, synchronous — a strict-FIFO stand-in
  *  for one Supabase broadcast channel with `self: true`. */
@@ -179,6 +180,48 @@ describe('online controller — loopback end-to-end', () => {
     // at every message boundary (wave-2 desync guard)
     expect(guest.getView().desynced).toBe(false);
     expect(host.getView().desynced).toBe(false);
+  });
+
+  it('humans draft FIRST (mp-7): the pool is untouched at spin 0 and bots pick per spin, after the humans', () => {
+    const { host, guest } = makePair();
+    host.create(SEED + 9);
+    guest.join(host.getView().code);
+    vi.advanceTimersByTime(250);
+    host.fillWithBots();
+    vi.advanceTimersByTime(250);
+
+    // gameStart: EVERY seat — bots included — starts with an OPEN slate. (The
+    // old pre-draft consumed ~200 of the best players before the first spin.)
+    for (const slate of slateIds(host)) {
+      expect(slate.every((id) => id === null)).toBe(true);
+    }
+
+    // spin 0: the guest's options are the FULL rolled squad — its best player
+    // is guaranteed to still be there, which is the whole point of the ruling.
+    const gv = guest.getView();
+    expect(gv.myRoll).not.toBeNull();
+    const squad = squadByRef(gv.myRoll!.nation, gv.myRoll!.year);
+    expect(gv.myOptions).toHaveLength(squad.players.length);
+    const top = [...squad.players].sort((a, b) => b.rating - a.rating)[0];
+    const mine = gv.myOptions.find((p) => p.rating >= top.rating)!;
+    expect(mine).toBeDefined();
+    guest.pick(mine.id, gv.mySlate.findIndex((s) => s === null));
+    vi.advanceTimersByTime(MP_REEL_MS + MP_PICK_MS + 400);
+
+    // the guest actually GOT the star, and every bot holds exactly ONE player
+    const after = guest.getView();
+    const mySlate = after.seats.find((s) => s.id === after.mySeatId)!.slate as ({
+      player: { id: string };
+    } | null)[];
+    expect(mySlate.some((x) => x?.player.id === mine.id)).toBe(true);
+    for (const seat of after.seats.filter((s) => !s.isHuman)) {
+      const filled = (seat.slate as ({ player: { id: string } } | null)[]).filter(
+        (x) => x !== null,
+      );
+      expect(filled).toHaveLength(1);
+    }
+    expect(slateIds(host)).toEqual(slateIds(guest));
+    expect(guest.getView().desynced).toBe(false);
   });
 
   it('GLOBAL uniqueness after the draft: no player exists twice across ALL 20 teams', () => {

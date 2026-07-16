@@ -25,9 +25,10 @@ import {
   MP_START_LEAD_MS,
   assignSquadsForSpin,
   autoPickForSlate,
+  botSpinPick,
   buildMpMatchday,
   defaultSeatTactics,
-  draftBotSeats,
+  makeBotSeats,
   makeRoomCode,
   mpDraftOptions,
   nextMorale,
@@ -609,7 +610,7 @@ export class OnlineController {
     }
     this.send({ t: 'gameStart', seats, setups: this.setups });
     // spin 0 is triggered from the APPLIED gameStart (one ordered stream) — firing
-    // it here would race the host's own self-broadcast (bots not yet drafted).
+    // it here would race the host's own self-broadcast (seats not yet built).
   }
 
   private hostSpinStart(spinIndex: number): void {
@@ -939,11 +940,12 @@ export class OnlineController {
       }
       case 'gameStart': {
         this.squadOrder = shuffledSquadOrder(this.roomSeed);
-        // GLOBAL uniqueness (Lucca's final ruling): bots consume the shared
-        // pool, so every player exists on at most ONE of the 20 teams.
+        // GLOBAL uniqueness (Lucca's final ruling) still holds — but the pool
+        // starts UNTOUCHED (mp-7): bots no longer pre-draft here; they take one
+        // pick per spin, applied AFTER the humans' picks at each spinResult.
         this.draftedIds = new Set();
         const botSeatNos = m.seats.filter((s) => s.clientId === null).map((s) => s.seat);
-        const bots = draftBotSeats(this.roomSeed, botSeatNos, this.draftedIds);
+        const bots = makeBotSeats(this.roomSeed, botSeatNos);
         const botBySeat = new Map(bots.map((b) => [b.seat, b]));
         const seats: MpSeat[] = m.seats.map((sa) => {
           if (sa.clientId === null) return botBySeat.get(sa.seat)!;
@@ -1026,6 +1028,28 @@ export class OnlineController {
             }
           }
           seat.slate = slate as XiSlotV2[];
+        }
+        // Bots draft LAST (mp-7, Lucca's ruling): one pick each, in seat order,
+        // only after every human pick of the spin is in the drafted set —
+        // humans get pool priority. Derived identically on every mirror from
+        // the spin's assignments, never sent over the wire.
+        for (const seat of seats) {
+          if (seat.isHuman) continue;
+          const pick = botSpinPick(
+            seat.slate as (XiSlotV2 | null)[],
+            seat.formation,
+            this.assignments[seat.seat] ?? null,
+            this.squadOrder,
+            m.spinIndex * MP_LOBBY_SIZE + seat.seat,
+            this.draftedIds,
+          );
+          if (pick) {
+            (seat.slate as (XiSlotV2 | null)[])[pick.slotIndex] = {
+              position: seat.formation.slots[pick.slotIndex],
+              player: pick.player,
+            };
+            this.draftedIds.add(pick.player.id);
+          }
         }
         const mine = seats.find((s) => s.id === this.view.mySeatId);
         this.emit({

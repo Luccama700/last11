@@ -65,8 +65,11 @@ export const MP_SLOT_GAP_MS = 1_500;
  *  mp-4: solo-parity squads — bots stop draining the human draft pool.
  *  mp-5: squad quality pass — new star snapshots + rating calibration.
  *  mp-6: GLOBAL uniqueness across ALL seats (mp-4 reversed by Lucca's final
- *        ruling) + pit-fold slate validation + same-person steal guard. */
-export const MP_ENGINE_VERSION = 'last11-mp-6';
+ *        ruling) + pit-fold slate validation + same-person steal guard.
+ *  mp-7: humans draft FIRST (Lucca, 2026-07-16) — bots no longer pre-draft
+ *        full squads at game start; they take one pick per spin, applied
+ *        AFTER the spin's human picks. Uniqueness itself is unchanged. */
+export const MP_ENGINE_VERSION = 'last11-mp-7';
 
 // ── Room codes ────────────────────────────────────────────────────────────────
 
@@ -167,39 +170,22 @@ export interface MpSeat {
 export const seatId = (seat: number): string => `seat-${seat}`;
 
 /**
- * Deterministic bot squads for every unfilled seat, drafted SEQUENTIALLY in seat
- * order under GLOBAL uniqueness (Lucca's final ruling, 2026-07-12: every player
- * in the simulation is unique across ALL seats — bots consume the shared pool,
- * so no player can ever appear on two teams). The mp-5 squad expansion (1038
- * players) keeps rolled squads playable despite the drain.
- * Pure from (roomSeed, botSeatNumbers) — no bot state ever crosses the wire.
+ * Deterministic bot IDENTITIES for every unfilled seat: name, formation, style —
+ * with an OPEN slate. Bots do NOT pre-draft here (Lucca's ruling, 2026-07-16,
+ * engine mp-7): the old game-start pre-draft consumed every rolled squad's best
+ * players before the first human spin. Instead bots draft one pick per spin via
+ * `botSpinPick`, applied AFTER that spin's human picks — GLOBAL uniqueness
+ * (Lucca's final ruling, 2026-07-12: every player unique across ALL seats) is
+ * unchanged; only the order of consumption moved. Pure from
+ * (roomSeed, botSeatNumbers) — no bot state ever crosses the wire.
  */
-export function draftBotSeats(
-  roomSeed: number,
-  botSeats: readonly number[],
-  draftedIds: Set<string>, // MUTATED: bot picks accumulate into the room's drafted set
-): MpSeat[] {
+export function makeBotSeats(roomSeed: number, botSeats: readonly number[]): MpSeat[] {
   const nameRng = createRng(matchSeed(roomSeed, 888, 0));
   const names = nameRng.shuffle(BOT_NAMES);
-  const order = shuffledSquadOrder(roomSeed);
   return botSeats.map((seat, i) => {
     const rng = createRng(matchSeed(roomSeed, 888, seat + 1));
     const formation = pickBotFormation(rng);
     const style = pickBotStyle(rng);
-    const slate: (XiSlotV2 | null)[] = new Array(formation.slots.length).fill(null);
-    let cursor = rng.int(order.length);
-    let guard = 0;
-    while (openSlots(slate).length > 0 && guard++ < 400) {
-      const roll = order[cursor % order.length];
-      cursor++;
-      const pick = autoPickForSlate(slate, formation, roll, draftedIds);
-      if (!pick) continue;
-      slate[pick.slotIndex] = {
-        position: formation.slots[pick.slotIndex],
-        player: pick.player,
-      };
-      draftedIds.add(pick.player.id);
-    }
     return {
       seat,
       id: seatId(seat),
@@ -207,9 +193,37 @@ export function draftBotSeats(
       isHuman: false,
       formation,
       tactics: { formationId: formation.id, style },
-      slate: slate as XiSlotV2[],
+      slate: new Array(formation.slots.length).fill(null) as unknown as XiSlotV2[],
     };
   });
+}
+
+/**
+ * One bot pick for one spin — every mirror runs this while applying a
+ * spinResult, AFTER the spin's human picks have landed in `draftedIds`
+ * (humans get pool priority; within a spin the stride assignment is disjoint,
+ * so a bot's roll never overlaps a human's anyway). Tries the seat's assigned
+ * roll first, then walks the room's canonical order from `cursorStart` so a
+ * drained roll can never leave a bot slate short. Deterministic and pure.
+ */
+export function botSpinPick(
+  slate: readonly (XiSlotV2 | null)[],
+  formation: Formation,
+  roll: SquadRef | null,
+  order: readonly SquadRef[],
+  cursorStart: number,
+  draftedIds: ReadonlySet<string>,
+): { player: PlayerV2; slotIndex: number } | null {
+  if (roll) {
+    const pick = autoPickForSlate(slate, formation, roll, draftedIds);
+    if (pick) return pick;
+  }
+  for (let i = 0; i < order.length; i++) {
+    const ref = order[(cursorStart + i) % order.length];
+    const pick = autoPickForSlate(slate, formation, ref, draftedIds);
+    if (pick) return pick;
+  }
+  return null;
 }
 
 // ── Round resolution (shared by host and every client) ───────────────────────

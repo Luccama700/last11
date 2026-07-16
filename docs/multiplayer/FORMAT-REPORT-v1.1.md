@@ -283,6 +283,15 @@ New, surfaced by this spec:
     doctored clients. (Supersedes the brief mp-4 solo-parity experiment where
     bots drafted from a private pool.) The 57-squad / 1,038-player data pass
     is what makes the shared drain affordable.
+13. **Humans draft FIRST (Lucca, 2026-07-16, engine mp-7).** mp-6 had bots
+    pre-draft their full XIs at game start, so every rolled squad's best
+    players were gone before the first human spin ("no matter what country I
+    get first, I don't get the best player"). Now bots draft like everyone
+    else — one pick per spin from their stride-assigned squad — and their
+    picks are applied AFTER the spin's human picks, derived deterministically
+    on every mirror (never on the wire). Uniqueness (#12) is unchanged; only
+    the order of pool consumption moved. A drained bot roll falls back to a
+    deterministic walk of the room's squad order so no bot XI comes up short.
 
 ## 7. What this means for plan v1.1
 

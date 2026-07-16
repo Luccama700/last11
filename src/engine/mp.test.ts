@@ -5,9 +5,10 @@ import {
   MP_SURVIVORS_PER_ROUND,
   assignSquadsForSpin,
   autoPickForSlate,
+  botSpinPick,
   buildMpMatchday,
   defaultSeatTactics,
-  draftBotSeats,
+  makeBotSeats,
   makeRoomCode,
   mpDraftOptions,
   nextMorale,
@@ -22,6 +23,7 @@ import { createRng } from './rng';
 import { squadRefsV2 } from './data/loader';
 import { personKey } from './draft';
 import { matchVerdict } from './match';
+import type { XiSlotV2 } from './types';
 
 const SEED = 20260711;
 
@@ -103,14 +105,52 @@ describe('global uniqueness + auto-pick', () => {
   });
 });
 
+/** A full all-bot room drafted the mp-7 way: one botSpinPick per seat per spin
+ *  from the spin's stride assignments — the same loop the controller applies. */
 function makeBotRoom(seed = SEED): { seats: MpSeat[]; drafted: Set<string> } {
   const drafted = new Set<string>();
-  const seats = draftBotSeats(seed, Array.from({ length: MP_LOBBY_SIZE }, (_, i) => i), drafted);
+  const order = shuffledSquadOrder(seed);
+  const seats = makeBotSeats(seed, Array.from({ length: MP_LOBBY_SIZE }, (_, i) => i));
+  for (let spin = 0; spin < MP_DRAFT_SPINS; spin++) {
+    const assigned = assignSquadsForSpin(order, spin, MP_LOBBY_SIZE, (ref) =>
+      squadHasPickLeft(ref, drafted),
+    );
+    for (const seat of seats) {
+      const pick = botSpinPick(
+        seat.slate as (XiSlotV2 | null)[],
+        seat.formation,
+        assigned[seat.seat] ?? null,
+        order,
+        spin * MP_LOBBY_SIZE + seat.seat,
+        drafted,
+      );
+      if (!pick) continue;
+      (seat.slate as (XiSlotV2 | null)[])[pick.slotIndex] = {
+        position: seat.formation.slots[pick.slotIndex],
+        player: pick.player,
+      };
+      drafted.add(pick.player.id);
+    }
+  }
   return { seats, drafted };
 }
 
-describe('bot seats', () => {
-  it('drafts 20 full XIs deterministically with GLOBAL uniqueness and the person rule', () => {
+describe('bot seats (mp-7: one pick per spin, after the humans)', () => {
+  it('makeBotSeats hands out identities with OPEN slates — no pre-draft at game start', () => {
+    const seats = makeBotSeats(SEED, Array.from({ length: MP_LOBBY_SIZE }, (_, i) => i));
+    for (const s of seats) {
+      expect(s.isHuman).toBe(false);
+      expect(s.slate).toHaveLength(s.formation.slots.length);
+      expect((s.slate as (XiSlotV2 | null)[]).every((x) => x === null)).toBe(true);
+    }
+    // identities are deterministic per room seed
+    const again = makeBotSeats(SEED, Array.from({ length: MP_LOBBY_SIZE }, (_, i) => i));
+    expect(again.map((s) => [s.name, s.formation.id, s.tactics.style])).toEqual(
+      seats.map((s) => [s.name, s.formation.id, s.tactics.style]),
+    );
+  });
+
+  it('11 spins of botSpinPick fill 20 full XIs deterministically with GLOBAL uniqueness and the person rule', () => {
     const { seats } = makeBotRoom();
     const again = makeBotRoom();
     expect(seats.map((s) => s.slate.map((x) => x.player.id))).toEqual(
@@ -121,6 +161,7 @@ describe('bot seats', () => {
     const ids = new Set<string>();
     for (const s of seats) {
       expect(s.slate).toHaveLength(11);
+      expect((s.slate as (XiSlotV2 | null)[]).every((x) => x !== null)).toBe(true);
       const persons = new Set<string>();
       for (const slot of s.slate) {
         expect(ids.has(slot.player.id)).toBe(false); // nobody drafted twice ANYWHERE
@@ -131,6 +172,47 @@ describe('bot seats', () => {
       }
     }
     expect(ids.size).toBe(MP_LOBBY_SIZE * 11);
+  });
+
+  it("humans draft first: a spin's bot picks can never touch the player a human takes that spin", () => {
+    // Seat 0 is the human; 1..19 are bots. Replay the whole draft with the
+    // human's pick applied BEFORE the bots' each spin (the mp-7 apply order)
+    // and check the human always got the best of their roll at that moment.
+    const drafted = new Set<string>();
+    const order = shuffledSquadOrder(SEED + 99);
+    const bots = makeBotSeats(SEED + 99, Array.from({ length: MP_LOBBY_SIZE - 1 }, (_, i) => i + 1));
+    const { formation } = defaultSeatTactics();
+    const humanSlate: (XiSlotV2 | null)[] = new Array(formation.slots.length).fill(null);
+    for (let spin = 0; spin < MP_DRAFT_SPINS; spin++) {
+      const assigned = assignSquadsForSpin(order, spin, MP_LOBBY_SIZE, (ref) =>
+        squadHasPickLeft(ref, drafted),
+      );
+      const best = autoPickForSlate(humanSlate, formation, assigned[0], drafted);
+      expect(best).not.toBeNull(); // the roll's best is ALWAYS still there
+      humanSlate[best!.slotIndex] = {
+        position: formation.slots[best!.slotIndex],
+        player: best!.player,
+      };
+      drafted.add(best!.player.id);
+      for (const seat of bots) {
+        const pick = botSpinPick(
+          seat.slate as (XiSlotV2 | null)[],
+          seat.formation,
+          assigned[seat.seat] ?? null,
+          order,
+          spin * MP_LOBBY_SIZE + seat.seat,
+          drafted,
+        );
+        expect(pick).not.toBeNull(); // the fallback walk never leaves a hole
+        expect(pick!.player.id).not.toBe(best!.player.id);
+        (seat.slate as (XiSlotV2 | null)[])[pick!.slotIndex] = {
+          position: seat.formation.slots[pick!.slotIndex],
+          player: pick!.player,
+        };
+        drafted.add(pick!.player.id);
+      }
+    }
+    expect(humanSlate.every((x) => x !== null)).toBe(true);
   });
 });
 

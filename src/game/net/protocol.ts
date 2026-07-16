@@ -84,13 +84,15 @@ export type HostMsgBody =
   | { t: 'gameStart'; seats: SeatAssignment[]; setups: Record<string, { formationId: string; style: Tactics['style'] }> }
   /** One spin for everyone: reels roll now, picks close at deadlineAt. The
    *  drafted set is deliberately NOT on the wire — every mirror derives it
-   *  identically (bots at gameStart, picks at each spinResult), and a snapshot
-   *  here raced the host's own gameStart apply (loopback test caught it). */
+   *  identically (ALL picks land at each spinResult: humans first, then the
+   *  bots' derived picks), and a snapshot here raced the host's own gameStart
+   *  apply (loopback test caught it). */
   | { t: 'spinStart'; spinIndex: number; deadlineAt: number }
-  /** The spin's authoritative picks (incl. auto-picks) + each seat's board moves
-   *  made during the window. Every client applies per seat: MOVES in order, then
-   *  the pick — matching the sender's local (moves-before-pick) ordering, which
-   *  the UI enforces by locking the board once you've picked. */
+  /** The spin's authoritative HUMAN picks (incl. auto-picks) + each seat's board
+   *  moves made during the window. Every client applies per seat: MOVES in
+   *  order, then the pick — matching the sender's local (moves-before-pick)
+   *  ordering, which the UI enforces by locking the board once you've picked.
+   *  Bot picks are then derived locally, AFTER the humans' (mp-7). */
   | {
       t: 'spinResult';
       spinIndex: number;
